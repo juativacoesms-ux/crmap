@@ -241,8 +241,8 @@
           <input type="file" id="fotoInput" accept="image/*" />
         </div>
         <div class="form-group">
-          <label for="numeroInput">2. Número (Nº)</label>
-          <input type="text" id="numeroInput" placeholder="Ex: 001/2026" />
+          <label for="numeroInput">2. Número da Credencial (Nº) - Automático</label>
+          <input type="text" id="numeroInput" readonly style="background-color: #e8f4ec; font-weight: bold; color: #1b7340;" />
         </div>
         <div class="form-group">
           <label for="emissaoInput">3. Data de Emissão</label>
@@ -296,6 +296,25 @@
   imgBase.src = 'carteirinha-base.png'; // A imagem em branco do usuário
   
   let imgFoto = null;
+
+  // Lógica de Geração Automática do Número
+  function gerarNumeroAutomatico() {
+    let currentID = parseInt(localStorage.getItem('crmap_last_id') || '0', 10);
+    // Para efeito de demonstração/geração estática: soma 1
+    currentID += 1;
+    localStorage.setItem('crmap_last_id', currentID);
+    
+    const year = new Date().getFullYear();
+    const formattedID = String(currentID).padStart(3, '0') + '/' + year;
+    numeroInput.value = formattedID;
+  }
+  
+  // Se estiver vazio, gera no carregamento da página
+  if (!numeroInput.value) {
+    gerarNumeroAutomatico();
+    // Marca a data de hoje por padrão
+    emissaoInput.value = new Date().toISOString().split('T')[0];
+  }
 
   // Atualiza o canvas inteiro
   function desenharCarteirinha() {
