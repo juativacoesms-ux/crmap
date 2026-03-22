@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CRMAP – Centro de Referência das Mulheres Atingidas do Paraopeba</title>
+<style>
+  /* Reset & Base */
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0; 
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f1f7f2 0%, #fdfdf8 100%);
+    color: #2b332b;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  a {
+    color: #1b7340;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+  img { max-width: 100%; height: auto; display: block; }
+  
+  /* Container Global */
+  .container {
+    max-width: 1200px;
+    padding: 0 1.5rem;
+    margin: 0 auto;
+  }
+
+  /* Header e Navegação */
+  header {
+    background: #ffffff; 
+    padding: 1rem 0; 
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  header .container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; 
+    gap: 1rem;
+  }
+  
+  .logo-img {
+    width: 130px; 
+    transition: transform 0.3s ease;
+  }
+  .logo-img:hover { transform: scale(1.05); }
+
+  nav {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  nav a.button-link {
+    background: #e8f4ec; 
+    color: #1b7340;
+    font-weight: 700;
+    padding: 0.6rem 1.2rem;
+    border-radius: 25px; 
+    font-size: 0.95rem;
+    border: 1px solid transparent;
+  }
+  nav a.button-link:hover,
+  nav a.button-link:focus {
+    background: #1b7340; 
+    color: #ffffff;
+    border-color: #1b7340;
+  }
+
+  /* Seção Hero */
+  .hero {
+    background: linear-gradient(135deg, #f0f7f2 0%, #e1efe4 100%); 
+    padding: 6rem 1rem 5rem;
+    text-align: center;
+  }
+  .hero h2 {
+    font-size: 2.6rem;
+    margin-bottom: 0.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #1b7340;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero .subtitle {
+    font-size: 1.35rem;
+    color: #d63222;
+    font-style: italic;
+    margin-bottom: 2rem;
+    font-weight: 600;
+  }
+  .hero p.intro {
+    max-width: 760px;
+    margin: 0 auto 2.75rem;
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: #3b4d40;
+  }
+  
+  /* Botões Padrões */
+  .btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+  }
+  .btn-primary, .btn-secondary {
+    cursor: pointer;
+    border-radius: 30px;
+    font-weight: 700;
+    padding: 0.9rem 2.2rem;
+    font-size: 1.05rem;
+    transition: all 0.3s ease;
+    border: none;
+    user-select: none;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-primary {
+    background: #d63222; 
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(214, 50, 34, 0.3);
+  }
+  .btn-primary:hover {
+    background: #b5281b; 
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(214, 50, 34, 0.45);
+    transform: translateY(-2px);
+  }
+  .btn-secondary {
+    background: #ffffff;
+    color: #1b7340;
+    border: 2px solid #1b7340;
+  }
+  .btn-secondary:hover {
+    background: #e8f4ec;
+    color: #104a29;
+    border-color: #104a29;
+    transform: translateY(-2px);
+  }
+
+  /* Seções Gerais */
+  section { padding: 5rem 0; }
+  section:nth-child(even) { background-color: #ffffff; }
+  
+  .section-title {
+    text-align: center;
+    font-size: 2.2rem;
+    margin-bottom: 3.5rem;
+    font-weight: 800;
+    color: #1b7340;
+    position: relative;
+  }
+  .section-title::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 4px;
+    background: #d63222;
+    margin: 0.8rem auto 0;
+    border-radius: 2px;
+  }
+
+  .texto-central {
+    max-width: 800px;
+    margin: 0 auto 3rem auto;
+    font-size: 1.15rem;
+    text-align: center;
+    color: #3b4d40;
+  }
+  
+  /* Grid de Cards */
+  .grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+  }
+  .card {
+    background: #ffffff;
+    border-radius: 12px;
+    border-top: 4px solid #1b7340; 
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    padding: 2.5rem 1.5rem;
+    transition: all 0.3s ease;
+    text-align: center;
+  }
+  .card:hover {
+    box-shadow: 0 8px 25px rgba(27, 115, 64, 0.12);
+    transform: translateY(-5px);
+  }
+  .card h4 {
+    font-weight: 800;
+    margin-bottom: 1rem;
+    font-size: 1.4rem;
+    color: #1b7340;
+    margin-top: 0;
+  }
+  .card p {
+    font-size: 1.05rem;
+    color: #4a5c4f;
+    margin: 0;
+  }
+  .card ul {
+    text-align: left;
+    margin: 0 auto;
+    padding-left: 1.5rem;
+    color: #4a5c4f;
+    font-weight: 500;
+  }
+  .card ul li { margin-bottom: 0.4rem; }
+
+  /* Citação (Corrigido o fundo invisível) */
+  section.prova-social {
+    background-color: #1b7340 !important; /* Força o fundo verde escuro */
+    color: #ffffff;
+    padding: 5rem 1rem;
+    text-align: center;
+  }
+  .prova-social .quote-text {
+    font-style: italic;
+    font-size: 1.8rem;
+    font-weight: 600;
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+  .prova-social .quote-mark {
+    color: #d63222; 
+    font-size: 2.5rem;
+    line-height: 0;
+    vertical-align: bottom;
+  }
+
+  /* SISTEMA DE ABAS (PORTAL TRANSPARÊNCIA) */
+  .tabs-container {
+    max-width: 1000px;
+    margin: 0 auto 4rem auto;
+  }
+  .tabs-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.8rem;
+    margin-bottom: 2rem;
+  }
+  .tab-btn {
+    background: #ffffff;
+    border: 2px solid #1b7340;
+    color: #1b7340;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .tab-btn:hover, .tab-btn.active {
+    background: #1b7340;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(27, 115, 64, 0.2);
+    transform: translateY(-2px);
+  }
+  
+  .tab-content {
+    display: none; 
+    background: #ffffff;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.06);
+    border-top: 5px solid #d63222;
+    animation: fadeIn 0.4s ease-in-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .tab-content h4 {
+    color: #1b7340;
+    font-size: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  .tab-content ul { list-style: inside disc; color: #3b4d40; padding-left: 1rem;}
+  .tab-content li { margin-bottom: 0.8rem; font-size: 1.1rem; }
+  .tab-content strong { color: #1b7340; }
+
+  /* Finanças */
+  .finance-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+  .finance-box {
+    background: #fafdfa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e1efe4;
+  }
+  .finance-box h5 { color: #d63222; font-size: 1.2rem; margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid #e1efe4; padding-bottom: 0.5rem;}
+  .finance-box ul { list-style: none; padding: 0; margin: 0; }
+  .finance-box li { margin-bottom: 0.8rem; border-bottom: 1px dashed #ccc; padding-bottom: 0.4rem; display: flex; justify-content: space-between;}
+  
+  /* Botões Download */
+  .doc-download-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .doc-download-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f0f7f2;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    color: #1b7340;
+    font-weight: 600;
+    border: 1px solid #cce3d3;
+    transition: all 0.2s;
+  }
+  .doc-download-btn:hover { background: #1b7340; color: #ffffff; }
+
+  /* Diretoria e Governança */
+  .board-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+  .board-card {
+    background: #fafdfa;
+    border: 1px solid #e1efe4;
+    border-left: 5px solid #1b7340;
+    padding: 1.5rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  }
+  .board-card.highlight {
+    border-left-color: #d63222;
+    background: #fff8f7;
+  }
+  .board-card h4 {
+    color: #d63222;
+    font-size: 1.2rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e1efe4;
+    padding-bottom: 0.5rem;
+  }
+  .board-card ul, .board-card ol { margin: 0; padding-left: 1.2rem; color: #3b4d40; }
+  .board-card li { margin-bottom: 0.5rem; font-size: 1.05rem; }
+  .board-card strong { color: #1b7340; }
+
+  /* Projetos Especiais Badge e Painel de Inovação */
+  .innovation-panel {
+    background: #e8f4ec;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-top: 3rem;
+    border: 1px solid #cce3d3;
+    text-align: center;
+  }
+  .innovation-panel h4 {
+    color: #1b7340;
+    font-size: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+  }
+  .innovation-panel p {
+    color: #3b4d40;
+    margin-bottom: 1.5rem;
+    font-size: 1.05rem;
+  }
+  .project-badges {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .badge {
+    background: #1b7340;
+    color: white;
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 8px rgba(27,115,64,0.3);
+  }
+  .badge.active-red { background: #d63222; box-shadow: 0 2px 8px rgba(214,50,34,0.3); }
+  .badge.future-gray { background: #6c757d; box-shadow: 0 2px 8px rgba(108,117,125,0.3); }
+
+  /* Contato */
+  .contato-box {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border-top: 6px solid #d63222;
+  }
+  .contato-box p {
+    font-size: 1.15rem;
+    margin-bottom: 1.2rem;
+    color: #3b4d40;
+    display: flex;
+    flex-direction: column;
+  }
+  .contato-box p strong { color: #1b7340; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem;}
+  .contato-box a { color: #d63222; font-weight: 600; font-size: 1.2rem; }
+
+  /* Footer */
+  footer {
+    background: #0f301d; 
+    color: #d0e6d8;
+    text-align: center;
+    padding: 2.5rem 1rem;
+  }
+
+  /* Responsivo */
+  @media (max-width: 768px) {
+    header .container { flex-direction: column; gap: 1rem; }
+    .logo-img { width: 110px; }
+    .hero h2 { font-size: 2rem; }
+    .hero .subtitle { font-size: 1.15rem; }
+    .btn-group { flex-direction: column; width: 100%; }
+    .btn-primary, .btn-secondary { width: 100%; text-align: center; }
+    .board-card { padding: 1.5rem; }
+    .tab-content { padding: 1.5rem; }
+    .finance-grid { grid-template-columns: 1fr; }
+    .tab-btn { width: 100%; }
+    .doc-download-btn { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<header role="banner">
+  <div class="container">
+    <a href="#" aria-label="Página Inicial CRMAP">
+      <img src="logo-nova.png" alt="Logo CRMAP" class="logo-img">
+    </a>
+    
+    <nav role="navigation">
+      <a href="#identity" class="button-link">Quem Somos</a>
+      <a href="#atuacao" class="button-link">Atuação</a>
+      <a href="#transparencia" class="button-link">Transparência</a>
+      <a href="carteirinha.html" class="button-link" style="background:#d63222; color:#ffffff; border-color: #d63222;">Gerar Carteirinha</a>
+      <a href="#contato" class="button-link">Contato</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="container">
+      <h2>Centro de Referência das Mulheres Atingidas do Paraopeba</h2>
+      <p class="subtitle">Quando uma mulher se levanta, todas as outras se levantam com ela.</p>
+      <p class="intro">Organização da sociedade civil sem fins lucrativos, dedicada ao acolhimento, geração de renda e desenvolvimento social de mulheres atingidas por barragens. Promovemos inclusão produtiva, capacitação e apoio em saúde mental.</p>
+      
+      <div class="btn-group">
+        <a href="#identity" class="btn-primary">Conheça Nossa Missão</a>
+        <a href="#transparencia" class="btn-secondary">Portal da Transparência</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="identity">
+    <div class="container">
+      <h3 class="section-title">Nossa Identidade</h3>
+      <div class="grid-cards">
+        <div class="card">
+          <h4>🏛️ Missão</h4>
+          <p>Promover acolhimento, fortalecimento comunitário e desenvolvimento social por meio de ações em saúde mental, projetos formativos e iniciativas de impacto social.</p>
+        </div>
+        <div class="card">
+          <h4>👁️ Visão</h4>
+          <p>Ser referência regional em organização comunitária, saúde mental e desenvolvimento social sustentável.</p>
+        </div>
+        <div class="card">
+          <h4>💎 Valores</h4>
+          <ul>
+            <li>Transparência</li>
+            <li>Ética</li>
+            <li>Responsabilidade Social</li>
+            <li>Respeito e Inclusão</li>
+            <li>Compromisso com a Comunidade</li>
+            <li>Justiça Social</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="atuacao" style="background-color: #f0f7f2;">
+    <div class="container">
+      <h3 class="section-title">Pilares de Atuação</h3>
+      <p class="texto-central">O CRMAP atua em diversas frentes estatutárias para apoiar, fortalecer e promover o desenvolvimento comunitário e individual das mulheres.</p>
+      
+      <div class="grid-cards">
+        <div class="card">
+          <h4>Apoio em Saúde Mental</h4>
+          <p>Atendimento psicológico, psicanalítico e social, visando o acolhimento e fortalecimento das mulheres atingidas.</p>
+        </div>
+        <div class="card">
+          <h4>Geração de Renda</h4>
+          <p>Iniciativas de impacto, incluindo cooperativa solidária, feiras, horta comunitária e projetos estruturantes.</p>
+        </div>
+        <div class="card">
+          <h4>Formação e Projetos</h4>
+          <p>Desenvolvimento de oficinas, cursos, Farmácia Viva e programas educacionais focados na autonomia.</p>
+        </div>
+        <div class="card">
+          <h4>Defesa de Direitos</h4>
+          <p>Representação institucional, defesa de políticas públicas e reparação justa e igualitária na Bacia do Paraopeba.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="prova-social">
+    <div class="container">
+      <p class="quote-text">
+        <span class="quote-mark">"</span>Quando uma mulher se levanta, todas as outras se levantam com ela.<span class="quote-mark">"</span>
+      </p>
+    </div>
+  </section>
+
+  <section id="transparencia">
+    <div class="container">
+      <h3 class="section-title">Transparência & Governança</h3>
+      <p class="texto-central">O CRMAP compromete-se com a transparência absoluta em suas ações e gestão de recursos. Navegue nas abas abaixo para acessar nossos relatórios e documentos oficiais.</p>
+      
+      <div class="tabs-container">
+        <div class="tabs-header">
+          <button class="tab-btn active" onclick="openTab(event, 'tab-contas')">📄 Prestação de Contas</button>
+          <button class="tab-btn" onclick="openTab(event, 'tab-docs')">📑 Documentos Oficiais</button>
+          <button class="tab-btn" onclick="openTab(event, 'tab-relatorios')">📊 Relatórios de Atividades</button>
+          <button class="tab-btn" onclick="openTab(event, 'tab-politica')">🤝 Política de Governança</button>
+        </div>
+
+        <div id="tab-contas" class="tab-content" style="display: block;">
+          <h4>Prestação de Contas – Exercício 2026</h4>
+          <p style="text-align:center; margin-bottom: 2rem;">Garantimos publicidade às receitas e despesas conforme previsto em nosso Estatuto Social.</p>
+          
+          <div class="finance-grid">
+            <div class="finance-box">
+              <h5>Receitas</h5>
+              <ul>
+                <li><span>Doações:</span> <span>_</span></li>
+                <li><span>Contribuições:</span> <span>_</span></li>
+                <li><span>Parcerias:</span> <span>_</span></li>
+                <li><span>Editais / Projetos:</span> <span>_</span></li>
+              </ul>
+            </div>
+            <div class="finance-box">
+              <h5>Despesas</h5>
+              <ul>
+                <li><span>Custos administrativos:</span> <span>_</span></li>
+                <li><span>Projetos e ações sociais:</span> <span>_</span></li>
+                <li><span>Eventos e formações:</span> <span>_</span></li>
+                <li><span>Serviços técnicos e contábeis:</span> <span>_</span></li>
+              </ul>
+            </div>
+          </div>
+          <div style="text-align: center; background: #e8f4ec; padding: 1.5rem; border-radius: 8px;">
+            <h5 style="color: #1b7340; margin: 0 0 0.5rem 0; font-size: 1.3rem;">Saldo Final apurado em: _</h5>
+            <p style="margin: 0; color: #3b4d40;"><strong>Responsáveis pela Tesouraria:</strong> Jaqueline do Carmo da Silva e Luana Ilda de Medeiros</p>
+          </div>
+        </div>
+
+        <div id="tab-docs" class="tab-content">
+          <h4>Documentos Institucionais (PDF)</h4>
+          <p style="text-align:center; margin-bottom: 2rem;">Nossos documentos encontram-se disponíveis para consulta pública.</p>
+          
+          <div class="doc-download-grid">
+            <a href="estatuto%20assinadoo.pdf" target="_blank" class="doc-download-btn">Estatuto Social <span>📥 Baixar PDF</span></a>
+            <a href="ata-fundacao-posse.pdf" target="_blank" class="doc-download-btn">Ata de Fundação, Eleição e Posse <span>📥 Baixar PDF</span></a>
+            <a href="cnpj.pdf" target="_blank" class="doc-download-btn">Comprovante de Inscrição no CNPJ <span>📥 Baixar PDF</span></a>
+          </div>
+        </div>
+
+        <div id="tab-relatorios" class="tab-content">
+          <h4>Relatório Anual – 2026</h4>
+          <p style="text-align:center; margin-bottom: 2rem;">Resumo das principais ações e resultados alcançados pelo CRMAP.</p>
+          
+          <div class="finance-grid">
+            <div class="finance-box">
+              <h5>Ações Realizadas</h5>
+              <ul style="padding-left: 1.2rem; list-style: disc;">
+                <li style="border:none; justify-content:flex-start;">Atendimentos em Saúde Mental: _</li>
+                <li style="border:none; justify-content:flex-start;">Projetos Comunitários: _</li>
+                <li style="border:none; justify-content:flex-start;">Eventos e Formações: _</li>
+                <li style="border:none; justify-content:flex-start;">Comunidades Atendidas: _</li>
+                <li style="border:none; justify-content:flex-start;">Parcerias Firmadas: _</li>
+              </ul>
+            </div>
+            <div class="finance-box">
+              <h5>Resultados Alcançados</h5>
+              <p style="color: #4a5c4f; font-style: italic;">(Relato quantitativo e qualitativo das ações - Em atualização.)</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-politica" class="tab-content">
+          <h4>Política de Governança</h4>
+          <p style="text-align:center; margin-bottom: 2rem;">Nossos princípios sólidos de gestão baseiam-se em:</p>
+          <ul style="max-width: 600px; margin: 0 auto; line-height: 2; font-size: 1.1rem; color: #3b4d40;">
+            <li>✅ Transparência na gestão administrativa e financeira</li>
+            <li>✅ Decisões colegiadas conforme Estatuto Social</li>
+            <li>✅ Prestação de contas periódica</li>
+            <li>✅ Conformidade legal e respeito à identidade de gênero</li>
+            <li>✅ Atuação voluntária ou remunerada conforme previsão estatutária</li>
+          </ul>
+        </div>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid #d6e8dc; margin: 4rem 0;">
+
+      <h3 class="section-title">Governança Institucional</h3>
+      <p class="texto-central">A administração e operação técnica do CRMAP são conduzidas por uma equipe dedicada, estruturada conforme nosso Estatuto Social e focada no desenvolvimento integral das associadas.</p>
+      
+      <div class="board-grid">
+        <div class="board-card highlight">
+          <h4>Presidência & Coordenação Geral</h4>
+          <ul>
+            <li><strong>Presidenta, Coord. Geral de Saúde Mental e Presidenta de Honra (Fundadora):</strong><br> Fátima Maria de Jesus Chaves Soares (Dra. em Psicanálise)</li>
+            <li style="margin-top: 0.8rem;"><strong>Vice-Presidenta & Diretora da Saúde Mental:</strong><br> Jórsia Chaves Horta</li>
+          </ul>
+        </div>
+        
+        <div class="board-card">
+          <h4>Secretaria</h4>
+          <ul>
+            <li><strong>1º Secretário-Geral:</strong> Edson Soares Damasceno Chaves</li>
+            <li><strong>2ª Secretária:</strong> Fátima Valério Gonçalves</li>
+          </ul>
+        </div>
+        
+        <div class="board-card">
+          <h4>Tesouraria</h4>
+          <ul>
+            <li><strong>1ª Tesoureira:</strong> Jaqueline do Carmo da Silva</li>
+            <li><strong>2ª Tesoureira:</strong> Luana Ilda de Medeiros</li>
+          </ul>
+        </div>
+
+        <div class="board-card">
+          <h4>Diretoria de Comunicação</h4>
+          <ul>
+            <li>Rosemeire Comissão Bruzinga</li>
+            <li>Aline Gomes Chaves Horta</li>
+            <li>Elizabeth Silva Oliveira</li>
+          </ul>
+        </div>
+
+        <div class="board-card">
+          <h4>Projetos, Cursos e Eventos</h4>
+          <ul>
+            <li>Luciana Elizabeth Miranda de Paula</li>
+            <li>Rosângela Maria de Sousa</li>
+            <li>Helena Rosário Ramos Dias</li>
+            <li>Raquel Conrado Ventura de Oliveira</li>
+            <li>Edirlaine Fernandes Cota Lima</li>
+          </ul>
+        </div>
+
+        <div class="board-card">
+          <h4>Saúde Mental e Acolhimento</h4>
+          <ul>
+            <li><strong>Psicóloga:</strong> Rosilaine Ribeiro de Moura Rocha</li>
+            <li><strong>Psicóloga:</strong> Márcia Rodrigues Daian</li>
+            <li><strong>Terapeuta:</strong> Luciene Gomes Paixão</li>
+            <li><strong>Assistente de Saúde:</strong> Érika Danúbia da Silva</li>
+          </ul>
+        </div>
+
+        <div class="board-card">
+          <h4>Coordenação Farmácia Viva</h4>
+          <ul>
+            <li>Angela</li>
+            <li>Edvania</li>
+            <li>Maria Aparecida</li>
+            <li>Vani</li>
+          </ul>
+        </div>
+
+        <div class="board-card">
+          <h4>Sociais Voluntárias(os)</h4>
+          <ul>
+            <li>Atuação ativa e essencial em nossos projetos sociais e de base.</li>
+            <li><strong>Identificação:</strong> Possuem as Carteirinhas Oficiais do CRMAP ativas.</li>
+          </ul>
+        </div>
+
+        <div class="board-card">
+          <h4>Apoio Jurídico e Ouvidoria</h4>
+          <ul>
+            <li><strong>Apoio Jurídico (Bacharel em Direito):</strong> Letícia A.</li>
+            <li><strong>Apoio Jurídico (Bacharel em Direito):</strong> Iara M.</li>
+            <li><strong>Ouvidora Jurídica:</strong> Iara Chaves Horta Nascimento</li>
+            <li><strong>Assessoria Jurídica:</strong> Daiane de Souza Gonçalves</li>
+          </ul>
+        </div>
+
+        <div class="board-card">
+          <h4>Contabilidade e Vogal</h4>
+          <ul>
+            <li><strong>Contabilidade:</strong> Letícia</li>
+            <li><strong>Vogal:</strong> Gleicilene da Conceição Gonçalves de Souza</li>
+          </ul>
+        </div>
+
+        <div class="board-card" style="grid-column: 1 / -1;">
+          <h4>Conselho Fiscal</h4>
+          <ol style="display: flex; flex-wrap: wrap; gap: 2rem;">
+            <li>Lucimara Aparecida Leroy Oliveira</li>
+            <li>Luciene Gomes Paixão</li>
+            <li>Edirlaine Fernandes Cota Lima</li>
+            <li>Lucimar Soares de Oliveira</li>
+            <li>Elisabeth de Fátima Cordeiro de Oliveira</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="innovation-panel">
+        <h4>Inovação e Economia Solidária</h4>
+        <p>Conheça nossas iniciativas estatutárias voltadas para o fortalecimento econômico e social das mulheres atingidas:</p>
+        <div class="project-badges">
+          <span class="badge active-red">🪙 Moeda Solidária (Ativa)</span>
+          <a href="carteirinha.html" class="badge" style="text-decoration: none;">💳 Carteira de Guardiã (Emissão Ativa)</a>
+          <span class="badge future-gray">🌱 Banco Comunitário Solidário (Em fase de implementação)</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="contato" style="background-color: #f0f7f2;">
+    <div class="container">
+      <h3 class="section-title">Fale Conosco</h3>
+      
+      <div class="contato-box">
+        <p>
+          <strong>E-mail</strong>
+          <a href="mailto:cdrmap13@gmail.com">cdrmap13@gmail.com</a>
+        </p>
+        <p>
+          <strong>Instagram</strong>
+          <a href="https://instagram.com/crmap.mulher.atingida" target="_blank">@crmap.mulher.atingida</a>
+        </p>
+        <p>
+          <strong>Telefone / WhatsApp</strong>
+          <span style="font-size: 1.15rem; color: #4a5c4f;">(31) ... (Aguardando ativação)</span>
+        </p>
+        <p style="margin-bottom: 0;">
+          <strong>Sede Institucional</strong>
+          <span style="font-size: 1.15rem; color: #4a5c4f;">Avenida Beira Rio 13, Fazendinhas Baú, Pompéu – MG</span>
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    &copy; 2026 CRMAP – Centro de Referência das Mulheres Atingidas do Paraopeba. Todos os direitos reservados.
+  </div>
+</footer>
+
+<script>
+  function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+    
+    tablinks = document.getElementsByClassName("tab-btn");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+  }
+</script>
+
+</body>
+</html>
