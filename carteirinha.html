@@ -335,10 +335,10 @@
     }
     
     // 3. Desenha a foto de rosto
-    const fotoX = 38;      
-    const fotoY = 147;     
-    const fotoWidth = 198; 
-    const fotoHeight = 251; 
+    const fotoX = 45;      
+    const fotoY = 172;     
+    const fotoWidth = 206; 
+    const fotoHeight = 297; 
     
     if (imgFoto && imgFoto.complete && imgFoto.naturalWidth > 0) {
       // Mantém a proporção (recorte simulado - cover)
@@ -367,7 +367,7 @@
       ctx.fillRect(fotoX, fotoY, fotoWidth, fotoHeight);
       ctx.fillStyle = '#1b7340';
       ctx.font = '14px Inter';
-      ctx.fillText('Foto do Perfil', fotoX + 45, fotoY + 125);
+      ctx.fillText('Foto do Perfil', fotoX + 45, fotoY + 145);
     }
 
     // 4. Configurar estilo do texto e desenhar os dados
@@ -375,13 +375,13 @@
     
     // ** NÚMERO **
     ctx.font = 'bold 22px Inter, sans-serif';
-    const numX = 330; 
-    const numY = 246; 
+    const numX = 315; 
+    const numY = 288; 
     ctx.fillText(`${numeroInput.value || '______________'}`, numX, numY);
 
     // ** EMISSÃO **
-    const emiX = 395;
-    const emiY = 296;
+    const emiX = 390;
+    const emiY = 338;
     
     // Formatar data para DD/MM/AAAA
     let dtEmissao = emissaoInput.value;
@@ -393,8 +393,8 @@
 
     // ** ASSINATURA **
     ctx.font = 'italic 34px "Times New Roman", serif'; // Fonte cursiva/elegante
-    const assX = 432;   // Centro projetado da linha da assinatura
-    const assY = 378;   // Em cima da linha
+    const assX = 405;   // Centro projetado da linha da assinatura
+    const assY = 393;   // Em cima da linha
     
     // Desenha centralizado acima da linha
     ctx.textAlign = 'center';
