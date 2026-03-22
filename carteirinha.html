@@ -335,10 +335,10 @@
     }
     
     // 3. Desenha a foto de rosto
-    const fotoX = 42;      
-    const fotoY = 125;     
-    const fotoWidth = 246; 
-    const fotoHeight = 340; 
+    const fotoX = 35;      
+    const fotoY = 135;     
+    const fotoWidth = 215; 
+    const fotoHeight = 320; 
     
     if (imgFoto && imgFoto.complete && imgFoto.naturalWidth > 0) {
       // Mantém a proporção (recorte simulado - cover)
@@ -367,7 +367,7 @@
       ctx.fillRect(fotoX, fotoY, fotoWidth, fotoHeight);
       ctx.fillStyle = '#1b7340';
       ctx.font = '14px Inter';
-      ctx.fillText('Foto do Perfil', fotoX + 75, fotoY + 170);
+      ctx.fillText('Foto do Perfil', fotoX + 60, fotoY + 160);
     }
 
     // 4. Configurar estilo do texto e desenhar os dados
