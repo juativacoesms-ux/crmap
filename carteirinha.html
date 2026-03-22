@@ -431,8 +431,36 @@
     }
   });
 
+  // Integração com Google Sheets
+  const GOOGLE_SCRIPT_URL = "COLOQUE_SUA_URL_AQUI";
+
   // Botão Baixar
   baixarBtn.addEventListener('click', function() {
+    // ---- ENVIAR PARA A PLANILHA DO GOOGLE ----
+    if (GOOGLE_SCRIPT_URL !== "COLOQUE_SUA_URL_AQUI" && assinaturaInput.value.trim() !== '') {
+      const formData = new FormData();
+      formData.append('numero', numeroInput.value);
+      
+      let dataPura = emissaoInput.value;
+      if (dataPura) {
+        let partes = dataPura.split('-');
+        dataPura = `${partes[2]}/${partes[1]}/${partes[0]}`;
+      }
+      formData.append('data', dataPura);
+      formData.append('nome', assinaturaInput.value);
+
+      fetch(GOOGLE_SCRIPT_URL, { 
+        method: 'POST', 
+        body: formData, 
+        mode: 'no-cors' // Evita erros de bloqueio de navegador
+      }).then(() => {
+        console.log('Dados enviados para a planilha!');
+      }).catch(err => {
+        console.error('Erro ao salvar na planilha', err);
+      });
+    }
+
+    // ---- BAIXAR A IMAGEM ----
     // Cria um link temporário para download
     const link = document.createElement('a');
     
