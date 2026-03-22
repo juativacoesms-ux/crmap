@@ -335,12 +335,12 @@
     }
     
     // 3. Desenha a foto de rosto
-    const fotoX = 49;      // margem esquerda aproximada do quadro
-    const fotoY = 252;     // topo aproximado do quadro
-    const fotoWidth = 252; // largura
-    const fotoHeight = 352; // altura
+    const fotoX = 38;      
+    const fotoY = 147;     
+    const fotoWidth = 198; 
+    const fotoHeight = 251; 
     
-    if (imgFoto) {
+    if (imgFoto && imgFoto.complete && imgFoto.naturalWidth > 0) {
       // Mantém a proporção (recorte simulado - cover)
       const ratioContext = fotoWidth / fotoHeight;
       const ratioImage = imgFoto.width / imgFoto.height;
@@ -362,26 +362,26 @@
           fotoX, fotoY, fotoWidth, fotoHeight // Destination on canvas
       );
     } else {
-      // Placeholder
+      // Placeholder verde provisório para a foto
       ctx.fillStyle = '#e1efe4';
       ctx.fillRect(fotoX, fotoY, fotoWidth, fotoHeight);
       ctx.fillStyle = '#1b7340';
-      ctx.font = '16px Inter';
-      ctx.fillText('Foto do Perfil', fotoX + 70, fotoY + 170);
+      ctx.font = '14px Inter';
+      ctx.fillText('Foto do Perfil', fotoX + 45, fotoY + 125);
     }
 
     // 4. Configurar estilo do texto e desenhar os dados
     ctx.fillStyle = '#2b332b'; // Cor preta/cinza escura
     
     // ** NÚMERO **
-    ctx.font = 'bold 24px Inter, sans-serif';
-    const numX = 512; 
-    const numY = 432; 
+    ctx.font = 'bold 22px Inter, sans-serif';
+    const numX = 330; 
+    const numY = 246; 
     ctx.fillText(`${numeroInput.value || '______________'}`, numX, numY);
 
     // ** EMISSÃO **
-    const emiX = 565;
-    const emiY = 507;
+    const emiX = 395;
+    const emiY = 296;
     
     // Formatar data para DD/MM/AAAA
     let dtEmissao = emissaoInput.value;
@@ -393,8 +393,8 @@
 
     // ** ASSINATURA **
     ctx.font = 'italic 34px "Times New Roman", serif'; // Fonte cursiva/elegante
-    const assX = 540;   // Centro projetado da linha da assinatura
-    const assY = 635;   // Em cima da linha, em vez de embaixo
+    const assX = 432;   // Centro projetado da linha da assinatura
+    const assY = 378;   // Em cima da linha
     
     // Desenha centralizado acima da linha
     ctx.textAlign = 'center';
