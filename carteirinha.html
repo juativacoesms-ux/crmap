@@ -335,12 +335,10 @@
     }
     
     // 3. Desenha a foto de rosto
-    // (Ajustar esses valores se a posição da foto na carteirinha em branco for diferente!!)
-    // Esses são valores estimados baseados na imagem fornecida na tela
-    const fotoX = 75;      // margem esquerda
-    const fotoY = 160;     // desce na área branca
-    const fotoWidth = 230; // largura do quadrado da foto
-    const fotoHeight = 310; // altura
+    const fotoX = 49;      // margem esquerda aproximada do quadro
+    const fotoY = 252;     // topo aproximado do quadro
+    const fotoWidth = 252; // largura
+    const fotoHeight = 352; // altura
     
     if (imgFoto) {
       // Mantém a proporção (recorte simulado - cover)
@@ -369,22 +367,21 @@
       ctx.fillRect(fotoX, fotoY, fotoWidth, fotoHeight);
       ctx.fillStyle = '#1b7340';
       ctx.font = '16px Inter';
-      ctx.fillText('Foto do Perfil', fotoX + 60, fotoY + 160);
+      ctx.fillText('Foto do Perfil', fotoX + 70, fotoY + 170);
     }
 
     // 4. Configurar estilo do texto e desenhar os dados
     ctx.fillStyle = '#2b332b'; // Cor preta/cinza escura
     
     // ** NÚMERO **
-    // Estimativas baseadas na foto
     ctx.font = 'bold 24px Inter, sans-serif';
-    const numX = 345; 
-    const numY = 245; 
-    ctx.fillText(`${numeroInput.value || '______________'}`, numX + 50, numY);
+    const numX = 512; 
+    const numY = 432; 
+    ctx.fillText(`${numeroInput.value || '______________'}`, numX, numY);
 
     // ** EMISSÃO **
-    const emiX = 345;
-    const emiY = 300;
+    const emiX = 565;
+    const emiY = 507;
     
     // Formatar data para DD/MM/AAAA
     let dtEmissao = emissaoInput.value;
@@ -392,12 +389,12 @@
       let partes = dtEmissao.split('-');
       dtEmissao = `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
-    ctx.fillText(`${dtEmissao || '___/___/_____'}`, emiX + 115, emiY);
+    ctx.fillText(`${dtEmissao || '___/___/_____'}`, emiX, emiY);
 
     // ** ASSINATURA **
-    ctx.font = 'italic 28px "Georgia", serif'; // Fonte cursiva/elegante
+    ctx.font = 'italic 34px "Times New Roman", serif'; // Fonte cursiva/elegante
     const assX = 540;   // Centro projetado da linha da assinatura
-    const assY = 460;   // Em cima da linha
+    const assY = 635;   // Em cima da linha, em vez de embaixo
     
     // Desenha centralizado acima da linha
     ctx.textAlign = 'center';
