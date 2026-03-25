@@ -87,10 +87,10 @@
 <script>
     const SUPABASE_URL = 'https://qzjvzbvoxwhggvadaroq.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_LAlIOr94LYGTN8-BvHuT1A_BC1xScEQ'; // Nota: Verifique se esta é a 'anon public' key
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function carregarProdutos() {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('produtos')
             .select('*')
             .order('created_at', { ascending: false });
