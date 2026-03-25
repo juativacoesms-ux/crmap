@@ -3,36 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Administrativo - Cooperativa Solidária</title>
+    <title>Painel Administrativo - CRMAP</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #1b7340; --secondary: #d63222; --bg: #f0f7f2; --white: #ffffff; --text: #2b332b; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 1rem; }
+        
+        /* Login */
         .login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:var(--primary); display:flex; justify-content:center; align-items:center; z-index:2000; }
         .login-box { background:white; padding:2rem; border-radius:12px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2); }
-        .container { max-width: 1000px; margin: 0 auto; display:none; flex-direction: column; gap: 2rem; }
-        .tabs { display: flex; gap: 1rem; margin-bottom: 2rem; }
-        .tab-btn { background: #ddd; color: #555; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; flex: 1; text-align: center; font-weight: 600; }
-        .tab-btn.active { background: var(--primary); color: white; }
+        
+        .container { max-width: 1000px; margin: 2rem auto; display:none; flex-direction: column; gap: 2rem; }
+        
+        /* Menu Principal (Hub) */
+        .hub-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 2rem; }
+        .hub-card { 
+            background: white; padding: 3rem 2rem; border-radius: 16px; text-align: center; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 8px solid var(--primary); transition: all 0.3s;
+        }
+        .hub-card:hover { transform: translateY(-10px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .hub-card i { font-size: 3rem; display: block; margin-bottom: 1rem; }
+        .hub-card h3 { margin: 0; color: var(--primary); }
+        
+        /* Seções */
         .view-section { display: none; }
-        .view-section.active { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
-        .full-section { display: none; background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 6px solid var(--primary); }
-        .full-section.active { display: block; }
-        .panel, .product-list { background: var(--white); padding: 1.5rem; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 6px solid var(--primary); }
+        .active-section { display: block; }
+
+        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .btn-back { background: #eee; color: #555; padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; }
+        
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .panel-box { background: var(--white); padding: 1.5rem; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 6px solid var(--primary); }
+        
         input, textarea { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 1rem; font-family: inherit; }
         button { background: var(--primary); color: white; border: none; padding: 1rem; width: 100%; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th, td { text-align: left; padding: 0.8rem; border-bottom: 1px solid #eee; }
-        th { color: var(--primary); }
-        .status-badge { padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        th, td { text-align: left; padding: 1rem; border-bottom: 1px solid #eee; }
+        th { background: #f8fbf9; color: var(--primary); }
+        
+        .status-badge { padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
         .status-approved { background: #dcfce7; color: #166534; }
         .status-pending { background: #fef9c3; color: #854d0e; }
+
         .product-item { display: flex; align-items: center; gap: 1rem; padding: 0.8rem 0; border-bottom: 1px solid #eee; }
         .product-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
         .btn-delete { background: #fee2e2; color: #dc2626; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.8rem; width: auto; }
+        
         #loader { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:rgba(0,0,0,0.7); color:white; padding:2rem; border-radius:12px; z-index:3000; }
-        @media(max-width: 800px) { .container { grid-template-columns: 1fr; } }
+        
+        @media(max-width: 800px) { .grid-layout { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -49,50 +70,78 @@
 </div>
 
 <div class="container" id="mainContainer">
-    <div class="tabs">
-        <div class="tab-btn active" onclick="switchTab('produtos')">Gerenciar Produtos</div>
-        <div class="tab-btn" onclick="switchTab('pagamentos')">Relatório de Pagamentos</div>
-    </div>
-
-    <!-- Seção de Produtos -->
-    <div id="section-produtos" class="view-section active">
-        <div class="panel">
-            <h2>Novo Produto</h2>
-            <form id="produtoForm">
-                <label>Nome</label><input type="text" id="nome" required>
-                <label>Descrição</label><textarea id="descricao" rows="2" required></textarea>
-                <label>Preço (R$)</label><input type="text" id="preco" required>
-                <label>WhatsApp do Fornecedor</label><input type="text" id="whatsapp" required>
-                <label>Foto do Produto</label><input type="file" id="foto" accept="image/*" required>
-                <button type="submit">Publicar Agora</button>
-            </form>
-        </div>
-
-        <div class="product-list">
-            <h2>Produtos Ativos</h2>
-            <div id="listaProdutos"></div>
+    
+    <!-- MENU PRINCIPAL (HUB) -->
+    <div id="section-hub" class="view-section active-section">
+        <h1 style="color: var(--primary); text-align: center;">Menu de Gestão</h1>
+        <div class="hub-grid">
+            <div class="hub-card" onclick="showSection('produtos')">
+                <span>🧺</span>
+                <h3>Produtos Cooperativa</h3>
+                <p>Adicione ou remova itens do site.</p>
+            </div>
+            <div class="hub-card" onclick="showSection('pagamentos')">
+                <span>📑</span>
+                <h3>Relatório Pagamentos</h3>
+                <p>Veja quem pagou as carteirinhas.</p>
+            </div>
+            <div class="hub-card" style="opacity: 0.5; border-top-color: #ccc;">
+                <span>⚙️</span>
+                <h3>Configurações</h3>
+                <p>Em breve...</p>
+            </div>
         </div>
     </div>
 
-    <!-- Seção de Pagamentos -->
-    <div id="section-pagamentos" class="full-section">
-        <h2>Controle de Pagamentos (Carteirinhas)</h2>
-        <p>Aqui você acompanha quem pagou e gerou a carteirinha.</p>
-        <table>
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Nome</th>
-                    <th>Credencial</th>
-                    <th>Valor</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="listaPagamentos">
-                <tr><td colspan="5" style="text-align:center">Carregando dados...</td></tr>
-            </tbody>
-        </table>
+    <!-- SEÇÃO PRODUTOS -->
+    <div id="section-produtos" class="view-section">
+        <div class="header-section">
+            <button class="btn-back" onclick="showSection('hub')">← Voltar ao Menu</button>
+            <h2>Gerenciar Produtos</h2>
+        </div>
+        <div class="grid-layout">
+            <div class="panel-box">
+                <h3>Novo Produto</h3>
+                <form id="produtoForm">
+                    <label>Nome</label><input type="text" id="nome-prod" required>
+                    <label>Descrição</label><textarea id="desc-prod" rows="2" required></textarea>
+                    <label>Preço (R$)</label><input type="text" id="preco-prod" required>
+                    <label>WhatsApp Fornecedor</label><input type="text" id="wpp-prod" required>
+                    <label>Foto</label><input type="file" id="foto-prod" accept="image/*" required>
+                    <button type="submit">Publicar Agora</button>
+                </form>
+            </div>
+            <div class="panel-box">
+                <h3>Produtos Ativos</h3>
+                <div id="listaProdutos"></div>
+            </div>
+        </div>
     </div>
+
+    <!-- SEÇÃO PAGAMENTOS -->
+    <div id="section-pagamentos" class="view-section">
+        <div class="header-section">
+            <button class="btn-back" onclick="showSection('hub')">← Voltar ao Menu</button>
+            <h2>Relatório de Pagamentos</h2>
+        </div>
+        <div class="panel-box" style="border-top-width: 0;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Nome</th>
+                        <th>Credencial</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="listaPagamentos">
+                    <tr><td colspan="5" style="text-align:center">Carregando dados...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -115,12 +164,9 @@
         }
     }
 
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.view-section, .full-section').forEach(s => s.classList.remove('active'));
-        
-        event.target.classList.add('active');
-        document.getElementById('section-' + tab).classList.add('active');
+    function showSection(sectionId) {
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active-section'));
+        document.getElementById('section-' + sectionId).classList.add('active-section');
     }
 
     async function carregarPagamentos() {
@@ -159,29 +205,26 @@
         loader.style.display = 'block';
 
         try {
-            const fotoFile = document.getElementById('foto').files[0];
+            const fotoFile = document.getElementById('foto-prod').files[0];
             const fileName = Date.now() + '-' + fotoFile.name;
             
-            // 1. Upload da Foto
             const { data: uploadData, error: uploadError } = await supabaseClient.storage
                 .from('fotos-produtos')
                 .upload(fileName, fotoFile);
 
             if (uploadError) throw uploadError;
 
-            // 2. Pegar URL Pública
             const { data: { publicUrl } } = supabaseClient.storage
                 .from('fotos-produtos')
                 .getPublicUrl(fileName);
 
-            // 3. Chamar Função Segura (RPC) no Supabase
             const { data: res, error: rpcError } = await supabaseClient.rpc('gerenciar_produto', {
                 p_acao: 'inserir',
                 p_senha: senhaGeral,
-                p_nome: document.getElementById('nome').value,
-                p_descricao: document.getElementById('descricao').value,
-                p_preco: document.getElementById('preco').value,
-                p_whatsapp: document.getElementById('whatsapp').value,
+                p_nome: document.getElementById('nome-prod').value,
+                p_descricao: document.getElementById('desc-prod').value,
+                p_preco: document.getElementById('preco-prod').value,
+                p_whatsapp: document.getElementById('wpp-prod').value,
                 p_foto_url: publicUrl
             });
 
@@ -192,7 +235,6 @@
             await carregarProdutos();
         } catch (err) {
             alert('Erro ao publicar: ' + err.message);
-            console.error(err);
         } finally {
             loader.style.display = 'none';
         }
@@ -203,13 +245,12 @@
         const loader = document.getElementById('loader');
         loader.style.display = 'block';
 
-        const { data: res, error } = await supabaseClient.rpc('gerenciar_produto', {
+        await supabaseClient.rpc('gerenciar_produto', {
             p_acao: 'deletar',
             p_senha: senhaGeral,
             p_id: id
         });
 
-        if (error) alert(error.message);
         await carregarProdutos();
         loader.style.display = 'none';
     }
