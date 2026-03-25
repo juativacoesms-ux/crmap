@@ -4,6 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Gerador de Carteirinha - CRMAP</title>
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   /* Reset & Base */
   *, *::before, *::after { box-sizing: border-box; }
@@ -253,7 +255,8 @@
           <input type="text" id="assinaturaInput" placeholder="Ex: Maria da Silva" />
         </div>
         
-        <button type="button" class="btn-primary" id="baixarBtn">📥 Baixar Carteirinha</button>
+        <button type="button" class="btn-primary" id="baixarBtn">📥 Conferir e Pagar (R$ 20)</button>
+        <button type="button" class="btn-primary" id="liberarDownloadBtn" style="display:none; background:#1b7340;">📥 Baixar Agora</button>
         
         <div class="alert-info">
           <strong>Aviso:</strong> Certifique-se de que de colocar todas as informações corretamente antes de baixar a carteirinha!
@@ -281,6 +284,14 @@
 </footer>
 
 <script>
+  // CONFIGURAÇÕES (Preencha com seus dados do Mercado Pago e Supabase)
+  const MP_PUBLIC_KEY = 'SUA_PUBLIC_KEY_AQUI'; 
+  const SUPABASE_URL = 'https://qzjvzbvoxwhggvadaroq.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_LAlIOr94LYGTN8-BvHuT1A_BC1xScEQ'; 
+
+  const mp = new MercadoPago(MP_PUBLIC_KEY);
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
   // Referências aos elementos
   const canvas = document.getElementById('carteirinhaCanvas');
   const ctx = canvas.getContext('2d');
@@ -431,8 +442,67 @@
   // Integração com Google Sheets
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZHsHOX2oljKqv1Kd3mWdyl8GiDnpP1y14xGWdV2U27wbwN7Rt2yyRnfcA1Re0JH_Z/exec";
 
-  // Botão Baixar
-  baixarBtn.addEventListener('click', function() {
+  // -------------------------------------------------------------------------
+
+  // ---- LÓGICA DE PAGAMENTO MERCADO PAGO ----
+
+  // 1. Verificar se o usuário voltou de um pagamento aprovado
+  window.onload = async function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+    const paymentId = urlParams.get('payment_id');
+    const merchantOrderId = urlParams.get('merchant_order_id');
+
+    if (status === 'approved') {
+        alert('Pagamento aprovado! Clique no botão verde para baixar sua carteirinha.');
+        
+        // Atualizar no Supabase (usando RPC para ser seguro)
+        await supabaseClient.from('pagamentos_carteirinha').update({ status: 'approved' }).eq('payment_id', paymentId || merchantOrderId);
+        
+        // Mostrar botão de download liberado
+        document.getElementById('baixarBtn').style.display = 'none';
+        document.getElementById('liberarDownloadBtn').style.display = 'block';
+    }
+  };
+
+  document.getElementById('liberarDownloadBtn').addEventListener('click', function() {
+    efetuarDownload();
+  });
+
+  baixarBtn.addEventListener('click', async function() {
+    if (assinaturaInput.value.trim() === '') {
+        alert('Por favor, preencha o seu nome/assinatura primeiro.');
+        return;
+    }
+
+    // Criar Registro Pendente no Supabase
+    const payment_id_temp = 'cred-' + Date.now();
+    const { error } = await supabaseClient.from('pagamentos_carteirinha').insert({
+        payment_id: payment_id_temp,
+        nome_pagador: assinaturaInput.value,
+        numero_credencial: numeroInput.value,
+        valor: 20.00,
+        status: 'pending'
+    });
+
+    if (error) {
+        console.error('Erro ao registrar intenção:', error);
+    }
+
+    // Redireciona para o Link de Pagamento do Mercado Pago
+    // NOTA: Como não temos um backend para gerar o link dinâmico agora,
+    // o ideal é você criar um "Link de Pagamento" de R$ 20 no seu painel do Mercado Pago
+    // e colar o link fixo aqui embaixo.
+    const LINK_PAGAMENTO_FIXO = "SEU_LINK_DE_PAGAMENTO_AQUI";
+    
+    if (LINK_PAGAMENTO_FIXO === "SEU_LINK_DE_PAGAMENTO_AQUI") {
+        alert("Configuração Pendente: O administrador precisa gerar o Link de Pagamento no Mercado Pago.");
+    } else {
+        window.location.href = LINK_PAGAMENTO_FIXO;
+    }
+  });
+
+  function efetuarDownload() {
     // ---- ENVIAR PARA A PLANILHA DO GOOGLE ----
     if (GOOGLE_SCRIPT_URL !== "COLOQUE_SUA_URL_AQUI" && assinaturaInput.value.trim() !== '') {
       const formData = new FormData();
@@ -473,7 +543,7 @@
     link.download = nomeArq;
     link.href = dataURL;
     link.click();
-  });
+  }
 
   // Primeira renderização
   desenharCarteirinha();
