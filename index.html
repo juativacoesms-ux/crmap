@@ -4,17 +4,23 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CRMAP – Centro de Referência das Mulheres Atingidas do Paraopeba</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
   /* Reset & Base */
   *, *::before, *::after { box-sizing: border-box; }
   body {
     margin: 0; 
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f1f7f2 0%, #fdfdf8 100%);
-    color: #2b332b;
+    font-family: 'Inter', sans-serif;
+    background: #fdfdfb;
+    color: #1e261e;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', sans-serif;
+    letter-spacing: -0.02em;
   }
   a {
     color: #1b7340;
@@ -150,14 +156,35 @@
     transform: translateY(-2px);
   }
 
-  /* Seções Gerais */
-  section { padding: 5rem 0; }
-  section:nth-child(even) { background-color: #ffffff; }
+  /* Seções Gerais e Animações */
+  section { padding: 8rem 0; overflow: hidden; }
+  section:nth-child(even) { background-color: #f8fbf9; }
   
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+    visibility: hidden;
+  }
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+  }
+
+  /* Glassmorphism */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  }
+
   .section-title {
     text-align: center;
-    font-size: 2.2rem;
-    margin-bottom: 3.5rem;
+    font-size: 2.8rem;
+    margin-bottom: 4rem;
     font-weight: 800;
     color: #1b7340;
     position: relative;
@@ -416,6 +443,14 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     border-top: 6px solid #d63222;
   }
+  
+  /* Hover dinâmico para cards */
+  .card.glass-card:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: #1b7340;
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 45px rgba(27, 115, 64, 0.15);
+  }
   .contato-box p {
     font-size: 1.15rem;
     margin-bottom: 1.2rem;
@@ -531,24 +566,28 @@
 </header>
 
 <main>
-  <section class="hero">
-    <div class="container">
-      <h2>Centro de Referência das Mulheres Atingidas do Paraopeba</h2>
-      <p class="subtitle">Quando uma mulher se levanta, todas as outras se levantam com ela.</p>
-      <p class="intro">Organização da sociedade civil sem fins lucrativos, dedicada ao acolhimento, geração de renda e desenvolvimento social de mulheres atingidas por barragens. Promovemos inclusão produtiva, capacitação e apoio em saúde mental.</p>
+  <section class="hero" style="background: linear-gradient(135deg, #0f301d 0%, #1b7340 100%); color: white; padding: 10rem 1rem 8rem; position: relative; overflow: hidden;">
+    <!-- Elementos decorativos de fundo -->
+    <div style="position: absolute; top: -10%; right: -5%; width: 400px; height: 400px; background: rgba(255,255,255,0.03); border-radius: 50%; filter: blur(80px);"></div>
+    <div style="position: absolute; bottom: -10%; left: -5%; width: 300px; height: 300px; background: rgba(214, 50, 34, 0.05); border-radius: 50%; filter: blur(60px);"></div>
+    
+    <div class="container reveal">
+      <h2 style="font-size: 3.5rem; color: #ffffff; margin-bottom: 1.5rem; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">Transformando Realidades Através da União</h2>
+      <p class="subtitle" style="color: #ffda79; font-size: 1.5rem; margin-bottom: 2rem;">"Quando uma mulher se levanta, todas se levantam com ela."</p>
+      <p class="intro" style="color: rgba(255,255,255,0.9); font-size: 1.2rem; max-width: 800px; margin-bottom: 3.5rem;">Somos o Centro de Referência das Mulheres Atingidas do Paraopeba. Uma rede de apoio, capacitação e luta pela dignidade das mulheres em nossa região.</p>
       
       <div class="btn-group">
-        <a href="#identity" class="btn-primary">Conheça Nossa Missão</a>
-        <a href="#transparencia" class="btn-secondary">Portal da Transparência</a>
+        <a href="#identity" class="btn-primary" style="background: #d63222; padding: 1.1rem 2.8rem; font-size: 1.1rem; box-shadow: 0 10px 25px rgba(214,50,34,0.4);">Conheça Nossa Luta</a>
+        <a href="#transparencia" class="btn-secondary" style="background: transparent; color: white; border-color: rgba(255,255,255,0.5); padding: 1.1rem 2.8rem; font-size: 1.1rem;">Portal da Transparência</a>
       </div>
     </div>
   </section>
 
-  <section id="identity">
+  <section id="identity" class="reveal">
     <div class="container">
       <h3 class="section-title">Nossa Identidade</h3>
       <div class="grid-cards">
-        <div class="card">
+        <div class="card glass-card reveal">
           <h4>🏛️ Missão</h4>
           <p>Promover acolhimento, fortalecimento comunitário e desenvolvimento social por meio de ações em saúde mental, projetos formativos e iniciativas de impacto social.</p>
         </div>
@@ -571,25 +610,25 @@
     </div>
   </section>
 
-  <section id="atuacao" style="background-color: #f0f7f2;">
+  <section id="atuacao" style="background-color: #f0f7f2;" class="reveal">
     <div class="container">
       <h3 class="section-title">Pilares de Atuação</h3>
       <p class="texto-central">O CRMAP atua em diversas frentes estatutárias para apoiar, fortalecer e promover o desenvolvimento comunitário e individual das mulheres.</p>
       
       <div class="grid-cards">
-        <div class="card">
+        <div class="card glass-card reveal">
           <h4>Apoio em Saúde Mental</h4>
           <p>Atendimento psicológico, psicanalítico e social, visando o acolhimento e fortalecimento das mulheres atingidas.</p>
         </div>
-        <div class="card">
+        <div class="card glass-card reveal">
           <h4>Geração de Renda</h4>
           <p>Iniciativas de impacto, incluindo cooperativa solidária, feiras, horta comunitária e projetos estruturantes.</p>
         </div>
-        <div class="card">
+        <div class="card glass-card reveal">
           <h4>Formação e Projetos</h4>
           <p>Desenvolvimento de oficinas, cursos, Farmácia Viva e programas educacionais focados na autonomia.</p>
         </div>
-        <div class="card">
+        <div class="card glass-card reveal">
           <h4>Defesa de Direitos</h4>
           <p>Representação institucional, defesa de políticas públicas e reparação justa e igualitária na Bacia do Paraopeba.</p>
         </div>
@@ -605,7 +644,7 @@
     </div>
   </section>
 
-  <section id="transparencia">
+  <section id="transparencia" class="reveal">
     <div class="container">
       <h3 class="section-title">Transparência & Governança</h3>
       <p class="texto-central">O CRMAP compromete-se com a transparência absoluta em suas ações e gestão de recursos. Navegue nas abas abaixo para acessar nossos relatórios e documentos oficiais.</p>
@@ -845,11 +884,11 @@
   </section>
 
 
-  <section id="contato" style="background-color: #f0f7f2;">
+  <section id="contato" style="background: linear-gradient(135deg, #fdfdfb 0%, #f0f7f2 100%);" class="reveal">
     <div class="container">
       <h3 class="section-title">Fale Conosco</h3>
       
-      <div class="contato-box">
+      <div class="contato-box glass-card">
         <p>
           <strong>E-mail</strong>
           <a href="mailto:cdrmap13@gmail.com">cdrmap13@gmail.com</a>
@@ -940,6 +979,23 @@
         this.disabled = false;
         this.innerText = originalText;
     }
+  });
+
+  // ANIMATION: SCROLL REVEAL
+  const revealCallback = (entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+      }
+    });
+  };
+
+  const observer = new IntersectionObserver(revealCallback, {
+    threshold: 0.1
+  });
+
+  document.querySelectorAll('.reveal').forEach(el => {
+    observer.observe(el);
   });
 </script>
 
