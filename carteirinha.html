@@ -517,7 +517,7 @@
             throw new Error(data.error || 'Não foi possível gerar o link de pagamento.');
         }
     } catch (err) {
-        alert('Erro ao processar pagamento. Tente novamente ou fale com o suporte.');
+        alert('Erro ao processar pagamento: ' + err.message);
         console.error(err);
         baixarBtn.disabled = false;
         baixarBtn.innerText = '📥 Conferir e doar!';
