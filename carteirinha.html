@@ -255,7 +255,7 @@
           <input type="text" id="assinaturaInput" placeholder="Ex: Maria da Silva" />
         </div>
         
-        <button type="button" class="btn-primary" id="baixarBtn">📥 Conferir e Pagar (R$ 20)</button>
+        <button type="button" class="btn-primary" id="baixarBtn">📥 Conferir e doar!</button>
         <button type="button" class="btn-primary" id="liberarDownloadBtn" style="display:none; background:#1b7340;">📥 Baixar Agora</button>
         
         <div class="alert-info">
@@ -285,9 +285,10 @@
 
 <script>
   // CONFIGURAÇÕES (Preencha com seus dados do Mercado Pago e Supabase)
-  const MP_PUBLIC_KEY = 'SUA_PUBLIC_KEY_AQUI'; 
+  const MP_PUBLIC_KEY = 'APP_USR-4162561623642195-032621-a16c94440528e321a3c5274bc8f6c159-3295029461'; 
   const SUPABASE_URL = 'https://qzjvzbvoxwhggvadaroq.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_LAlIOr94LYGTN8-BvHuT1A_BC1xScEQ'; 
+  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxta2QnUbWxVA9DRuy5NdKwSjDv_RjfIht0Qgt5C6CRnUlzZ_QnVB7G1V2DxamDMMLW/exec";
 
   const mp = new MercadoPago(MP_PUBLIC_KEY);
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -440,30 +441,43 @@
   });
 
   // Integração com Google Sheets
-  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZHsHOX2oljKqv1Kd3mWdyl8GiDnpP1y14xGWdV2U27wbwN7Rt2yyRnfcA1Re0JH_Z/exec";
 
   // -------------------------------------------------------------------------
 
-  // ---- LÓGICA DE PAGAMENTO MERCADO PAGO ----
+  // ---- LÓGICA DE PAGAMENTO SEGURO (MERCADO PAGO + GOOGLE APPS SCRIPT) ----
 
-  // 1. Verificar se o usuário voltou de um pagamento aprovado
+  // 1. Verificar status de pagamento no carregamento
   window.onload = async function() {
     const urlParams = new URLSearchParams(window.location.search);
     const status = urlParams.get('status');
-    const paymentId = urlParams.get('payment_id');
-    const merchantOrderId = urlParams.get('merchant_order_id');
+    const num = urlParams.get('num');
 
-    if (status === 'approved') {
-        alert('Pagamento aprovado! Clique no botão verde para baixar sua carteirinha.');
-        
-        // Atualizar no Supabase (usando RPC para ser seguro)
-        await supabaseClient.from('pagamentos_carteirinha').update({ status: 'approved' }).eq('payment_id', paymentId || merchantOrderId);
-        
-        // Mostrar botão de download liberado
-        document.getElementById('baixarBtn').style.display = 'none';
-        document.getElementById('liberarDownloadBtn').style.display = 'block';
+    if (num) {
+        const pago = await verificarPagamentoNoBanco(num);
+        if (pago) {
+            alert('Pagamento Verificado! Sua carteirinha está liberada.');
+            liberarBotaoDownload();
+            // Download Automático se aprovado via URL
+            if(status === 'approved') efetuarDownload();
+        }
     }
   };
+
+  async function verificarPagamentoNoBanco(numeroCredencial) {
+    const { data } = await supabaseClient
+        .from('pagamentos_carteirinha')
+        .select('status')
+        .eq('numero_credencial', numeroCredencial)
+        .eq('status', 'approved')
+        .maybeSingle();
+    
+    return data ? true : false;
+  }
+
+  function liberarBotaoDownload() {
+    document.getElementById('baixarBtn').style.display = 'none';
+    document.getElementById('liberarDownloadBtn').style.display = 'block';
+  }
 
   document.getElementById('liberarDownloadBtn').addEventListener('click', function() {
     efetuarDownload();
@@ -475,30 +489,27 @@
         return;
     }
 
-    // Criar Registro Pendente no Supabase
-    const payment_id_temp = 'cred-' + Date.now();
-    const { error } = await supabaseClient.from('pagamentos_carteirinha').insert({
-        payment_id: payment_id_temp,
-        nome_pagador: assinaturaInput.value,
-        numero_credencial: numeroInput.value,
-        valor: 20.00,
-        status: 'pending'
-    });
+    baixarBtn.disabled = true;
+    baixarBtn.innerText = '⌛ Iniciando...';
 
-    if (error) {
-        console.error('Erro ao registrar intenção:', error);
-    }
+    try {
+        // Chamada Segura para o Google Apps Script (Backend)
+        const url = `${GOOGLE_SCRIPT_URL}?action=create_preference&nome=${encodeURIComponent(assinaturaInput.value)}&numero_credencial=${encodeURIComponent(numeroInput.value)}&origin=${encodeURIComponent(window.location.origin)}`;
 
-    // Redireciona para o Link de Pagamento do Mercado Pago
-    // NOTA: Como não temos um backend para gerar o link dinâmico agora,
-    // o ideal é você criar um "Link de Pagamento" de R$ 20 no seu painel do Mercado Pago
-    // e colar o link fixo aqui embaixo.
-    const LINK_PAGAMENTO_FIXO = "SEU_LINK_DE_PAGAMENTO_AQUI";
-    
-    if (LINK_PAGAMENTO_FIXO === "SEU_LINK_DE_PAGAMENTO_AQUI") {
-        alert("Configuração Pendente: O administrador precisa gerar o Link de Pagamento no Mercado Pago.");
-    } else {
-        window.location.href = LINK_PAGAMENTO_FIXO;
+        const response = await fetch(url, { method: 'POST' });
+        const data = await response.json();
+
+        if (data.init_point) {
+            // Redireciona para o Checkout Pro (Seguro)
+            window.location.href = data.init_point;
+        } else {
+            throw new Error('Não foi possível gerar o link de pagamento.');
+        }
+    } catch (err) {
+        alert('Erro ao processar pagamento. Tente novamente ou fale com o suporte.');
+        console.error(err);
+        baixarBtn.disabled = false;
+        baixarBtn.innerText = '📥 Conferir e doar!';
     }
   });
 
