@@ -522,6 +522,7 @@
       <a href="#identity" class="button-link">Quem Somos</a>
       <a href="#atuacao" class="button-link">Atuação</a>
       <a href="#transparencia" class="button-link">Transparência</a>
+      <a href="#transparencia" class="button-link" onclick="openTab(null, 'tab-contas')">Doações</a>
       <a href="carteirinha.html" class="button-link" style="background:#d63222; color:#ffffff; border-color: #d63222;">Gerar Carteirinha</a>
       <a href="produtos/" class="button-link">Produtos</a>
       <a href="#contato" class="button-link">Contato</a>
@@ -656,6 +657,13 @@
                 <span style="font-weight: 800; color: #1b7340; font-size: 1.1rem;">R$</span>
                 <input type="number" id="donation-amount" placeholder="Valor" value="20" min="1" style="width: 120px;">
                 <button class="btn-donation" id="btn-fazer-doacao" style="padding: 0.8rem 1.5rem; font-size: 1rem;">Fazer uma doação!</button>
+              </div>
+
+              <div style="margin-top: 2rem; border-top: 1px dashed #cde2d4; padding-top: 1.5rem;">
+                <p style="font-size: 0.95rem; color: #4a5c4f; margin-bottom: 1rem;">Para doar materiais, equipamentos ou outras formas, entre em contato:</p>
+                <a href="https://wa.me/5531996177729?text=Quero%20doar%20um%20...." target="_blank" class="btn-secondary" style="padding: 0.6rem 1.5rem; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; border-color: #25d366; color: #075e54;">
+                  <span style="font-size: 1.2rem;">🟢</span> Falar pelo WhatsApp
+                </a>
               </div>
             </div>
           </div>
@@ -867,16 +875,22 @@
     
     tabcontent = document.getElementsByClassName("tab-content");
     for (i = 0; i < tabcontent.length; i++) {
-      tabcontent[i].style.display = "none";
+        tabcontent[i].style.display = "none";
     }
     
     tablinks = document.getElementsByClassName("tab-btn");
     for (i = 0; i < tablinks.length; i++) {
-      tablinks[i].className = tablinks[i].className.replace(" active", "");
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+        // Se for uma chamada programática (evt=null), ativa o botão correspondente
+        if (!evt && tablinks[i].getAttribute('onclick').includes(tabName)) {
+            tablinks[i].className += " active";
+        }
     }
     
     document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.className += " active";
+    if (evt) {
+        evt.currentTarget.className += " active";
+    }
   }
 
   // CONFIGURAÇÃO SUPABASE PARA DOAÇÃO
