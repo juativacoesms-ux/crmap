@@ -5,7 +5,7 @@
  * O Token de acesso não é exposto no site, apenas o Google tem acesso a ele.
  */
 
-const MP_ACCESS_TOKEN = "APP_USR-34c58bdf-0820-4d12-91c3-0a615de9117d";
+const MP_ACCESS_TOKEN = "APP_USR-5952635800834737-032621-b4f384773f3b340c4edaee6e08d0a250-3291408548";
 const SUPABASE_URL = "https://qzjvzbvoxwhggvadaroq.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0"; // Pode ser a chave pública ou service role se necessário
 
