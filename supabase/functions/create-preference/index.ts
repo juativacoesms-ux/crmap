@@ -16,7 +16,8 @@ serve(async (req) => {
   }
 
   try {
-    const { nome, numero_credencial } = await req.json()
+    const { nome, numero_credencial, valor } = await req.json()
+    const unitPrice = parseFloat(valor) || 20.00
 
     // 1. Criar Preferência no Mercado Pago
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
@@ -28,8 +29,8 @@ serve(async (req) => {
       body: JSON.stringify({
         items: [
           {
-            title: `Carteirinha CRMAP - ${nome}`,
-            unit_price: 20.00,
+            title: valor ? `Doação CRMAP - ${nome || 'Anônimo'}` : `Carteirinha CRMAP - ${nome}`,
+            unit_price: unitPrice,
             quantity: 1,
             currency_id: 'BRL'
           }

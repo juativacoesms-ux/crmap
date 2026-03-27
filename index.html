@@ -448,6 +448,66 @@
     .tab-btn { width: 100%; }
     .doc-download-btn { width: 100%; justify-content: center; }
   }
+
+  /* Banner de Doação Discreto */
+  .donation-banner {
+    background: #f8fbf9;
+    padding: 4rem 1rem;
+    text-align: center;
+    border-top: 1px solid #e1efe4;
+    border-bottom: 1px solid #e1efe4;
+  }
+  .donation-banner h4 {
+    color: #1b7340;
+    margin-bottom: 0.8rem;
+    font-size: 1.6rem;
+    font-weight: 800;
+  }
+  .donation-banner p {
+    color: #4a5c4f;
+    margin-bottom: 2rem;
+    max-width: 650px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1.1rem;
+  }
+  .donation-input-group {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .donation-input-group input {
+    width: 140px;
+    padding: 0.8rem;
+    border: 2px solid #1b7340;
+    border-radius: 30px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 0;
+    background: white;
+    box-shadow: 0 2px 8px rgba(27,115,64,0.1);
+  }
+  .btn-donation {
+    background: #d63222;
+    color: white;
+    padding: 0.9rem 2.5rem;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-decoration: none;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(214, 50, 34, 0.2);
+  }
+  .btn-donation:hover {
+    background: #b5281b;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(214, 50, 34, 0.3);
+  }
 </style>
 </head>
 <body>
@@ -754,6 +814,20 @@
     </div>
   </section>
 
+  <!-- SEÇÃO DE DOAÇÃO DINÂMICA -->
+  <section class="donation-banner">
+    <div class="container">
+      <h4>Faça a diferença hoje</h4>
+      <p>Sua doação ajuda a transformar a vida de centenas de mulheres atingidas por barragens em nossa região.</p>
+      
+      <div class="donation-input-group">
+        <span style="font-weight: 800; color: #1b7340; font-size: 1.2rem;">R$</span>
+        <input type="number" id="donation-amount" placeholder="Valor" value="20" min="1">
+        <button class="btn-donation" id="btn-fazer-doacao">Fazer uma doação!</button>
+      </div>
+    </div>
+  </section>
+
   <section id="contato" style="background-color: #f0f7f2;">
     <div class="container">
       <h3 class="section-title">Fale Conosco</h3>
@@ -803,6 +877,47 @@
     document.getElementById(tabName).style.display = "block";
     evt.currentTarget.className += " active";
   }
+
+  // CONFIGURAÇÃO SUPABASE PARA DOAÇÃO
+  const SUPABASE_URL = 'https://qzjvzbvoxwhggvadaroq.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0';
+
+  document.getElementById('btn-fazer-doacao')?.addEventListener('click', async function() {
+    const amount = document.getElementById('donation-amount').value;
+    if (!amount || amount <= 0) {
+        alert('Por favor, informe um valor válido para doação.');
+        return;
+    }
+
+    this.disabled = true;
+    const originalText = this.innerText;
+    this.innerText = '⌛ Processando...';
+
+    try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/create-preference`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            },
+            body: JSON.stringify({
+                valor: amount,
+                nome: 'Doador Site'
+            })
+        });
+
+        const data = await response.json();
+        if (data.init_point) {
+            window.location.href = data.init_point;
+        } else {
+            throw new Error(data.error || 'Erro ao gerar link de doação.');
+        }
+    } catch (err) {
+        alert('Erro: ' + err.message);
+        this.disabled = false;
+        this.innerText = originalText;
+    }
+  });
 </script>
 
 </body>
