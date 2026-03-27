@@ -648,9 +648,17 @@
           </div>
 
           <!-- SEÇÃO DE DOAÇÃO DINÂMICA (Inserida no Conteúdo da Aba) -->
+          <style>
+            @keyframes softPulse {
+              0% { transform: scale(1); opacity: 1; }
+              50% { transform: scale(1.03); opacity: 0.95; }
+              100% { transform: scale(1); opacity: 1; }
+            }
+            .animate-pulse-soft { animation: softPulse 2s infinite ease-in-out; }
+          </style>
           <div class="donation-banner" style="margin-top: 2rem; border-radius: 12px; border: 1px solid #e1efe4;">
             <div class="container">
-              <h4 style="font-size: 1.4rem;">Faça a diferença hoje</h4>
+              <h4 class="animate-pulse-soft" style="font-size: 1.4rem; color: #1b7340; font-weight: 800;">Faça a diferença hoje</h4>
               <p style="font-size: 1rem; margin-bottom: 1.5rem;">Sua doação ajuda a transformar a vida de centenas de mulheres atingidas por barragens em nossa região.</p>
               
               <div class="donation-input-group">
@@ -660,7 +668,7 @@
               </div>
 
               <div style="margin-top: 2rem; border-top: 1px dashed #cde2d4; padding-top: 1.5rem;">
-                <p style="font-size: 0.95rem; color: #4a5c4f; margin-bottom: 1rem;">Para doar materiais, equipamentos ou outras formas, entre em contato:</p>
+                <p style="font-size: 0.95rem; color: #4a5c4f; margin-bottom: 1rem; font-weight: 800;">Para doar materiais, equipamentos ou outras formas, entre em contato:</p>
                 <a href="https://wa.me/5531996177729?text=Quero%20doar%20um%20...." target="_blank" class="btn-secondary" style="padding: 0.6rem 1.5rem; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; border-color: #25d366; color: #075e54;">
                   <span style="font-size: 1.2rem;">🟢</span> Falar pelo WhatsApp
                 </a>
