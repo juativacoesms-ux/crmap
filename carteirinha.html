@@ -493,17 +493,28 @@
     baixarBtn.innerText = '⌛ Iniciando...';
 
     try {
-        // Chamada Segura para o Google Apps Script (Backend)
-        const url = `${GOOGLE_SCRIPT_URL}?action=create_preference&nome=${encodeURIComponent(assinaturaInput.value)}&numero_credencial=${encodeURIComponent(numeroInput.value)}&origin=${encodeURIComponent(window.location.origin)}`;
+        // Chamada para o Supabase Edge Function
+        const url = `${SUPABASE_URL}/functions/v1/create-preference`;
 
-        const response = await fetch(url, { method: 'POST' });
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            },
+            body: JSON.stringify({
+                nome: assinaturaInput.value,
+                numero_credencial: numeroInput.value
+            })
+        });
+
         const data = await response.json();
 
         if (data.init_point) {
             // Redireciona para o Checkout Pro (Seguro)
             window.location.href = data.init_point;
         } else {
-            throw new Error('Não foi possível gerar o link de pagamento.');
+            throw new Error(data.error || 'Não foi possível gerar o link de pagamento.');
         }
     } catch (err) {
         alert('Erro ao processar pagamento. Tente novamente ou fale com o suporte.');
