@@ -7,7 +7,7 @@
 
 const MP_ACCESS_TOKEN = "APP_USR-34c58bdf-0820-4d12-91c3-0a615de9117d";
 const SUPABASE_URL = "https://qzjvzbvoxwhggvadaroq.supabase.co";
-const SUPABASE_KEY = "sb_publishable_LAlIOr94LYGTN8-BvHuT1A_BC1xScEQ"; // Pode ser a chave pública ou service role se necessário
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0"; // Pode ser a chave pública ou service role se necessário
 
 function doPost(e) {
   const params = e.parameter;
