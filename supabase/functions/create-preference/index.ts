@@ -36,6 +36,9 @@ serve(async (req) => {
           }
         ],
         external_reference: numero_credencial,
+        payer: {
+          email: 'contato@cdrmap.com.br' // Email institucional como default para habilitar mais meios
+        },
         back_urls: {
           success: `${req.headers.get('origin')}/carteirinha.html?status=approved&num=${numero_credencial}`,
           failure: `${req.headers.get('origin')}/carteirinha.html?status=failure`,
