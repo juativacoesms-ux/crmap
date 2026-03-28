@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ações & Eventos - CRMAP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* Reset & Base */
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0; 
+    font-family: 'Inter', sans-serif;
+    background: #fdfdfb;
+    color: #1e261e;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', sans-serif;
+    letter-spacing: -0.02em;
+  }
+  a { color: #1b7340; text-decoration: none; transition: all 0.3s ease; }
+  img { max-width: 100%; height: auto; display: block; }
+  .container { max-width: 1200px; padding: 0 1.5rem; margin: 0 auto; }
+
+  header { 
+    background: #ffffff; 
+    padding: 1rem 0; 
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08); 
+    position: sticky; 
+    top: 0; 
+    z-index: 1000; 
+  }
+  header .container { display: flex; justify-content: space-between; align-items: center; }
+  .logo-img { width: 130px; }
+  nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  nav a.button-link { background: #e8f4ec; color: #1b7340; font-weight: 700; padding: 0.5rem 1rem; border-radius: 25px; font-size: 0.9rem; }
+  nav a.button-link:hover { background: #1b7340; color: #ffffff; }
+
+  /* Seção Hero */
+  .hero-acoes {
+    background: linear-gradient(rgba(15, 48, 29, 0.7), rgba(27, 115, 64, 0.7)), url('../images/acoes/hero_acoes.png');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 10rem 1rem 8rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-acoes h2 {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  }
+  .hero-acoes p {
+    font-size: 1.4rem;
+    max-width: 800px;
+    margin: 0 auto;
+    color: rgba(255,255,255,0.9);
+  }
+
+  section { padding: 8rem 0; overflow: hidden; }
+  .section-title { 
+    text-align: center; 
+    font-size: 2.8rem; 
+    margin-bottom: 3.5rem; 
+    color: #1b7340; 
+    position: relative; 
+  }
+  .section-title::after { content: ''; display: block; width: 60px; height: 4px; background: #d63222; margin: 0.8rem auto 0; border-radius: 2px; }
+  
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+    visibility: hidden;
+  }
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+  }
+
+  /* Glassmorphism */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  }
+
+  .grid-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2.5rem; }
+  .gallery-card { 
+    border-radius: 12px; overflow: hidden; position: relative;
+    transition: all 0.4s ease;
+  }
+  .gallery-card:hover { transform: translateY(-10px); }
+  .gallery-card img { width: 100%; height: 350px; object-fit: cover; }
+  .gallery-card .info {
+    padding: 1.5rem;
+    background: #ffffff;
+    border-top: 4px solid #1b7340;
+  }
+  .gallery-card h4 { margin: 0 0 0.5rem; font-size: 1.4rem; color: #1b7340; }
+  .gallery-card p { color: #4a5c4f; margin: 0; font-size: 1rem; }
+
+  footer { background: #0f301d; color: #d0e6d8; text-align: center; padding: 2.5rem 1rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="../index.html"><img src="../logo-nova.png" alt="Logo CRMAP" class="logo-img"></a>
+    <nav>
+      <a href="../index.html" class="button-link">Início</a>
+      <a href="../produtos/index.html" class="button-link">Produtos</a>
+      <a href="#" class="button-link" style="background:#1b7340; color:white;">Ações</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero-acoes">
+    <div class="container reveal">
+      <h2>Transformando Vidas na Prática</h2>
+      <p>Nossas ações no território fortalecem vínculos e promovem a autonomia das mulheres atingidas.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <h3 class="section-title">Nossos Momentos</h3>
+      <div class="grid-gallery">
+        
+        <!-- Card 1: Arte e Identidade -->
+        <div class="gallery-card glass-card reveal">
+          <img src="../imagens/acoes/WhatsApp Image 2026-03-04 at 15.12.34.jpeg" alt="Oficina de Artesanato">
+          <div class="info">
+            <h4>Artesanato e Identidade</h4>
+            <p>Valorizando o saber local através de oficinas que transformam talentos em geração de renda.</p>
+          </div>
+        </div>
+
+        <!-- Card 2: União Comunitária -->
+        <div class="gallery-card glass-card reveal">
+          <img src="../imagens/acoes/WhatsApp Image 2026-03-04 at 15.12.35.jpeg" alt="Eventos CRMAP">
+          <div class="info">
+            <h4>União e Fortalecimento</h4>
+            <p>Espaços de troca e apoio mútuo onde construímos nossa rede de proteção e alegria.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">&copy; 2026 CRMAP – Centro de Referência das Mulheres Atingidas do Paraopeba.</div>
+</footer>
+
+<script>
+  // ANIMATION: SCROLL REVEAL
+  const revealCallback = (entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+      }
+    });
+  };
+
+  const observer = new IntersectionObserver(revealCallback, {
+    threshold: 0.1
+  });
+
+  document.querySelectorAll('.reveal').forEach(el => {
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>
