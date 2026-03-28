@@ -142,27 +142,18 @@
           const gallery = document.querySelector('.grid-gallery');
           const descriptions = [
             "Oficina de Artesanato e União",
-            "Encontro de Lideranças CRMAP",
+            "Atendimento e Apoio",
             "Planejamento de Ações Territoriais",
-            "Roda de Conversa e Apoio",
-            "Distribuição de Materiais",
-            "Workshop de Autonomia",
-            "Momento de Integração",
-            "Fortalecimento de Vínculos",
-            "Capacitação Técnica",
-            "Assembleia das Mulheres",
-            "Produção da Cooperativa",
-            "Alinhamento Estratégico",
-            "Visita às Comunidades",
-            "Comemoração do Coletivo"
+            "Roda de Conversa e Sororidade",
+            "Encontro de Fortalecimento",
+            "Workshop de Autonomia e Renda"
           ];
 
-          for (let i = 1; i <= 14; i++) {
+          for (let i = 1; i <= 6; i++) {
             gallery.innerHTML += `
               <div class="gallery-card glass-card reveal">
-                <div class="image-box" style="position:relative;">
-                  <img src="../imagens/acoes/acao_${i}.jpeg" alt="Ação ${i}" style="filter: blur(15px);">
-                  <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:white; font-weight:800; text-shadow:0 0 10px rgba(0,0,0,0.5); font-size:1.2rem; pointer-events:none;">Privacidade Protegida</div>
+                <div class="image-box">
+                  <img src="../images/acoes_blurred/acao_${i}.png" alt="Ação ${i}">
                 </div>
                 <div class="info">
                   <h4>${descriptions[i-1]}</h4>

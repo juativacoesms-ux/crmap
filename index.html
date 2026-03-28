@@ -85,31 +85,57 @@
 
   /* Seção Hero */
   .hero {
-    background: linear-gradient(rgba(15, 48, 29, 0.7), rgba(27, 115, 64, 0.7)), url('fotopginicial.png');
+    background: url('fotopginicial.png');
     background-size: cover;
     background-position: center;
-    color: white;
-    padding: 14rem 1rem 12rem;
-    text-align: center;
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 4rem 1.5rem;
     position: relative;
     overflow: hidden;
   }
-  .hero h2 {
+  .hero-glass-box {
+    background: rgba(15, 48, 29, 0.9);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    padding: 3.5rem;
+    border-radius: 24px;
+    max-width: 700px;
+    width: 100%;
+    color: white;
+    text-align: left;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    margin-left: 2rem;
+  }
+  .hero-glass-box h2 {
     font-size: 3.8rem;
     font-weight: 800;
     line-height: 1.1;
+    margin-bottom: 1.5rem;
     color: #ffffff;
-    text-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    max-width: 950px;
-    margin: 0 auto 1.5rem;
+    text-shadow: none;
+    max-width: 100%;
+    text-align: left;
   }
-  .hero .quote {
-    font-size: 1.6rem;
+  .hero-glass-box .quote {
+    font-size: 1.3rem;
     font-weight: 500;
-    font-style: italic;
     color: #ffd700;
     margin-bottom: 2rem;
     display: block;
+  }
+  .hero-glass-box p {
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 3rem;
+  }
+  @media (max-width: 768px) {
+    .hero { justify-content: center; padding: 2rem 1rem; }
+    .hero-glass-box { margin-left: 0; padding: 2rem; }
+    .hero-glass-box h2 { font-size: 2.8rem; }
   }
   .hero h2 {
     font-size: 2.6rem;
@@ -594,14 +620,13 @@
     <!-- Elementos decorativos de fundo -->
     <div style="position: absolute; top: -10%; right: -5%; width: 400px; height: 400px; background: rgba(255,255,255,0.03); border-radius: 50%; filter: blur(80px);"></div>
   <section class="hero reveal">
-    <div class="container">
-      <h2>Transformando Realidades Através da União</h2>
-      <span class="quote">"Quando uma mulher se levanta, todas se levantam com ela."</span>
-      <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto 3rem; color: rgba(255,255,255,0.9);">Somos o Centro de Referência das Mulheres Atingidas do Paraopeba. Uma rede de apoio, capacitação e luta pela dignidade das mulheres em nossa região.</p>
+    <div class="hero-glass-box">
+      <h2>Transformando Realidades</h2>
+      <span class="quote">Apoiamos e fortalecemos mulheres atingidas, promovendo autonomia, direitos e dignidade.</span>
       
-      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-        <a href="#transparencia" class="button-link" onclick="openTab(null, 'tab-contas')" style="background: #d63222; color: #ffffff; font-size: 1.1rem; padding: 1rem 2rem;">Seja um Doador</a>
-        <a href="#identity" class="button-link" style="background: transparent; border: 2px solid #ffffff; color: #ffffff; font-size: 1.1rem; padding: 1rem 2rem;">Saiba Mais</a>
+      <div style="display: flex; gap: 1.2rem; flex-wrap: wrap;">
+        <a href="#transparencia" class="button-link" onclick="openTab(null, 'tab-contas')" style="background: #d63222; color: #ffffff; font-size: 1rem; padding: 0.9rem 2.2rem; border-radius: 30px; font-weight: 700;">SEJA UM DOADOR</a>
+        <a href="#identity" class="button-link" style="background: transparent; border: 2px solid #ffffff; color: #ffffff; font-size: 1rem; padding: 0.9rem 2.2rem; border-radius: 30px; font-weight: 700;">Saiba Mais</a>
       </div>
     </div>
   </section>
