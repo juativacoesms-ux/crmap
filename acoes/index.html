@@ -138,23 +138,40 @@
       <h3 class="section-title">Nossos Momentos</h3>
       <div class="grid-gallery">
         
-        <!-- Card 1: Arte e Identidade -->
-        <div class="gallery-card glass-card reveal">
-          <img src="../imagens/acoes/WhatsApp Image 2026-03-04 at 15.12.34.jpeg" alt="Oficina de Artesanato">
-          <div class="info">
-            <h4>Artesanato e Identidade</h4>
-            <p>Valorizando o saber local através de oficinas que transformam talentos em geração de renda.</p>
-          </div>
-        </div>
+        <script>
+          const gallery = document.querySelector('.grid-gallery');
+          const descriptions = [
+            "Oficina de Artesanato e União",
+            "Encontro de Lideranças CRMAP",
+            "Planejamento de Ações Territoriais",
+            "Roda de Conversa e Apoio",
+            "Distribuição de Materiais",
+            "Workshop de Autonomia",
+            "Momento de Integração",
+            "Fortalecimento de Vínculos",
+            "Capacitação Técnica",
+            "Assembleia das Mulheres",
+            "Produção da Cooperativa",
+            "Alinhamento Estratégico",
+            "Visita às Comunidades",
+            "Comemoração do Coletivo"
+          ];
 
-        <!-- Card 2: União Comunitária -->
-        <div class="gallery-card glass-card reveal">
-          <img src="../imagens/acoes/WhatsApp Image 2026-03-04 at 15.12.35.jpeg" alt="Eventos CRMAP">
-          <div class="info">
-            <h4>União e Fortalecimento</h4>
-            <p>Espaços de troca e apoio mútuo onde construímos nossa rede de proteção e alegria.</p>
-          </div>
-        </div>
+          for (let i = 1; i <= 14; i++) {
+            gallery.innerHTML += `
+              <div class="gallery-card glass-card reveal">
+                <div class="image-box" style="position:relative;">
+                  <img src="../imagens/acoes/acao_${i}.jpeg" alt="Ação ${i}" style="filter: blur(15px);">
+                  <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:white; font-weight:800; text-shadow:0 0 10px rgba(0,0,0,0.5); font-size:1.2rem; pointer-events:none;">Privacidade Protegida</div>
+                </div>
+                <div class="info">
+                  <h4>${descriptions[i-1]}</h4>
+                  <p>Ação realizada no território para fortalecer a luta das mulheres atingidas.</p>
+                </div>
+              </div>
+            `;
+          }
+        </script>
 
       </div>
     </div>
