@@ -37,8 +37,23 @@ serve(async (req) => {
         ],
         external_reference: numero_credencial,
         payer: {
-          email: 'contato@cdrmap.com.br' // Email institucional como default para habilitar mais meios
+          email: 'contato@cdrmap.com.br',
+          first_name: nome || 'Colaborador',
+          last_name: 'CRMAP'
         },
+        payment_methods: {
+          included_payment_methods: [
+            { id: 'pix' } // Tentativa direta pelo ID 'pix' 
+          ],
+          included_payment_types: [
+            { id: 'ticket' },
+            { id: 'bank_transfer' },
+            { id: 'credit_card' },
+            { id: 'debit_card' }
+          ],
+          installments: 1,
+        },
+        binary_mode: true,
         back_urls: {
           success: `${req.headers.get('origin')}/carteirinha.html?status=approved&num=${numero_credencial}`,
           failure: `${req.headers.get('origin')}/carteirinha.html?status=failure`,

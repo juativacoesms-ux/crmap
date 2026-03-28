@@ -1,0 +1,40 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const MP_ACCESS_TOKEN = Deno.env.get('MP_ACCESS_TOKEN')
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+serve(async (req) => {
+  try {
+    const body = await req.json()
+    const { action, data } = body
+
+    if (action === 'payment.created' || action === 'payment.updated') {
+      const paymentId = data.id
+
+      // 1. Buscar detalhes do pagamento no Mercado Pago
+      const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: {
+          'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+        }
+      })
+      const paymentData = await response.json()
+
+      // 2. Atualizar no Supabase
+      const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!)
+      const { status, external_reference } = paymentData
+
+      if (status === 'approved') {
+        await supabase.from('pagamentos_carteirinha')
+          .update({ status: 'approved' })
+          .eq('numero_credencial', external_reference)
+      }
+    }
+
+    return new Response(JSON.stringify({ received: true }), { status: 200 })
+  } catch (error) {
+    console.error('Webhook Error:', error.message)
+    return new Response(JSON.stringify({ error: error.message }), { status: 400 })
+  }
+})
