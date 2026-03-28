@@ -85,14 +85,31 @@
 
   /* Seção Hero */
   .hero {
-    background: linear-gradient(rgba(15, 48, 29, 0.8), rgba(27, 115, 64, 0.8)), url('images/hero_home.png');
+    background: linear-gradient(rgba(15, 48, 29, 0.7), rgba(27, 115, 64, 0.7)), url('fotopginicial.png');
     background-size: cover;
     background-position: center;
     color: white;
-    padding: 12rem 1rem 10rem;
+    padding: 14rem 1rem 12rem;
     text-align: center;
     position: relative;
     overflow: hidden;
+  }
+  .hero h2 {
+    font-size: 3.8rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #ffffff;
+    text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    max-width: 950px;
+    margin: 0 auto 1.5rem;
+  }
+  .hero .quote {
+    font-size: 1.6rem;
+    font-weight: 500;
+    font-style: italic;
+    color: #ffd700;
+    margin-bottom: 2rem;
+    display: block;
   }
   .hero h2 {
     font-size: 2.6rem;
@@ -576,16 +593,15 @@
   <section class="hero" style="background: linear-gradient(135deg, #0f301d 0%, #1b7340 100%); color: white; padding: 10rem 1rem 8rem; position: relative; overflow: hidden;">
     <!-- Elementos decorativos de fundo -->
     <div style="position: absolute; top: -10%; right: -5%; width: 400px; height: 400px; background: rgba(255,255,255,0.03); border-radius: 50%; filter: blur(80px);"></div>
-    <div style="position: absolute; bottom: -10%; left: -5%; width: 300px; height: 300px; background: rgba(214, 50, 34, 0.05); border-radius: 50%; filter: blur(60px);"></div>
-    
-    <div class="container reveal">
-      <h2 style="font-size: 3.5rem; color: #ffffff; margin-bottom: 1.5rem; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">Transformando Realidades Através da União</h2>
-      <p class="subtitle" style="color: #ffda79; font-size: 1.5rem; margin-bottom: 2rem;">"Quando uma mulher se levanta, todas se levantam com ela."</p>
-      <p class="intro" style="color: rgba(255,255,255,0.9); font-size: 1.2rem; max-width: 800px; margin-bottom: 3.5rem;">Somos o Centro de Referência das Mulheres Atingidas do Paraopeba. Uma rede de apoio, capacitação e luta pela dignidade das mulheres em nossa região.</p>
+  <section class="hero reveal">
+    <div class="container">
+      <h2>Transformando Realidades Através da União</h2>
+      <span class="quote">"Quando uma mulher se levanta, todas se levantam com ela."</span>
+      <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto 3rem; color: rgba(255,255,255,0.9);">Somos o Centro de Referência das Mulheres Atingidas do Paraopeba. Uma rede de apoio, capacitação e luta pela dignidade das mulheres em nossa região.</p>
       
-      <div class="btn-group">
-        <a href="#identity" class="btn-primary" style="background: #d63222; padding: 1.1rem 2.8rem; font-size: 1.1rem; box-shadow: 0 10px 25px rgba(214,50,34,0.4);">Conheça Nossa Luta</a>
-        <a href="#transparencia" class="btn-secondary" style="background: transparent; color: white; border-color: rgba(255,255,255,0.5); padding: 1.1rem 2.8rem; font-size: 1.1rem;">Portal da Transparência</a>
+      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="#transparencia" class="button-link" onclick="openTab(null, 'tab-contas')" style="background: #d63222; color: #ffffff; font-size: 1.1rem; padding: 1rem 2rem;">Seja um Doador</a>
+        <a href="#identity" class="button-link" style="background: transparent; border: 2px solid #ffffff; color: #ffffff; font-size: 1.1rem; padding: 1rem 2rem;">Saiba Mais</a>
       </div>
     </div>
   </section>
