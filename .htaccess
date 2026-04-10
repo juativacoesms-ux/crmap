@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# Redirecionar para o novo domínio crmapoficial.org.br
+RewriteCond %{HTTP_HOST} ^(www\.)?cdrmap\.com\.br$ [NC]
+RewriteRule ^(.*)$ https://crmapoficial.org.br/$1 [R=301,L]
+
+# Garantir HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

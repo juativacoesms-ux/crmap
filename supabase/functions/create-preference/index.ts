@@ -37,7 +37,7 @@ serve(async (req) => {
         ],
         external_reference: numero_credencial,
         payer: {
-          email: 'contato@cdrmap.com.br',
+          email: 'contato@crmapoficial.org.br',
           first_name: nome || 'Colaborador',
           last_name: 'CRMAP'
         },
