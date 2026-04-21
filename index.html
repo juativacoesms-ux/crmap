@@ -567,6 +567,51 @@
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(214, 50, 34, 0.3);
   }
+  /* Galeria Lote Doado */
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+  .gallery-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    background: #fff;
+    aspect-ratio: 4 / 3;
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .gallery-item:hover {
+    transform: scale(1.03) translateY(-5px);
+    box-shadow: 0 20px 40px rgba(27, 115, 64, 0.2);
+    z-index: 10;
+  }
+  .gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+  .gallery-item:hover img {
+    transform: scale(1.1);
+  }
+  .gallery-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(15, 48, 29, 0.8));
+    padding: 1.5rem;
+    color: white;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .gallery-item:hover .gallery-overlay {
+    opacity: 1;
+  }
 </style>
 </head>
 <body>
@@ -659,6 +704,32 @@
         <div class="card glass-card reveal">
           <h4>Defesa de Direitos</h4>
           <p>Representação institucional, defesa de políticas públicas e reparação justa e igualitária na Bacia do Paraopeba.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="lote-doado" class="reveal">
+    <div class="container">
+      <h3 class="section-title">Terreno doado à CRMAP</h3>
+      <p class="texto-central">Um marco fundamental para a autonomia e o futuro da nossa instituição. Este espaço será dedicado ao desenvolvimento de novos projetos e acolhimento das nossas associadas.</p>
+      
+      <div class="gallery-grid">
+        <div class="gallery-item">
+          <img src="images/lote_doado/foto1.jpeg" alt="Vista do terreno doado 1">
+          <div class="gallery-overlay">Vista do Terreno</div>
+        </div>
+        <div class="gallery-item">
+          <img src="images/lote_doado/foto2.jpeg" alt="Vista do terreno doado 2">
+          <div class="gallery-overlay">Área de Cultivo</div>
+        </div>
+        <div class="gallery-item">
+          <img src="images/lote_doado/foto3.jpeg" alt="Vista do terreno doado 3">
+          <div class="gallery-overlay">Limites do Terreno</div>
+        </div>
+        <div class="gallery-item">
+          <img src="images/lote_doado/foto4.jpeg" alt="Vista do terreno doado 4">
+          <div class="gallery-overlay">Panorama Geral</div>
         </div>
       </div>
     </div>
