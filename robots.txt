@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /painel/
+Disallow: /supabase/
+
+Sitemap: https://crmapoficial.org.br/sitemap.xml
