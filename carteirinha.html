@@ -256,6 +256,7 @@
         </div>
         
         <button type="button" class="btn-primary" id="baixarBtn">📥 Conferir e doar!</button>
+        <button type="button" class="btn-primary" id="verificarPagamentoBtn" style="background:#1b7340;">✅ Já paguei, verificar liberação</button>
         <button type="button" class="btn-primary" id="liberarDownloadBtn" style="display:none; background:#1b7340;">📥 Baixar Agora</button>
         
         <div class="alert-info">
@@ -302,6 +303,7 @@
   const emissaoInput = document.getElementById('emissaoInput');
   const assinaturaInput = document.getElementById('assinaturaInput');
   const baixarBtn = document.getElementById('baixarBtn');
+  const verificarPagamentoBtn = document.getElementById('verificarPagamentoBtn');
 
   // Variáveis para as imagens
   let imgBase = new Image();
@@ -481,6 +483,34 @@
 
   document.getElementById('liberarDownloadBtn').addEventListener('click', function() {
     efetuarDownload();
+  });
+
+  verificarPagamentoBtn.addEventListener('click', async function() {
+    const numero = numeroInput.value?.trim();
+    if (!numero) {
+      alert('Número da credencial não encontrado. Recarregue a página e tente novamente.');
+      return;
+    }
+
+    this.disabled = true;
+    const textoOriginal = this.innerText;
+    this.innerText = '⌛ Verificando pagamento...';
+
+    try {
+      const pago = await verificarPagamentoNoBanco(numero);
+      if (pago) {
+        liberarBotaoDownload();
+        alert('Pagamento localizado e confirmado. Clique em "Baixar Agora".');
+      } else {
+        alert(`Pagamento ainda não confirmado para a credencial ${numero}. Aguarde alguns minutos e tente novamente.`);
+      }
+    } catch (err) {
+      alert('Não foi possível verificar agora. Tente novamente em instantes.');
+      console.error(err);
+    } finally {
+      this.disabled = false;
+      this.innerText = textoOriginal;
+    }
   });
 
   baixarBtn.addEventListener('click', async function() {

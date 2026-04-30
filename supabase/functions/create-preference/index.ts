@@ -18,6 +18,8 @@ serve(async (req) => {
   try {
     const { nome, numero_credencial, valor } = await req.json()
     const unitPrice = parseFloat(valor) || 20.00
+    const origin = req.headers.get('origin') || Deno.env.get('SITE_URL') || 'https://crmapoficial.org.br'
+    const webhookUrl = `${SUPABASE_URL}/functions/v1/mp-webhook`
 
     // 1. Criar Preferência no Mercado Pago
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
@@ -55,11 +57,12 @@ serve(async (req) => {
         },
         binary_mode: true,
         back_urls: {
-          success: `${req.headers.get('origin')}/carteirinha.html?status=approved&num=${numero_credencial}`,
-          failure: `${req.headers.get('origin')}/carteirinha.html?status=failure`,
-          pending: `${req.headers.get('origin')}/carteirinha.html?status=pending`
+          success: `${origin}/carteirinha.html?status=approved&num=${encodeURIComponent(numero_credencial || '')}`,
+          failure: `${origin}/carteirinha.html?status=failure`,
+          pending: `${origin}/carteirinha.html?status=pending`
         },
-        auto_return: 'approved'
+        auto_return: 'approved',
+        notification_url: webhookUrl
       })
     })
 
@@ -78,7 +81,7 @@ serve(async (req) => {
         payment_id: preference.id,
         nome_pagador: nome,
         numero_credencial: numero_credencial,
-        valor: 20.00,
+        valor: unitPrice,
         status: 'pending'
     })
 

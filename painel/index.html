@@ -138,10 +138,11 @@
                         <th>Credencial</th>
                         <th>Valor</th>
                         <th>Status</th>
+                        <th>Ação</th>
                     </tr>
                 </thead>
                 <tbody id="listaPagamentos">
-                    <tr><td colspan="5" style="text-align:center">Carregando dados...</td></tr>
+                    <tr><td colspan="6" style="text-align:center">Carregando dados...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -178,7 +179,7 @@
         const { data } = await supabaseClient.from('pagamentos_carteirinha').select('*').order('created_at', { ascending: false });
         const lista = document.getElementById('listaPagamentos');
         if (!data || data.length === 0) {
-            lista.innerHTML = '<tr><td colspan="5" style="text-align:center">Nenhum pagamento registrado.</td></tr>';
+            lista.innerHTML = '<tr><td colspan="6" style="text-align:center">Nenhum pagamento registrado.</td></tr>';
             return;
         }
         lista.innerHTML = data.map(p => `
@@ -188,8 +189,41 @@
                 <td>${p.numero_credencial}</td>
                 <td>R$ ${p.valor}</td>
                 <td><span class="status-badge status-${p.status}">${p.status === 'approved' ? 'Pago' : 'Pendente'}</span></td>
+                <td>
+                    ${p.status === 'approved' ? '-' : `<button style="width:auto; padding:0.5rem 0.8rem;" onclick="aprovarManual('${p.payment_id || ''}')">Aprovar manual</button>`}
+                </td>
             </tr>
         `).join('');
+    }
+
+    async function aprovarManual(paymentId) {
+        if (!paymentId) {
+            alert('Registro sem payment_id. Não é possível aprovar manualmente.');
+            return;
+        }
+        if (!confirm('Confirmar aprovação manual deste pagamento?')) return;
+
+        const loader = document.getElementById('loader');
+        loader.style.display = 'block';
+        try {
+            const { data: res, error } = await supabaseClient.rpc('confirmar_pagamento', {
+                p_senha: senhaGeral,
+                p_payment_id: paymentId,
+                p_status: 'approved'
+            });
+
+            if (error) throw error;
+            if (res?.success === false) {
+                alert(res.message || 'Falha ao aprovar manualmente.');
+            } else {
+                alert('Pagamento aprovado manualmente com sucesso.');
+                await carregarPagamentos();
+            }
+        } catch (err) {
+            alert('Erro ao aprovar manualmente: ' + err.message);
+        } finally {
+            loader.style.display = 'none';
+        }
     }
 
     async function carregarProdutos() {

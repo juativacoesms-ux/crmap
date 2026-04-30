@@ -7,11 +7,30 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
 serve(async (req) => {
   try {
-    const body = await req.json()
-    const { action, data } = body
+    const url = new URL(req.url)
+    const queryType = url.searchParams.get('type') || url.searchParams.get('topic')
+    const queryPaymentId = url.searchParams.get('data.id') || url.searchParams.get('id')
 
-    if (action === 'payment.created' || action === 'payment.updated') {
-      const paymentId = data.id
+    let body: any = {}
+    try {
+      body = await req.json()
+    } catch (_) {
+      body = {}
+    }
+
+    const bodyAction = body?.action
+    const bodyPaymentId = body?.data?.id
+    const bodyType = body?.type
+
+    const isPaymentEvent =
+      bodyAction === 'payment.created' ||
+      bodyAction === 'payment.updated' ||
+      bodyType === 'payment' ||
+      queryType === 'payment'
+
+    const paymentId = bodyPaymentId || queryPaymentId
+
+    if (isPaymentEvent && paymentId) {
 
       // 1. Buscar detalhes do pagamento no Mercado Pago
       const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
@@ -25,7 +44,7 @@ serve(async (req) => {
       const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!)
       const { status, external_reference } = paymentData
 
-      if (status === 'approved') {
+      if (status === 'approved' && external_reference) {
         await supabase.from('pagamentos_carteirinha')
           .update({ status: 'approved' })
           .eq('numero_credencial', external_reference)
