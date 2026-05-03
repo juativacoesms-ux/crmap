@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Carteirinha voluntário (interno) - CRMAP</title>
+<meta name="description" content="Ferramenta interna CRMAP para gerar carteirinha digital sem pagamento. Não divulgar publicamente.">
+<meta name="robots" content="noindex,nofollow">
+<link rel="canonical" href="https://crmapoficial.org.br/c.voluntario.html">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f1f7f2 0%, #fdfdf8 100%);
+    color: #2b332b;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  a {
+    color: #1b7340;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+  .container {
+    max-width: 1200px;
+    padding: 0 1.5rem;
+    margin: 0 auto;
+  }
+  header {
+    background: #ffffff;
+    padding: 1rem 0;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  header .container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .logo-img {
+    width: 130px;
+    transition: transform 0.3s ease;
+  }
+  .logo-img:hover { transform: scale(1.05); }
+  nav {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  nav a.button-link {
+    background: #e8f4ec;
+    color: #1b7340;
+    font-weight: 700;
+    padding: 0.6rem 1.2rem;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    border: 1px solid transparent;
+  }
+  nav a.button-link:hover {
+    background: #1b7340;
+    color: #ffffff;
+    border-color: #1b7340;
+  }
+  .generator-section {
+    padding: 4rem 0 6rem;
+  }
+  .section-title {
+    text-align: center;
+    font-size: 2.2rem;
+    margin-bottom: 2rem;
+    font-weight: 800;
+    color: #1b7340;
+  }
+  .section-title::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 4px;
+    background: #d63222;
+    margin: 0.8rem auto 0;
+    border-radius: 2px;
+  }
+  .intro-text {
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto 3rem;
+    font-size: 1.1rem;
+    color: #3b4d40;
+  }
+  .generator-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+  .form-container {
+    background: #ffffff;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.06);
+    border-top: 5px solid #1b7340;
+  }
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  .form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #1b7340;
+  }
+  .form-group input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #cce3d3;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #3b4d40;
+    font-family: inherit;
+    transition: border-color 0.3s;
+  }
+  .form-group input:focus {
+    outline: none;
+    border-color: #1b7340;
+    box-shadow: 0 0 0 3px rgba(27, 115, 64, 0.1);
+  }
+  .form-group input[type="file"] {
+    background: #f0f7f2;
+    padding: 0.5rem;
+  }
+  button.btn-primary {
+    cursor: pointer;
+    background: #1b7340;
+    color: #ffffff;
+    border: none;
+    border-radius: 30px;
+    font-weight: 700;
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(27, 115, 64, 0.3);
+    width: 100%;
+    margin-top: 1rem;
+  }
+  button.btn-primary:hover {
+    background: #145a33;
+    box-shadow: 0 6px 16px rgba(27, 115, 64, 0.45);
+    transform: translateY(-2px);
+  }
+  .preview-container {
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.06);
+    border-top: 5px solid #d63222;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .preview-container h4 {
+    margin-top: 0;
+    color: #1b7340;
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+  }
+  canvas {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #e1efe4;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    background-color: #f9f9f9;
+  }
+  .alert-info {
+    background: #e8f4ec;
+    border-left: 4px solid #1b7340;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    color: #3b4d40;
+    text-align: left;
+  }
+  @media (max-width: 900px) {
+    .generator-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header role="banner">
+  <div class="container">
+    <a href="index.html" aria-label="Página Inicial CRMAP">
+      <img src="logonova.png" alt="Logo CRMAP" class="logo-img" onerror="this.src='https://via.placeholder.com/130x50?text=CRMAP';">
+    </a>
+    <nav role="navigation">
+      <a href="index.html" class="button-link">Voltar ao Início</a>
+    </nav>
+  </div>
+</header>
+
+<main class="generator-section">
+  <div class="container">
+    <h2 class="section-title">Gerar Carteirinha Guardiã (voluntário)</h2>
+    <p class="intro-text">Uso interno da CRMAP: mesma geração da carteirinha pública, sem pagamento — baixe o PNG diretamente. Não compartilhe este link publicamente.</p>
+
+    <div class="generator-grid">
+      <div class="form-container">
+        <div class="form-group">
+          <label for="fotoInput">1. Foto de Rosto</label>
+          <input type="file" id="fotoInput" accept="image/*" />
+        </div>
+        <div class="form-group">
+          <label for="numeroInput">2. Número da Credencial (Nº) - Automático</label>
+          <input type="text" id="numeroInput" readonly style="background-color: #e8f4ec; font-weight: bold; color: #1b7340;" />
+        </div>
+        <div class="form-group">
+          <label for="emissaoInput">3. Data de Emissão</label>
+          <input type="date" id="emissaoInput" />
+        </div>
+        <div class="form-group">
+          <label for="assinaturaInput">4. Assinatura (Nome ou Iniciais)</label>
+          <input type="text" id="assinaturaInput" placeholder="Ex: Maria da Silva" />
+        </div>
+
+        <button type="button" class="btn-primary" id="baixarBtn">📥 Baixar carteirinha (sem pagamento)</button>
+
+        <div class="alert-info">
+          <strong>Aviso:</strong> Confira nome, data e foto antes de baixar. A numeração desta página é independente da carteirinha com doação.
+        </div>
+
+        <div class="alert-info" style="border-left-color: #d63222; background: #fff8f7;" id="admin-notice">
+          <strong>Atenção:</strong> É necessário o arquivo <code>carteirinha-base.png</code> na mesma pasta deste HTML.
+        </div>
+      </div>
+
+      <div class="preview-container">
+        <h4>Pré-visualização</h4>
+        <canvas id="carteirinhaCanvas" width="800" height="565"></canvas>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="container" style="text-align: center; padding: 2rem; background: #0f301d; color: #d0e6d8;">
+    &copy; 2026 CRMAP – Centro de Referência das Mulheres Atingidas do Paraopeba.
+  </div>
+</footer>
+
+<script>
+  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxta2QnUbWxVA9DRuy5NdKwSjDv_RjfIht0Qgt5C6CRnUlzZ_QnVB7G1V2DxamDMMLW/exec";
+
+  const canvas = document.getElementById('carteirinhaCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const fotoInput = document.getElementById('fotoInput');
+  const numeroInput = document.getElementById('numeroInput');
+  const emissaoInput = document.getElementById('emissaoInput');
+  const assinaturaInput = document.getElementById('assinaturaInput');
+  const baixarBtn = document.getElementById('baixarBtn');
+
+  let imgBase = new Image();
+  imgBase.src = 'carteirinha-base.png';
+
+  let imgFoto = null;
+
+  function gerarNumeroAutomatico() {
+    let currentID = parseInt(localStorage.getItem('crmap_voluntario_last_id') || '0', 10);
+    currentID += 1;
+    localStorage.setItem('crmap_voluntario_last_id', String(currentID));
+    const year = new Date().getFullYear();
+    numeroInput.value = String(currentID).padStart(3, '0') + '/' + year;
+  }
+
+  if (!numeroInput.value) {
+    gerarNumeroAutomatico();
+    emissaoInput.value = new Date().toISOString().split('T')[0];
+  }
+
+  function desenharCarteirinha() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (imgBase.complete && imgBase.naturalWidth !== 0) {
+      document.getElementById('admin-notice').style.display = 'none';
+      ctx.drawImage(imgBase, 0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.fillStyle = '#fdfdf8';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#1b7340';
+      ctx.font = '24px Inter';
+      ctx.fillText('Aguardando carteirinha-base.png...', 50, 50);
+    }
+
+    const fotoX = 35;
+    const fotoY = 135;
+    const fotoWidth = 215;
+    const fotoHeight = 320;
+
+    if (imgFoto && imgFoto.complete && imgFoto.naturalWidth > 0) {
+      const ratioContext = fotoWidth / fotoHeight;
+      const ratioImage = imgFoto.width / imgFoto.height;
+      let renderWidth, renderHeight, offsetX = 0, offsetY = 0;
+
+      if (ratioImage > ratioContext) {
+        renderHeight = imgFoto.height;
+        renderWidth = imgFoto.height * ratioContext;
+        offsetX = (imgFoto.width - renderWidth) / 2;
+      } else {
+        renderWidth = imgFoto.width;
+        renderHeight = imgFoto.width / ratioContext;
+        offsetY = (imgFoto.height - renderHeight) / 2;
+      }
+
+      ctx.drawImage(
+        imgFoto,
+        offsetX, offsetY, renderWidth, renderHeight,
+        fotoX, fotoY, fotoWidth, fotoHeight
+      );
+    } else {
+      ctx.fillStyle = '#e1efe4';
+      ctx.fillRect(fotoX, fotoY, fotoWidth, fotoHeight);
+      ctx.fillStyle = '#1b7340';
+      ctx.font = '14px Inter';
+      ctx.fillText('Foto do Perfil', fotoX + 60, fotoY + 160);
+    }
+
+    ctx.fillStyle = '#2b332b';
+    ctx.font = 'bold 22px Inter, sans-serif';
+    const numX = 350;
+    const numY = 248;
+    ctx.fillText(`${numeroInput.value || '______________'}`, numX, numY);
+
+    const emiX = 410;
+    const emiY = 282;
+    let dtEmissao = emissaoInput.value;
+    if (dtEmissao) {
+      const partes = dtEmissao.split('-');
+      dtEmissao = `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+    ctx.fillText(`${dtEmissao || '___/___/_____'}`, emiX, emiY);
+
+    ctx.font = 'italic 34px "Times New Roman", serif';
+    const assX = 450;
+    const assY = 368;
+    ctx.textAlign = 'center';
+    ctx.fillText(assinaturaInput.value || '', assX, assY);
+    ctx.textAlign = 'left';
+  }
+
+  imgBase.onload = desenharCarteirinha;
+  imgBase.onerror = function() {
+    console.warn('Imagem carteirinha-base.png não encontrada.');
+    desenharCarteirinha();
+  };
+
+  numeroInput.addEventListener('input', desenharCarteirinha);
+  emissaoInput.addEventListener('input', desenharCarteirinha);
+  assinaturaInput.addEventListener('input', desenharCarteirinha);
+
+  fotoInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        imgFoto = new Image();
+        imgFoto.onload = desenharCarteirinha;
+        imgFoto.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  function efetuarDownload() {
+    if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== 'COLOQUE_SUA_URL_AQUI' && assinaturaInput.value.trim() !== '') {
+      const formData = new FormData();
+      formData.append('numero', numeroInput.value);
+      let dataPura = emissaoInput.value;
+      if (dataPura) {
+        const partes = dataPura.split('-');
+        dataPura = `${partes[2]}/${partes[1]}/${partes[0]}`;
+      }
+      formData.append('data', dataPura);
+      formData.append('nome', assinaturaInput.value);
+
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: formData,
+        mode: 'no-cors'
+      }).catch(function(err) {
+        console.error(err);
+      });
+    }
+
+    const link = document.createElement('a');
+    const dataURL = canvas.toDataURL('image/png');
+    let nomeArq = 'carteirinha-crmap-voluntario.png';
+    if (numeroInput.value) {
+      nomeArq = 'carteirinha-vol-' + numeroInput.value.replace(/[^a-zA-Z0-9]/g, '') + '.png';
+    }
+    link.download = nomeArq;
+    link.href = dataURL;
+    link.click();
+  }
+
+  baixarBtn.addEventListener('click', function() {
+    if (assinaturaInput.value.trim() === '') {
+      alert('Preencha o nome ou assinatura antes de baixar.');
+      return;
+    }
+    desenharCarteirinha();
+    efetuarDownload();
+  });
+
+  desenharCarteirinha();
+</script>
+
+</body>
+</html>
