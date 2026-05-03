@@ -272,8 +272,8 @@
           <strong>Aviso:</strong> Certifique-se de colocar todas as informações corretamente antes de baixar a carteirinha!
         </div>
 
-        <div class="alert-info" style="border-left-color: #d63222; background: #fff8f7;" id="admin-notice">
-          <strong>Atenção Admin:</strong> Certifique-se de que exista uma imagem chamada <code>carteirinha-base.png</code> na mesma pasta deste arquivo HTML.
+        <div class="alert-info" style="border-left-color: #d63222; background: #fff8f7; display: none;" id="admin-notice">
+          <strong>Atenção:</strong> Se a prévia não aparecer, confira se o ficheiro <code>carteirinha-base-data.js</code> está na mesma pasta desta página no deploy.
         </div>
       </div>
 
@@ -293,6 +293,7 @@
   </div>
 </footer>
 
+<script src="carteirinha-base-data.js"></script>
 <script>
   // CONFIGURAÇÕES (Preencha com seus dados do Mercado Pago e Supabase)
   const MP_PUBLIC_KEY = 'APP_USR-34c58bdf-0820-4d12-91c3-0a615de9117d'; 
@@ -314,9 +315,14 @@
   const baixarBtn = document.getElementById('baixarBtn');
   const verificarPagamentoBtn = document.getElementById('verificarPagamentoBtn');
 
-  // Variáveis para as imagens
+  function urlCarteirinhaBase() {
+    if (window.__CRMAP_CARTEIRINHA_BASE_DATA_URL__) return window.__CRMAP_CARTEIRINHA_BASE_DATA_URL__;
+    document.getElementById('admin-notice').style.display = '';
+    return '';
+  }
+
   let imgBase = new Image();
-  imgBase.src = 'carteirinha-base.png'; // A imagem em branco do usuário
+  imgBase.src = urlCarteirinhaBase();
   
   let imgFoto = null;
 
@@ -354,7 +360,7 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = '#1b7340';
       ctx.font = '24px Inter';
-      ctx.fillText('Aguardando carteirinha-base.png...', 50, 50);
+      ctx.fillText('Aguardando arte da carteirinha...', 50, 50);
     }
     
     // 3. Desenha a foto de rosto
@@ -429,7 +435,8 @@
   imgBase.onload = desenharCarteirinha;
   // Fallback caso a imagem não exista
   imgBase.onerror = function() {
-    console.warn("Imagem carteirinha-base.png não encontrada. Usando fundo provisório.");
+    console.warn('Arte da carteirinha indisponível (carteirinha-base-data.js).');
+    document.getElementById('admin-notice').style.display = '';
     desenharCarteirinha();
   };
 

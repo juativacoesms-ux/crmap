@@ -18,4 +18,11 @@ RewriteRule ^index_backup\.html$ / [R=301,L]
 RewriteRule ^(acoes|produtos|terreno)/index\.html$ /$1/ [R=301,L]
 RewriteRule ^(acoes|produtos|terreno)$ /$1/ [R=301,L]
 RewriteRule ^carteirinha/?$ /carteirinha.html [R=301,L]
+
+# Carteirinha voluntário (sem pagamento): URL curta para divulgação
+RewriteRule ^c\.carteirinha\.voluntario\.html$ /c.carteirinha.voluntario [R=301,L]
+RewriteRule ^c\.carteirinha\.voluntario/?$ /c.carteirinha.voluntario.html [L]
+RewriteRule ^c\.carteirinha\.voluntário/?$ /c.carteirinha.voluntario.html [L]
+RewriteRule ^c\.carteirinha\.volunt%C3%A1rio/?$ /c.carteirinha.voluntario.html [L]
+RewriteRule ^c\.voluntario\.html$ /c.carteirinha.voluntario [R=301,L]
 RewriteRule ^crmap2/?$ / [R=301,L]

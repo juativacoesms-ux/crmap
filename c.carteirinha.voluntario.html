@@ -3,14 +3,21 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Carteirinha voluntário (interno) - CRMAP</title>
-<meta name="description" content="Ferramenta interna CRMAP para gerar carteirinha digital sem pagamento. Não divulgar publicamente.">
-<meta name="robots" content="noindex,nofollow">
-<link rel="canonical" href="https://crmapoficial.org.br/c.voluntario.html">
+<title>Carteirinha Voluntário – CRMAP</title>
+<meta name="description" content="Gere sua carteirinha digital da CRMAP (equipe/voluntário), sem pagamento — mesmo layout da página principal.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://crmapoficial.org.br/c.carteirinha.voluntario">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Carteirinha Voluntário – CRMAP">
+<meta property="og:description" content="Emita sua carteirinha digital da CRMAP em poucos passos, sem doação.">
+<meta property="og:url" content="https://crmapoficial.org.br/c.carteirinha.voluntario">
+<meta property="og:image" content="https://crmapoficial.org.br/logonova.png">
+<meta name="twitter:card" content="summary_large_image">
 <style>
+  /* Reset & Base */
   *, *::before, *::after { box-sizing: border-box; }
   body {
-    margin: 0;
+    margin: 0; 
     font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #f1f7f2 0%, #fdfdf8 100%);
     color: #2b332b;
@@ -23,14 +30,18 @@
     text-decoration: none;
     transition: all 0.3s ease;
   }
+  
+  /* Container Global */
   .container {
     max-width: 1200px;
     padding: 0 1.5rem;
     margin: 0 auto;
   }
+
+  /* Header e Navegação (Cópia do index) */
   header {
-    background: #ffffff;
-    padding: 1rem 0;
+    background: #ffffff; 
+    padding: 1rem 0; 
     box-shadow: 0 2px 15px rgba(0,0,0,0.08);
     position: sticky;
     top: 0;
@@ -41,14 +52,15 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: wrap; 
     gap: 1rem;
   }
   .logo-img {
-    width: 130px;
+    width: 130px; 
     transition: transform 0.3s ease;
   }
   .logo-img:hover { transform: scale(1.05); }
+
   nav {
     display: flex;
     gap: 0.8rem;
@@ -57,19 +69,21 @@
     justify-content: center;
   }
   nav a.button-link {
-    background: #e8f4ec;
+    background: #e8f4ec; 
     color: #1b7340;
     font-weight: 700;
     padding: 0.6rem 1.2rem;
-    border-radius: 25px;
+    border-radius: 25px; 
     font-size: 0.95rem;
     border: 1px solid transparent;
   }
   nav a.button-link:hover {
-    background: #1b7340;
+    background: #1b7340; 
     color: #ffffff;
     border-color: #1b7340;
   }
+
+  /* Gerador de Carteirinha */
   .generator-section {
     padding: 4rem 0 6rem;
   }
@@ -96,12 +110,15 @@
     font-size: 1.1rem;
     color: #3b4d40;
   }
+
   .generator-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 3rem;
     align-items: start;
   }
+
+  /* Formulário */
   .form-container {
     background: #ffffff;
     padding: 2.5rem;
@@ -137,9 +154,11 @@
     background: #f0f7f2;
     padding: 0.5rem;
   }
+  
+  /* Botões Adicionais */
   button.btn-primary {
     cursor: pointer;
-    background: #1b7340;
+    background: #d63222; 
     color: #ffffff;
     border: none;
     border-radius: 30px;
@@ -147,15 +166,17 @@
     padding: 1rem 2.5rem;
     font-size: 1.1rem;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(27, 115, 64, 0.3);
+    box-shadow: 0 4px 12px rgba(214, 50, 34, 0.3);
     width: 100%;
     margin-top: 1rem;
   }
   button.btn-primary:hover {
-    background: #145a33;
-    box-shadow: 0 6px 16px rgba(27, 115, 64, 0.45);
+    background: #b5281b; 
+    box-shadow: 0 6px 16px rgba(214, 50, 34, 0.45);
     transform: translateY(-2px);
   }
+
+  /* Preview (Canvas) */
   .preview-container {
     background: #ffffff;
     padding: 1.5rem;
@@ -173,6 +194,7 @@
     font-size: 1.3rem;
     margin-bottom: 1.5rem;
   }
+  
   canvas {
     max-width: 100%;
     height: auto;
@@ -181,6 +203,8 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     background-color: #f9f9f9;
   }
+
+  /* Dica */
   .alert-info {
     background: #e8f4ec;
     border-left: 4px solid #1b7340;
@@ -191,6 +215,8 @@
     color: #3b4d40;
     text-align: left;
   }
+
+  /* Responsivo */
   @media (max-width: 900px) {
     .generator-grid {
       grid-template-columns: 1fr;
@@ -202,21 +228,22 @@
 
 <header role="banner">
   <div class="container">
-    <a href="index.html" aria-label="Página Inicial CRMAP">
-      <img src="logonova.png" alt="Logo CRMAP" class="logo-img" onerror="this.src='https://via.placeholder.com/130x50?text=CRMAP';">
+    <a href="/index.html" aria-label="Página Inicial CRMAP">
+      <img src="/logonova.png" alt="Logo CRMAP" class="logo-img" onerror="this.src='https://via.placeholder.com/130x50?text=CRMAP';">
     </a>
     <nav role="navigation">
-      <a href="index.html" class="button-link">Voltar ao Início</a>
+      <a href="/index.html" class="button-link">Voltar ao Início</a>
     </nav>
   </div>
 </header>
 
 <main class="generator-section">
   <div class="container">
-    <h2 class="section-title">Gerar Carteirinha Guardiã (voluntário)</h2>
-    <p class="intro-text">Uso interno da CRMAP: mesma geração da carteirinha pública, sem pagamento — baixe o PNG diretamente. Não compartilhe este link publicamente.</p>
-
+    <h2 class="section-title">Carteirinha Voluntário / Equipe</h2>
+    <p class="intro-text">Mesmo gerador da carteirinha principal: foto, número automático, data e assinatura. Sem pagamento — baixe o PNG na hora. Uso interno e divulgação entre a equipe.</p>
+    
     <div class="generator-grid">
+      <!-- Formulário de Entrada -->
       <div class="form-container">
         <div class="form-group">
           <label for="fotoInput">1. Foto de Rosto</label>
@@ -234,8 +261,8 @@
           <label for="assinaturaInput">4. Assinatura (Nome ou Iniciais)</label>
           <input type="text" id="assinaturaInput" placeholder="Ex: Maria da Silva" />
         </div>
-
-        <button type="button" class="btn-primary" id="baixarBtn">📥 Baixar carteirinha (sem pagamento)</button>
+        
+        <button type="button" class="btn-primary" id="baixarBtn">📥 Baixar carteirinha (PNG)</button>
 
         <div class="alert-info">
           <strong>Aviso:</strong> Confira nome, data e foto antes de baixar. A numeração desta página é independente da carteirinha com doação.
@@ -246,8 +273,10 @@
         </div>
       </div>
 
+      <!-- Preview -->
       <div class="preview-container">
         <h4>Pré-visualização</h4>
+        <!-- O canvas onde vamos desenhar a base + dados -->
         <canvas id="carteirinhaCanvas" width="800" height="565"></canvas>
       </div>
     </div>
@@ -281,62 +310,73 @@
 
   let imgBase = new Image();
   imgBase.src = urlCarteirinhaBase();
-
+  
   let imgFoto = null;
 
   function gerarNumeroAutomatico() {
     let currentID = parseInt(localStorage.getItem('crmap_voluntario_last_id') || '0', 10);
     currentID += 1;
     localStorage.setItem('crmap_voluntario_last_id', String(currentID));
+    
     const year = new Date().getFullYear();
-    numeroInput.value = String(currentID).padStart(3, '0') + '/' + year;
+    const formattedID = String(currentID).padStart(3, '0') + '/' + year;
+    numeroInput.value = formattedID;
   }
-
+  
+  // Se estiver vazio, gera no carregamento da página
   if (!numeroInput.value) {
     gerarNumeroAutomatico();
+    // Marca a data de hoje por padrão
     emissaoInput.value = new Date().toISOString().split('T')[0];
   }
 
+  // Atualiza o canvas inteiro
   function desenharCarteirinha() {
+    // 1. Limpa o canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+    
+    // 2. Desenha a imagem base, se estiver carregada
     if (imgBase.complete && imgBase.naturalWidth !== 0) {
       document.getElementById('admin-notice').style.display = 'none';
       ctx.drawImage(imgBase, 0, 0, canvas.width, canvas.height);
     } else {
+      // Background provisório caso não ache a imagem
       ctx.fillStyle = '#fdfdf8';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = '#1b7340';
       ctx.font = '24px Inter';
       ctx.fillText('Aguardando arte da carteirinha...', 50, 50);
     }
-
-    const fotoX = 35;
-    const fotoY = 135;
-    const fotoWidth = 215;
-    const fotoHeight = 320;
-
+    
+    // 3. Desenha a foto de rosto
+    const fotoX = 35;      
+    const fotoY = 135;     
+    const fotoWidth = 215; 
+    const fotoHeight = 320; 
+    
     if (imgFoto && imgFoto.complete && imgFoto.naturalWidth > 0) {
+      // Mantém a proporção (recorte simulado - cover)
       const ratioContext = fotoWidth / fotoHeight;
       const ratioImage = imgFoto.width / imgFoto.height;
       let renderWidth, renderHeight, offsetX = 0, offsetY = 0;
-
-      if (ratioImage > ratioContext) {
-        renderHeight = imgFoto.height;
-        renderWidth = imgFoto.height * ratioContext;
-        offsetX = (imgFoto.width - renderWidth) / 2;
+      
+      if(ratioImage > ratioContext) {
+          renderHeight = imgFoto.height;
+          renderWidth = imgFoto.height * ratioContext;
+          offsetX = (imgFoto.width - renderWidth) / 2;
       } else {
-        renderWidth = imgFoto.width;
-        renderHeight = imgFoto.width / ratioContext;
-        offsetY = (imgFoto.height - renderHeight) / 2;
+          renderWidth = imgFoto.width;
+          renderHeight = imgFoto.width / ratioContext;
+          offsetY = (imgFoto.height - renderHeight) / 2;
       }
-
+      
       ctx.drawImage(
-        imgFoto,
-        offsetX, offsetY, renderWidth, renderHeight,
-        fotoX, fotoY, fotoWidth, fotoHeight
+          imgFoto, 
+          offsetX, offsetY, renderWidth, renderHeight, // Source clipping
+          fotoX, fotoY, fotoWidth, fotoHeight // Destination on canvas
       );
     } else {
+      // Placeholder verde provisório para a foto
       ctx.fillStyle = '#e1efe4';
       ctx.fillRect(fotoX, fotoY, fotoWidth, fotoHeight);
       ctx.fillStyle = '#1b7340';
@@ -344,30 +384,41 @@
       ctx.fillText('Foto do Perfil', fotoX + 60, fotoY + 160);
     }
 
-    ctx.fillStyle = '#2b332b';
+    // 4. Configurar estilo do texto e desenhar os dados
+    ctx.fillStyle = '#2b332b'; // Cor preta/cinza escura
+    
+    // ** NÚMERO **
     ctx.font = 'bold 22px Inter, sans-serif';
-    const numX = 350;
-    const numY = 248;
+    const numX = 350; 
+    const numY = 248; 
     ctx.fillText(`${numeroInput.value || '______________'}`, numX, numY);
 
+    // ** EMISSÃO **
     const emiX = 410;
     const emiY = 282;
+    
+    // Formatar data para DD/MM/AAAA
     let dtEmissao = emissaoInput.value;
     if (dtEmissao) {
-      const partes = dtEmissao.split('-');
+      let partes = dtEmissao.split('-');
       dtEmissao = `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
     ctx.fillText(`${dtEmissao || '___/___/_____'}`, emiX, emiY);
 
-    ctx.font = 'italic 34px "Times New Roman", serif';
-    const assX = 450;
-    const assY = 368;
+    // ** ASSINATURA **
+    ctx.font = 'italic 34px "Times New Roman", serif'; // Fonte cursiva/elegante
+    const assX = 450;   // Centro projetado da linha da assinatura
+    const assY = 368;   // Em cima da linha
+    
+    // Desenha centralizado acima da linha
     ctx.textAlign = 'center';
     ctx.fillText(assinaturaInput.value || '', assX, assY);
-    ctx.textAlign = 'left';
+    ctx.textAlign = 'left'; // reset
   }
 
+  // Event Listeners (Redesenhar sempre que algo for digitado)
   imgBase.onload = desenharCarteirinha;
+  // Fallback caso a imagem não exista
   imgBase.onerror = function() {
     console.warn('Arte da carteirinha indisponível (carteirinha-base-data.js).');
     document.getElementById('admin-notice').style.display = '';
@@ -378,6 +429,7 @@
   emissaoInput.addEventListener('input', desenharCarteirinha);
   assinaturaInput.addEventListener('input', desenharCarteirinha);
 
+  // Lógica da Foto
   fotoInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
@@ -391,47 +443,59 @@
     }
   });
 
-  function efetuarDownload() {
-    if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== 'COLOQUE_SUA_URL_AQUI' && assinaturaInput.value.trim() !== '') {
-      const formData = new FormData();
-      formData.append('numero', numeroInput.value);
-      let dataPura = emissaoInput.value;
-      if (dataPura) {
-        const partes = dataPura.split('-');
-        dataPura = `${partes[2]}/${partes[1]}/${partes[0]}`;
-      }
-      formData.append('data', dataPura);
-      formData.append('nome', assinaturaInput.value);
-
-      fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        body: formData,
-        mode: 'no-cors'
-      }).catch(function(err) {
-        console.error(err);
-      });
-    }
-
-    const link = document.createElement('a');
-    const dataURL = canvas.toDataURL('image/png');
-    let nomeArq = 'carteirinha-crmap-voluntario.png';
-    if (numeroInput.value) {
-      nomeArq = 'carteirinha-vol-' + numeroInput.value.replace(/[^a-zA-Z0-9]/g, '') + '.png';
-    }
-    link.download = nomeArq;
-    link.href = dataURL;
-    link.click();
-  }
-
   baixarBtn.addEventListener('click', function() {
     if (assinaturaInput.value.trim() === '') {
-      alert('Preencha o nome ou assinatura antes de baixar.');
+      alert('Por favor, preencha o seu nome/assinatura primeiro.');
       return;
     }
     desenharCarteirinha();
     efetuarDownload();
   });
 
+  function efetuarDownload() {
+    // ---- ENVIAR PARA A PLANILHA DO GOOGLE ----
+    if (GOOGLE_SCRIPT_URL !== "COLOQUE_SUA_URL_AQUI" && assinaturaInput.value.trim() !== '') {
+      const formData = new FormData();
+      formData.append('numero', numeroInput.value);
+      
+      let dataPura = emissaoInput.value;
+      if (dataPura) {
+        let partes = dataPura.split('-');
+        dataPura = `${partes[2]}/${partes[1]}/${partes[0]}`;
+      }
+      formData.append('data', dataPura);
+      formData.append('nome', assinaturaInput.value);
+
+      fetch(GOOGLE_SCRIPT_URL, { 
+        method: 'POST', 
+        body: formData, 
+        mode: 'no-cors' // Evita erros de bloqueio de navegador
+      }).then(() => {
+        console.log('Dados enviados para a planilha!');
+      }).catch(err => {
+        console.error('Erro ao salvar na planilha', err);
+      });
+    }
+
+    // ---- BAIXAR A IMAGEM ----
+    // Cria um link temporário para download
+    const link = document.createElement('a');
+    
+    // Extrai o conteúdo do canvas como imagem PNG
+    const dataURL = canvas.toDataURL('image/png');
+    
+    // Define o nome do arquivo
+    let nomeArq = "carteirinha-crmap.png";
+    if (numeroInput.value) {
+      nomeArq = `carteirinha-${numeroInput.value.replace(/[^a-zA-Z0-9]/g, '')}.png`;
+    }
+    
+    link.download = nomeArq;
+    link.href = dataURL;
+    link.click();
+  }
+
+  // Primeira renderização
   desenharCarteirinha();
 </script>
 

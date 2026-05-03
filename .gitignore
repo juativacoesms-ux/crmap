@@ -1,3 +1,6 @@
+# Arte PNG só local; no site usa carteirinha-base-data.js (regenerar com: node -e "...")
+carteirinha-base.png
+
 node_modules/
 painel/node_modules/
 .DS_Store

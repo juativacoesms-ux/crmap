@@ -8,6 +8,5 @@ Disallow: /api/
 Disallow: /admin/
 Disallow: /index_backup.html
 Disallow: /crmap2/
-Disallow: /c.voluntario.html
 
 Sitemap: https://crmapoficial.org.br/sitemap.xml
