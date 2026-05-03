@@ -326,6 +326,22 @@
   
   let imgFoto = null;
 
+  function credencialDaUrlRetorno() {
+    const p = new URLSearchParams(window.location.search);
+    const raw = p.get('num') || p.get('external_reference');
+    if (!raw) return '';
+    try {
+      return decodeURIComponent(raw.replace(/\+/g, ' ')).trim();
+    } catch (e) {
+      return String(raw).trim();
+    }
+  }
+
+  function ehRetornoMercadoPago() {
+    const p = new URLSearchParams(window.location.search);
+    return !!(p.get('collection_id') || p.get('payment_id') || p.get('preference_id') || p.get('collection_status') || p.get('external_reference'));
+  }
+
   // Lógica de Geração Automática do Número
   function gerarNumeroAutomatico() {
     let currentID = parseInt(localStorage.getItem('crmap_last_id') || '0', 10);
@@ -338,10 +354,14 @@
     numeroInput.value = formattedID;
   }
   
-  // Se estiver vazio, gera no carregamento da página
-  if (!numeroInput.value) {
+  // Volta do checkout: manter o mesmo Nº da credencial (MP manda external_reference, não só ?num=)
+  const credencialRetorno = credencialDaUrlRetorno();
+  if (credencialRetorno) {
+    numeroInput.value = credencialRetorno;
+  } else if (!numeroInput.value) {
     gerarNumeroAutomatico();
-    // Marca a data de hoje por padrão
+  }
+  if (!emissaoInput.value) {
     emissaoInput.value = new Date().toISOString().split('T')[0];
   }
 
@@ -464,32 +484,36 @@
 
   // ---- LÓGICA DE PAGAMENTO SEGURO (MERCADO PAGO + GOOGLE APPS SCRIPT) ----
 
-  // 1. Verificar status de pagamento no carregamento
+  // 1. Verificar pagamento ao voltar do Mercado Pago (params oficiais + nossos ?num=)
   window.onload = async function() {
     const urlParams = new URLSearchParams(window.location.search);
-    const status = urlParams.get('status');
-    const num = urlParams.get('num');
+    const collectionStatus = (urlParams.get('collection_status') || '').toLowerCase();
+    const statusParam = (urlParams.get('status') || '').toLowerCase();
+    const aprovadoNaUrl = collectionStatus === 'approved' || statusParam === 'approved';
+    const num = credencialDaUrlRetorno();
 
-    if (num) {
-        const pago = await verificarPagamentoNoBanco(num);
-        if (pago) {
-            alert('Pagamento Verificado! Sua carteirinha está liberada.');
-            liberarBotaoDownload();
-            // Download Automático se aprovado via URL
-            if(status === 'approved') efetuarDownload();
-        }
+    if (!num || !String(num).trim()) return;
+
+    const pago = await verificarPagamentoNoBanco(String(num).trim());
+    if (pago) {
+      alert('Pagamento verificado! Sua carteirinha está liberada.');
+      liberarBotaoDownload();
+      desenharCarteirinha();
+      if (aprovadoNaUrl) efetuarDownload();
+    } else if (ehRetornoMercadoPago()) {
+      alert('Retorno do pagamento recebido. Se o banco ainda estiver processando, aguarde 1–2 minutos e use «Já paguei, verificar liberação».');
     }
   };
 
   async function verificarPagamentoNoBanco(numeroCredencial) {
-    const { data } = await supabaseClient
+    const { data, error } = await supabaseClient
         .from('pagamentos_carteirinha')
         .select('status')
         .eq('numero_credencial', numeroCredencial)
         .eq('status', 'approved')
         .maybeSingle();
-    
-    return data ? true : false;
+    if (error) console.error('Supabase (verificar pagamento):', error);
+    return !!data;
   }
 
   function liberarBotaoDownload() {
