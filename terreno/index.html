@@ -43,7 +43,19 @@
     z-index: 1000;
   }
   header .container { display: flex; justify-content: space-between; align-items: center; }
-  .logo-img { width: 130px; }
+  header .container > a:first-of-type {
+    display: inline-block;
+    line-height: 0;
+    background: transparent;
+  }
+  .logo-img {
+    width: 130px;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    background: transparent;
+    filter: drop-shadow(0 1px 3px rgba(15, 48, 29, 0.12));
+  }
   nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
   nav a.button-link {
     background: #e8f4ec;

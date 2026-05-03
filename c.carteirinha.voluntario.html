@@ -55,11 +55,24 @@
     flex-wrap: wrap; 
     gap: 1rem;
   }
-  .logo-img {
-    width: 130px; 
-    transition: transform 0.3s ease;
+  header > a:first-of-type {
+    display: inline-block;
+    line-height: 0;
+    background: transparent;
   }
-  .logo-img:hover { transform: scale(1.05); }
+  .logo-img {
+    width: 130px;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    background: transparent;
+    transition: transform 0.3s ease, filter 0.3s ease;
+    filter: drop-shadow(0 1px 3px rgba(15, 48, 29, 0.12));
+  }
+  .logo-img:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 2px 6px rgba(15, 48, 29, 0.18));
+  }
 
   nav {
     display: flex;
