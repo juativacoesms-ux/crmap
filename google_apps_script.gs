@@ -141,20 +141,26 @@ function salvarNaPlanilha(params) {
   const numero = String(params.numero || "").trim();
   const nome = String(params.nome || "").trim();
   const data = String(params.data || "").trim();
-  const fluxo = String(params.fluxo || "").toLowerCase();
   const evento = String(params.evento || "").toLowerCase();
 
-  // Regra solicitada: só registra linha completa após pagamento real.
-  // Ignora chamadas manuais/parciais e fluxo voluntário.
   if (!numero || !nome || !data) return;
-  if (fluxo.indexOf("volunt") >= 0) return;
-  if (evento !== "download_pos_pagamento") return;
-  if (!pagamentoAprovado(numero)) return;
+
+  var pagamento;
+  var voluntario;
+
+  if (evento === "download_voluntario") {
+    pagamento = "Voluntário (sem cobrança)";
+    voluntario = "SIM";
+  } else if (evento === "download_pos_pagamento") {
+    if (!pagamentoAprovado(numero)) return;
+    pagamento = "R$ 20,00";
+    voluntario = "NÃO";
+  } else {
+    return;
+  }
 
   const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
   const targetSheet = spreadsheet.getSheets().find(s => s.getSheetId() === SHEET_GID) || spreadsheet.getSheets()[0];
-  const pagamento = "R$ 20,00";
-  const voluntario = "NÃO";
   targetSheet.appendRow([
     new Date(),
     numero,

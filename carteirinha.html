@@ -353,7 +353,6 @@
 
   function salvarDraftFormulario() {
     const draft = {
-      numero: (numeroInput.value || '').trim(),
       emissao: (emissaoInput.value || '').trim(),
       assinatura: (assinaturaInput.value || '').trim(),
       ts: Date.now()
@@ -369,7 +368,6 @@
       if (!draft || typeof draft !== 'object') return;
       if (!assinaturaInput.value && draft.assinatura) assinaturaInput.value = draft.assinatura;
       if (!emissaoInput.value && draft.emissao) emissaoInput.value = draft.emissao;
-      if (!numeroInput.value && draft.numero) numeroInput.value = draft.numero;
     } catch (e) {
       console.warn('Não foi possível restaurar draft da carteirinha.', e);
     }
@@ -380,29 +378,45 @@
     return !!(p.get('collection_id') || p.get('payment_id') || p.get('preference_id') || p.get('collection_status') || p.get('external_reference'));
   }
 
-  // Lógica de Geração Automática do Número
-  function gerarNumeroAutomatico() {
-    let currentID = parseInt(localStorage.getItem('crmap_last_id') || '0', 10);
-    // Para efeito de demonstração/geração estática: soma 1
-    currentID += 1;
-    localStorage.setItem('crmap_last_id', currentID);
-    
-    const year = new Date().getFullYear();
-    const formattedID = String(currentID).padStart(3, '0') + '/' + year;
-    numeroInput.value = formattedID;
+  async function reservarNumeroCredencialServidor() {
+    const { data, error } = await supabaseClient.rpc('reservar_proximo_numero_carteirinha');
+    if (error) throw error;
+    const s = String(data == null ? '' : data).trim();
+    if (!s) throw new Error('Número vazio');
+    return s;
   }
-  
-  // Volta do checkout: manter o mesmo Nº da credencial (MP manda external_reference, não só ?num=)
-  const credencialRetorno = credencialDaUrlRetorno();
-  if (credencialRetorno) {
-    numeroInput.value = credencialRetorno;
-  } else if (!numeroInput.value) {
-    gerarNumeroAutomatico();
+
+  function definirBotoesCredencialPronta(pronto) {
+    baixarBtn.disabled = !pronto;
+    verificarPagamentoBtn.disabled = !pronto;
+    numeroInput.placeholder = pronto ? '' : 'Aguarde…';
   }
-  restaurarDraftFormulario();
-  if (!emissaoInput.value) {
-    emissaoInput.value = new Date().toISOString().split('T')[0];
-  }
+
+  definirBotoesCredencialPronta(false);
+
+  (async function inicializarNumeroCredencial() {
+    try {
+      const credencialRetorno = credencialDaUrlRetorno();
+      if (credencialRetorno) {
+        numeroInput.value = credencialRetorno;
+      } else {
+        numeroInput.value = '⌛ …';
+        const reservado = await reservarNumeroCredencialServidor();
+        numeroInput.value = reservado;
+      }
+      restaurarDraftFormulario();
+      if (!emissaoInput.value) {
+        emissaoInput.value = new Date().toISOString().split('T')[0];
+      }
+      definirBotoesCredencialPronta(true);
+    } catch (e) {
+      console.error(e);
+      alert('Não foi possível reservar o número oficial da credencial. Recarregue a página ou tente outra rede.');
+      numeroInput.value = '';
+      definirBotoesCredencialPronta(false);
+    }
+    desenharCarteirinha();
+  })();
 
   // Atualiza o canvas inteiro
   function desenharCarteirinha() {
@@ -600,6 +614,11 @@
         alert('Por favor, preencha o seu nome/assinatura primeiro.');
         return;
     }
+    const numCred = (numeroInput.value || '').trim();
+    if (!/^[0-9]+\/[0-9]{4}$/.test(numCred)) {
+        alert('O número oficial da credencial ainda não está disponível. Aguarde ou recarregue a página.');
+        return;
+    }
 
     baixarBtn.disabled = true;
     baixarBtn.innerText = '⌛ Iniciando...';
@@ -647,21 +666,18 @@
   function enviarParaPlanilha(payload) {
     if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'COLOQUE_SUA_URL_AQUI') return;
     const body = new URLSearchParams(payload).toString();
-
+    const blob = new Blob([body], { type: 'application/x-www-form-urlencoded;charset=UTF-8' });
+    if (navigator.sendBeacon && navigator.sendBeacon(GOOGLE_SCRIPT_URL, blob)) {
+      return;
+    }
     fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
       body,
       keepalive: true
-    }).then(() => {
-      console.log('Dados enviados para a planilha.');
     }).catch((err) => {
       console.error('Erro ao salvar na planilha', err);
-      if (navigator.sendBeacon) {
-        const blob = new Blob([body], { type: 'application/x-www-form-urlencoded;charset=UTF-8' });
-        navigator.sendBeacon(GOOGLE_SCRIPT_URL, blob);
-      }
     });
   }
 

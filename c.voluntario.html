@@ -252,7 +252,7 @@
         <button type="button" class="btn-primary" id="baixarBtn">📥 Baixar carteirinha (sem pagamento)</button>
 
         <div class="alert-info">
-          <strong>Aviso:</strong> Confira nome, data e foto antes de baixar. A numeração desta página é independente da carteirinha com doação.
+          <strong>Aviso:</strong> Confira nome, data e foto antes de baixar. A numeração é única no sistema (mesma sequência da carteirinha com doação).
         </div>
 
         <div class="alert-info" style="border-left-color: #d63222; background: #fff8f7; display: none;" id="admin-notice">
@@ -304,7 +304,6 @@
 
   function salvarDraftFormulario() {
     const draft = {
-      numero: (numeroInput.value || '').trim(),
       emissao: (emissaoInput.value || '').trim(),
       assinatura: (assinaturaInput.value || '').trim(),
       ts: Date.now()
@@ -320,25 +319,38 @@
       if (!draft || typeof draft !== 'object') return;
       if (!assinaturaInput.value && draft.assinatura) assinaturaInput.value = draft.assinatura;
       if (!emissaoInput.value && draft.emissao) emissaoInput.value = draft.emissao;
-      if (!numeroInput.value && draft.numero) numeroInput.value = draft.numero;
     } catch (e) {
       console.warn('Não foi possível restaurar draft voluntário interno.', e);
     }
   }
 
-  function gerarNumeroAutomatico() {
-    let currentID = parseInt(localStorage.getItem('crmap_voluntario_last_id') || '0', 10);
-    currentID += 1;
-    localStorage.setItem('crmap_voluntario_last_id', String(currentID));
-    const year = new Date().getFullYear();
-    numeroInput.value = String(currentID).padStart(3, '0') + '/' + year;
+  async function reservarNumeroCredencialServidor() {
+    const { data, error } = await supabaseClient.rpc('reservar_proximo_numero_carteirinha');
+    if (error) throw error;
+    const s = String(data == null ? '' : data).trim();
+    if (!s) throw new Error('Número vazio');
+    return s;
   }
 
-  if (!numeroInput.value) {
-    gerarNumeroAutomatico();
-    emissaoInput.value = new Date().toISOString().split('T')[0];
-  }
-  restaurarDraftFormulario();
+  baixarBtn.disabled = true;
+
+  (async function inicializarNumeroCredencial() {
+    try {
+      numeroInput.value = '⌛ …';
+      numeroInput.value = await reservarNumeroCredencialServidor();
+      restaurarDraftFormulario();
+      if (!emissaoInput.value) {
+        emissaoInput.value = new Date().toISOString().split('T')[0];
+      }
+      baixarBtn.disabled = false;
+    } catch (e) {
+      console.error(e);
+      alert('Não foi possível reservar o número oficial. Recarregue a página.');
+      numeroInput.value = '';
+      baixarBtn.disabled = true;
+    }
+    desenharCarteirinha();
+  })();
 
   function desenharCarteirinha() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -447,6 +459,10 @@
   function enviarParaPlanilha(payload) {
     if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'COLOQUE_SUA_URL_AQUI') return;
     const body = new URLSearchParams(payload).toString();
+    const blob = new Blob([body], { type: 'application/x-www-form-urlencoded;charset=UTF-8' });
+    if (navigator.sendBeacon && navigator.sendBeacon(GOOGLE_SCRIPT_URL, blob)) {
+      return;
+    }
     fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
@@ -455,10 +471,6 @@
       keepalive: true
     }).catch(function(err) {
       console.error(err);
-      if (navigator.sendBeacon) {
-        const blob = new Blob([body], { type: 'application/x-www-form-urlencoded;charset=UTF-8' });
-        navigator.sendBeacon(GOOGLE_SCRIPT_URL, blob);
-      }
     });
   }
 
@@ -482,7 +494,7 @@
       data: dataFormatadaBr(emissaoInput.value),
       nome,
       fluxo: 'voluntario',
-      evento: 'download_direto'
+      evento: 'download_voluntario'
     };
     enviarParaPlanilha(payload);
     registrarDownloadNoBanco(payload);
@@ -501,6 +513,10 @@
   baixarBtn.addEventListener('click', function() {
     if (assinaturaInput.value.trim() === '') {
       alert('Preencha o nome ou assinatura antes de baixar.');
+      return;
+    }
+    if (!/^[0-9]+\/[0-9]{4}$/.test((numeroInput.value || '').trim())) {
+      alert('Número da credencial não está pronto. Aguarde ou recarregue a página.');
       return;
     }
     desenharCarteirinha();
