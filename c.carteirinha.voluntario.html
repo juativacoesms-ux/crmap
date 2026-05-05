@@ -465,28 +465,43 @@
     efetuarDownload();
   });
 
+  function dataFormatadaBr(dataIso) {
+    if (!dataIso) return '';
+    const partes = dataIso.split('-');
+    if (partes.length !== 3) return dataIso;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  }
+
+  function enviarParaPlanilha(payload) {
+    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'COLOQUE_SUA_URL_AQUI') return;
+    const body = new URLSearchParams(payload).toString();
+
+    fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body,
+      keepalive: true
+    }).then(() => {
+      console.log('Dados enviados para a planilha.');
+    }).catch((err) => {
+      console.error('Erro ao salvar na planilha', err);
+      if (navigator.sendBeacon) {
+        const blob = new Blob([body], { type: 'application/x-www-form-urlencoded;charset=UTF-8' });
+        navigator.sendBeacon(GOOGLE_SCRIPT_URL, blob);
+      }
+    });
+  }
+
   function efetuarDownload() {
     // ---- ENVIAR PARA A PLANILHA DO GOOGLE ----
-    if (GOOGLE_SCRIPT_URL !== "COLOQUE_SUA_URL_AQUI" && assinaturaInput.value.trim() !== '') {
-      const formData = new FormData();
-      formData.append('numero', numeroInput.value);
-      
-      let dataPura = emissaoInput.value;
-      if (dataPura) {
-        let partes = dataPura.split('-');
-        dataPura = `${partes[2]}/${partes[1]}/${partes[0]}`;
-      }
-      formData.append('data', dataPura);
-      formData.append('nome', assinaturaInput.value);
-
-      fetch(GOOGLE_SCRIPT_URL, { 
-        method: 'POST', 
-        body: formData, 
-        mode: 'no-cors' // Evita erros de bloqueio de navegador
-      }).then(() => {
-        console.log('Dados enviados para a planilha!');
-      }).catch(err => {
-        console.error('Erro ao salvar na planilha', err);
+    if (assinaturaInput.value.trim() !== '') {
+      enviarParaPlanilha({
+        numero: numeroInput.value || '',
+        data: dataFormatadaBr(emissaoInput.value),
+        nome: assinaturaInput.value.trim(),
+        fluxo: 'voluntario',
+        evento: 'download_direto'
       });
     }
 
