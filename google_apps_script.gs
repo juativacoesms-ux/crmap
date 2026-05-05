@@ -12,7 +12,15 @@ const SPREADSHEET_ID = "1k1QTl5-OXekR_0MtWZRmd18RWLJn_SovZBV3MW9imak";
 const SHEET_GID = 0;
 
 function doPost(e) {
-  const params = e.parameter;
+  e = e || {};
+  let params = e.parameter || {};
+  if ((!params || Object.keys(params).length === 0) && e.postData && e.postData.contents) {
+    try {
+      params = JSON.parse(e.postData.contents);
+    } catch (err) {
+      params = {};
+    }
+  }
   const action = params.action;
 
   // Lógica de CORS para navegadores
@@ -130,15 +138,56 @@ function registrarNoSupabase(nome, numero, status) {
 }
 
 function salvarNaPlanilha(params) {
+  const numero = String(params.numero || "").trim();
+  const nome = String(params.nome || "").trim();
+  const data = String(params.data || "").trim();
+  const fluxo = String(params.fluxo || "").toLowerCase();
+  const evento = String(params.evento || "").toLowerCase();
+
+  // Regra solicitada: só registra linha completa após pagamento real.
+  // Ignora chamadas manuais/parciais e fluxo voluntário.
+  if (!numero || !nome || !data) return;
+  if (fluxo.indexOf("volunt") >= 0) return;
+  if (evento !== "download_pos_pagamento") return;
+  if (!pagamentoAprovado(numero)) return;
+
   const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
   const targetSheet = spreadsheet.getSheets().find(s => s.getSheetId() === SHEET_GID) || spreadsheet.getSheets()[0];
+  const pagamento = "R$ 20,00";
+  const voluntario = "NÃO";
   targetSheet.appendRow([
     new Date(),
-    params.numero || "",
-    params.nome || "",
-    params.data || "",
-    params.fluxo || "",
-    params.evento || "",
-    "R$ 20,00"
+    numero,
+    nome,
+    data,
+    pagamento,
+    voluntario
   ]);
+}
+
+function pagamentoAprovado(numero) {
+  try {
+    const filtroNumero = encodeURIComponent(numero);
+    const url = SUPABASE_URL
+      + "/rest/v1/pagamentos_carteirinha"
+      + "?select=id"
+      + "&numero_credencial=eq." + filtroNumero
+      + "&status=eq.approved"
+      + "&limit=1";
+
+    const response = UrlFetchApp.fetch(url, {
+      method: "get",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": "Bearer " + SUPABASE_KEY
+      },
+      muteHttpExceptions: true
+    });
+
+    if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) return false;
+    const rows = JSON.parse(response.getContentText() || "[]");
+    return Array.isArray(rows) && rows.length > 0;
+  } catch (err) {
+    return false;
+  }
 }
