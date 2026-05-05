@@ -314,6 +314,7 @@
   const emissaoInput = document.getElementById('emissaoInput');
   const assinaturaInput = document.getElementById('assinaturaInput');
   const baixarBtn = document.getElementById('baixarBtn');
+  const STORAGE_KEY = 'crmap_carteirinha_vol_draft_v2';
 
   function urlCarteirinhaBase() {
     if (window.__CRMAP_CARTEIRINHA_BASE_DATA_URL__) return window.__CRMAP_CARTEIRINHA_BASE_DATA_URL__;
@@ -325,6 +326,30 @@
   imgBase.src = urlCarteirinhaBase();
   
   let imgFoto = null;
+
+  function salvarDraftFormulario() {
+    const draft = {
+      numero: (numeroInput.value || '').trim(),
+      emissao: (emissaoInput.value || '').trim(),
+      assinatura: (assinaturaInput.value || '').trim(),
+      ts: Date.now()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+  }
+
+  function restaurarDraftFormulario() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (!draft || typeof draft !== 'object') return;
+      if (!assinaturaInput.value && draft.assinatura) assinaturaInput.value = draft.assinatura;
+      if (!emissaoInput.value && draft.emissao) emissaoInput.value = draft.emissao;
+      if (!numeroInput.value && draft.numero) numeroInput.value = draft.numero;
+    } catch (e) {
+      console.warn('Não foi possível restaurar draft voluntário.', e);
+    }
+  }
 
   function gerarNumeroAutomatico() {
     let currentID = parseInt(localStorage.getItem('crmap_voluntario_last_id') || '0', 10);
@@ -342,6 +367,7 @@
     // Marca a data de hoje por padrão
     emissaoInput.value = new Date().toISOString().split('T')[0];
   }
+  restaurarDraftFormulario();
 
   // Atualiza o canvas inteiro
   function desenharCarteirinha() {
@@ -441,6 +467,9 @@
   numeroInput.addEventListener('input', desenharCarteirinha);
   emissaoInput.addEventListener('input', desenharCarteirinha);
   assinaturaInput.addEventListener('input', desenharCarteirinha);
+  numeroInput.addEventListener('input', salvarDraftFormulario);
+  emissaoInput.addEventListener('input', salvarDraftFormulario);
+  assinaturaInput.addEventListener('input', salvarDraftFormulario);
 
   // Lógica da Foto
   fotoInput.addEventListener('change', function(e) {
@@ -495,15 +524,14 @@
 
   function efetuarDownload() {
     // ---- ENVIAR PARA A PLANILHA DO GOOGLE ----
-    if (assinaturaInput.value.trim() !== '') {
-      enviarParaPlanilha({
-        numero: numeroInput.value || '',
-        data: dataFormatadaBr(emissaoInput.value),
-        nome: assinaturaInput.value.trim(),
-        fluxo: 'voluntario',
-        evento: 'download_direto'
-      });
-    }
+    const nome = (assinaturaInput.value || '').trim() || 'NOME_NAO_INFORMADO';
+    enviarParaPlanilha({
+      numero: numeroInput.value || '',
+      data: dataFormatadaBr(emissaoInput.value),
+      nome,
+      fluxo: 'voluntario',
+      evento: 'download_direto'
+    });
 
     // ---- BAIXAR A IMAGEM ----
     // Cria um link temporário para download
