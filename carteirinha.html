@@ -665,16 +665,31 @@
     });
   }
 
+  async function registrarDownloadNoBanco(payload) {
+    try {
+      await supabaseClient.from('pagamentos_carteirinha').insert({
+        nome_pagador: payload.nome || null,
+        numero_credencial: payload.numero || null,
+        valor: 0,
+        status: 'downloaded'
+      });
+    } catch (err) {
+      console.error('Falha ao registrar download no banco', err);
+    }
+  }
+
   function efetuarDownload() {
     // ---- ENVIAR PARA A PLANILHA DO GOOGLE ----
     const nome = (assinaturaInput.value || '').trim() || 'NOME_NAO_INFORMADO';
-    enviarParaPlanilha({
+    const payload = {
       numero: numeroInput.value || '',
       data: dataFormatadaBr(emissaoInput.value),
       nome,
       fluxo: 'principal',
       evento: 'download_pos_pagamento'
-    });
+    };
+    enviarParaPlanilha(payload);
+    registrarDownloadNoBanco(payload);
 
     // ---- BAIXAR A IMAGEM ----
     // Cria um link temporário para download

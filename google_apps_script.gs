@@ -8,6 +8,8 @@
 const MP_ACCESS_TOKEN = "APP_USR-5952635800834737-032621-b4f384773f3b340c4edaee6e08d0a250-3291408548";
 const SUPABASE_URL = "https://qzjvzbvoxwhggvadaroq.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0"; // Pode ser a chave pública ou service role se necessário
+const SPREADSHEET_ID = "1k1QTl5-OXekR_0MtWZRmd18RWLJn_SovZBV3MW9imak";
+const SHEET_GID = 0;
 
 function doPost(e) {
   const params = e.parameter;
@@ -128,6 +130,15 @@ function registrarNoSupabase(nome, numero, status) {
 }
 
 function salvarNaPlanilha(params) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  sheet.appendRow([new Date(), params.numero, params.nome, params.data, "R$ 20,00"]);
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const targetSheet = spreadsheet.getSheets().find(s => s.getSheetId() === SHEET_GID) || spreadsheet.getSheets()[0];
+  targetSheet.appendRow([
+    new Date(),
+    params.numero || "",
+    params.nome || "",
+    params.data || "",
+    params.fluxo || "",
+    params.evento || "",
+    "R$ 20,00"
+  ]);
 }

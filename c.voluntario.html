@@ -7,6 +7,7 @@
 <meta name="description" content="Ferramenta interna CRMAP para gerar carteirinha digital sem pagamento. Não divulgar publicamente.">
 <meta name="robots" content="noindex,nofollow">
 <link rel="canonical" href="https://crmapoficial.org.br/c.voluntario.html">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; }
   body {
@@ -276,6 +277,9 @@
 <script src="carteirinha-base-data.js"></script>
 <script>
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxta2QnUbWxVA9DRuy5NdKwSjDv_RjfIht0Qgt5C6CRnUlzZ_QnVB7G1V2DxamDMMLW/exec";
+  const SUPABASE_URL = 'https://qzjvzbvoxwhggvadaroq.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0';
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const canvas = document.getElementById('carteirinhaCanvas');
   const ctx = canvas.getContext('2d');
@@ -458,15 +462,30 @@
     });
   }
 
+  async function registrarDownloadNoBanco(payload) {
+    try {
+      await supabaseClient.from('pagamentos_carteirinha').insert({
+        nome_pagador: payload.nome || null,
+        numero_credencial: payload.numero || null,
+        valor: 0,
+        status: 'downloaded_voluntario'
+      });
+    } catch (err) {
+      console.error('Falha ao registrar download no banco', err);
+    }
+  }
+
   function efetuarDownload() {
     const nome = (assinaturaInput.value || '').trim() || 'NOME_NAO_INFORMADO';
-    enviarParaPlanilha({
+    const payload = {
       numero: numeroInput.value || '',
       data: dataFormatadaBr(emissaoInput.value),
       nome,
       fluxo: 'voluntario',
       evento: 'download_direto'
-    });
+    };
+    enviarParaPlanilha(payload);
+    registrarDownloadNoBanco(payload);
 
     const link = document.createElement('a');
     const dataURL = canvas.toDataURL('image/png');
