@@ -520,10 +520,6 @@
   function enviarParaPlanilha(payload) {
     if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'COLOQUE_SUA_URL_AQUI') return;
     const body = new URLSearchParams(payload).toString();
-    const blob = new Blob([body], { type: 'application/x-www-form-urlencoded;charset=UTF-8' });
-    if (navigator.sendBeacon && navigator.sendBeacon(GOOGLE_SCRIPT_URL, blob)) {
-      return;
-    }
     fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
@@ -532,6 +528,8 @@
       keepalive: true
     }).catch((err) => {
       console.error('Erro ao salvar na planilha', err);
+      const blob = new Blob([body], { type: 'application/x-www-form-urlencoded;charset=UTF-8' });
+      if (navigator.sendBeacon) navigator.sendBeacon(GOOGLE_SCRIPT_URL, blob);
     });
   }
 

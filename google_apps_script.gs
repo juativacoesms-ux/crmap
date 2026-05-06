@@ -11,16 +11,57 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const SPREADSHEET_ID = "1k1QTl5-OXekR_0MtWZRmd18RWLJn_SovZBV3MW9imak";
 const SHEET_GID = 0;
 
-function doPost(e) {
+/** Corpo vindo do site (form-urlencoded ou sendBeacon+Blob) nem sempre preenche e.parameter; JSON.parse falha em "a=b&c=d". */
+function parseFormUrlEncoded_(raw) {
+  var out = {};
+  var pairs = String(raw).split("&");
+  for (var i = 0; i < pairs.length; i++) {
+    var pair = pairs[i];
+    if (!pair) continue;
+    var eq = pair.indexOf("=");
+    var k = eq >= 0 ? pair.substring(0, eq) : pair;
+    var v = eq >= 0 ? pair.substring(eq + 1) : "";
+    k = decodeURIComponent(k.replace(/\+/g, " "));
+    v = decodeURIComponent(v.replace(/\+/g, " "));
+    out[k] = v;
+  }
+  return out;
+}
+
+function parsePostParams_(e) {
   e = e || {};
-  let params = e.parameter || {};
-  if ((!params || Object.keys(params).length === 0) && e.postData && e.postData.contents) {
+  var base = e.parameter || {};
+  if (Object.keys(base).length > 0) {
+    return base;
+  }
+  if (!e.postData || !e.postData.contents) {
+    return {};
+  }
+  var raw = String(e.postData.contents).trim();
+  if (!raw) {
+    return {};
+  }
+  var ct = String(e.postData.type || "").toLowerCase();
+  if (ct.indexOf("application/json") >= 0 || raw.charAt(0) === "{") {
     try {
-      params = JSON.parse(e.postData.contents);
+      return JSON.parse(raw);
     } catch (err) {
-      params = {};
+      return {};
     }
   }
+  if (raw.indexOf("=") >= 0) {
+    return parseFormUrlEncoded_(raw);
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (err2) {
+    return {};
+  }
+}
+
+function doPost(e) {
+  e = e || {};
+  var params = parsePostParams_(e);
   const action = params.action;
 
   // Lógica de CORS para navegadores
