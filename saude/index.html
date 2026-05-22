@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saúde Mental — Agenda CRMAP</title>
+  <meta name="description" content="Agenda de atendimentos em saúde mental da CRMAP — uso da equipe técnica.">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="canonical" href="https://crmapoficial.org.br/saude/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --primary: #1b7340;
+      --primary-dark: #0f301d;
+      --accent: #d63222;
+      --bg: #f0f7f2;
+      --white: #fff;
+      --text: #2b332b;
+      --muted: #5a6b5e;
+      --border: #e1efe4;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(165deg, #fdfdfb 0%, var(--bg) 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    h1, h2, h3 { font-family: 'Montserrat', sans-serif; letter-spacing: -0.02em; }
+
+    header.site-header {
+      background: rgba(255,255,255,0.95);
+      border-bottom: 1px solid rgba(27,115,64,0.08);
+      padding: 0.85rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    header .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .logo-img { width: 120px; height: auto; }
+    .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .nav-links a {
+      background: #e8f4ec;
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      text-decoration: none;
+    }
+    .nav-links a:hover { background: var(--primary); color: #fff; }
+
+    .login-overlay {
+      position: fixed; inset: 0;
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2000; padding: 1rem;
+    }
+    .login-box {
+      background: var(--white);
+      padding: 2rem;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .login-box h2 { color: var(--primary); margin-top: 0; }
+    .login-box p { color: var(--muted); font-size: 0.9rem; }
+
+    .app { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; display: none; }
+    .app.visible { display: block; }
+
+    .hero-saude {
+      background: linear-gradient(120deg, rgba(15,48,29,0.92), rgba(27,115,64,0.85));
+      color: #fff;
+      border-radius: 16px;
+      padding: 1.75rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .hero-saude h1 { margin: 0 0 0.5rem; font-size: 1.6rem; }
+    .hero-saude p { margin: 0; opacity: 0.9; font-size: 0.95rem; }
+
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end;
+      margin-bottom: 1.25rem;
+    }
+    .toolbar label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--muted); margin-bottom: 0.25rem; }
+    .toolbar input, .toolbar select {
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font: inherit;
+    }
+    .btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 0.65rem 1.1rem;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .btn:hover { filter: brightness(1.05); }
+    .btn-outline {
+      background: #fff;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    .btn-danger { background: var(--accent); }
+    .btn-sm { padding: 0.35rem 0.65rem; font-size: 0.78rem; width: auto; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 1.25rem;
+      box-shadow: 0 4px 18px rgba(15,48,29,0.06);
+      border-top: 5px solid var(--primary);
+    }
+    .card h3 { margin-top: 0; color: var(--primary); font-size: 1.05rem; }
+
+    .form-group { margin-bottom: 0.85rem; }
+    .form-group label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.3rem; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font: inherit;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th, td { text-align: left; padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--primary); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    tr:hover td { background: #f8fbf9; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .badge-agendada { background: #dbeafe; color: #1e40af; }
+    .badge-realizada { background: #dcfce7; color: #166534; }
+    .badge-cancelada { background: #f3f4f6; color: #4b5563; }
+    .badge-falta { background: #fee2e2; color: #991b1b; }
+
+    .empty { text-align: center; color: var(--muted); padding: 2rem; }
+    #loader {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(15,48,29,0.5);
+      color: #fff;
+      align-items: center; justify-content: center;
+      z-index: 3000; font-weight: 700;
+    }
+    #loader.show { display: flex; }
+    .actions-cell { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  </style>
+</head>
+<body>
+
+<div id="loader">Aguarde…</div>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="../index.html"><img src="../logo.png" alt="CRMAP" class="logo-img" onerror="this.style.display='none'"></a>
+    <nav class="nav-links">
+      <a href="../index.html">Início</a>
+      <a href="../acoes/">Ações</a>
+      <a href="../painel/">Painel gestão</a>
+    </nav>
+  </div>
+</header>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h2>🩺 Agenda — Saúde CRMAP</h2>
+    <p>Acesso restrito à equipe de saúde mental e coordenação.</p>
+    <input type="password" id="senhaAcesso" placeholder="Senha da equipe" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;margin:1rem 0;">
+    <button class="btn" style="width:100%" onclick="entrar()">Entrar na agenda</button>
+  </div>
+</div>
+
+<main class="app" id="app">
+  <section class="hero-saude">
+    <h1>Saúde Mental — Agenda de consultas</h1>
+    <p>Agende e acompanhe atendimentos psicológicos, psicanalíticos e de acolhimento. Visível para toda a equipe autorizada.</p>
+  </section>
+
+  <div class="toolbar">
+    <div>
+      <label>De</label>
+      <input type="date" id="filtroInicio">
+    </div>
+    <div>
+      <label>Até</label>
+      <input type="date" id="filtroFim">
+    </div>
+    <div>
+      <label>Profissional</label>
+      <select id="filtroProf" style="min-width:200px">
+        <option value="">Todos</option>
+      </select>
+    </div>
+    <button class="btn" onclick="carregarAgenda()">Atualizar lista</button>
+    <button class="btn btn-outline" onclick="sair()">Sair</button>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Nova consulta</h3>
+      <form id="formAgendar" onsubmit="agendarConsulta(event)">
+        <div class="form-group">
+          <label>Profissional *</label>
+          <select id="profissionalId" required></select>
+        </div>
+        <div class="form-group">
+          <label>Nome da paciente *</label>
+          <input type="text" id="nomePaciente" required placeholder="Nome completo">
+        </div>
+        <div class="form-group">
+          <label>Telefone / WhatsApp</label>
+          <input type="tel" id="telefonePaciente" placeholder="(31) 9 9999-9999">
+        </div>
+        <div class="form-group">
+          <label>Data *</label>
+          <input type="date" id="dataConsulta" required>
+        </div>
+        <div class="form-group">
+          <label>Horário *</label>
+          <input type="time" id="horaConsulta" required>
+        </div>
+        <div class="form-group">
+          <label>Duração (min)</label>
+          <select id="duracaoConsulta">
+            <option value="30">30 min</option>
+            <option value="50" selected>50 min</option>
+            <option value="60">60 min</option>
+            <option value="90">90 min</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tipo de atendimento</label>
+          <select id="tipoAtendimento">
+            <option>Psicologia</option>
+            <option>Psicanálise</option>
+            <option>Acolhimento social</option>
+            <option>Assistente de saúde</option>
+            <option>Retorno</option>
+            <option>Primeira vez</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Observações</label>
+          <textarea id="obsConsulta" rows="2" placeholder="Encaminhamento, preferências…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Registrado por</label>
+          <input type="text" id="criadoPor" placeholder="Seu nome (equipe)">
+        </div>
+        <button type="submit" class="btn" style="width:100%">Confirmar agendamento</button>
+      </form>
+    </div>
+
+    <div class="card" style="border-top-color: var(--accent);">
+      <h3>Agenda do período</h3>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Hora</th>
+              <th>Profissional</th>
+              <th>Paciente</th>
+              <th>Tipo</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="listaConsultas">
+            <tr><td colspan="7" class="empty">Carregando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const SUPABASE_URL = 'https://qzjvzbvoxwhggvadaroq.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0';
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let senhaEquipe = '';
+  let profissionaisMap = {};
+
+  function hojeIso() {
+    const d = new Date();
+    return d.toISOString().slice(0, 10);
+  }
+
+  function daquiDiasIso(n) {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function formatarDataBr(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  function formatarHora(t) {
+    if (!t) return '—';
+    return String(t).slice(0, 5);
+  }
+
+  function badgeStatus(s) {
+    const map = {
+      agendada: ['Agendada', 'badge-agendada'],
+      realizada: ['Realizada', 'badge-realizada'],
+      cancelada: ['Cancelada', 'badge-cancelada'],
+      falta: ['Falta', 'badge-falta']
+    };
+    const [label, cls] = map[s] || [s, 'badge-agendada'];
+    return `<span class="badge ${cls}">${label}</span>`;
+  }
+
+  function loader(on) {
+    document.getElementById('loader').classList.toggle('show', on);
+  }
+
+  async function entrar() {
+    const pass = document.getElementById('senhaAcesso').value;
+    senhaEquipe = pass;
+    loader(true);
+    try {
+      const { data, error } = await supabaseClient.rpc('listar_consultas_saude', {
+        p_senha: pass,
+        p_data_inicio: hojeIso(),
+        p_data_fim: daquiDiasIso(7),
+        p_profissional_id: null
+      });
+      if (error) throw error;
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('app').classList.add('visible');
+      document.getElementById('filtroInicio').value = hojeIso();
+      document.getElementById('filtroFim').value = daquiDiasIso(30);
+      document.getElementById('dataConsulta').value = hojeIso();
+      await carregarProfissionais();
+      await carregarAgenda();
+    } catch (e) {
+      alert('Senha incorreta ou agenda ainda não configurada no servidor. Avise a coordenação.');
+      console.error(e);
+      senhaEquipe = '';
+    } finally {
+      loader(false);
+    }
+  }
+
+  function sair() {
+    senhaEquipe = '';
+    document.getElementById('app').classList.remove('visible');
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('senhaAcesso').value = '';
+  }
+
+  document.getElementById('senhaAcesso').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') entrar();
+  });
+
+  async function carregarProfissionais() {
+    const { data, error } = await supabaseClient
+      .from('profissionais_saude')
+      .select('id, nome, cargo')
+      .eq('ativo', true)
+      .order('ordem', { ascending: true });
+    if (error) {
+      console.error(error);
+      return;
+    }
+    profissionaisMap = {};
+    const selForm = document.getElementById('profissionalId');
+    const selFiltro = document.getElementById('filtroProf');
+    selForm.innerHTML = '';
+    selFiltro.innerHTML = '<option value="">Todos</option>';
+    (data || []).forEach((p) => {
+      profissionaisMap[p.id] = p;
+      const o1 = document.createElement('option');
+      o1.value = p.id;
+      o1.textContent = p.nome;
+      selForm.appendChild(o1);
+      const o2 = document.createElement('option');
+      o2.value = p.id;
+      o2.textContent = p.nome;
+      selFiltro.appendChild(o2);
+    });
+  }
+
+  async function carregarAgenda() {
+    if (!senhaEquipe) return;
+    loader(true);
+    const tbody = document.getElementById('listaConsultas');
+    try {
+      const profId = document.getElementById('filtroProf').value;
+      const { data, error } = await supabaseClient.rpc('listar_consultas_saude', {
+        p_senha: senhaEquipe,
+        p_data_inicio: document.getElementById('filtroInicio').value || null,
+        p_data_fim: document.getElementById('filtroFim').value || null,
+        p_profissional_id: profId ? Number(profId) : null
+      });
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhuma consulta neste período.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map((c) => {
+        const prof = profissionaisMap[c.profissional_id];
+        const nomeProf = prof ? prof.nome.split(' ')[0] + '…' : '—';
+        return `<tr>
+          <td>${formatarDataBr(c.data_consulta)}</td>
+          <td>${formatarHora(c.hora_inicio)}</td>
+          <td title="${prof ? prof.nome : ''}">${nomeProf}</td>
+          <td><strong>${escapeHtml(c.nome_paciente)}</strong><br><small>${escapeHtml(c.telefone || '')}</small></td>
+          <td>${escapeHtml(c.tipo_atendimento || '')}</td>
+          <td>${badgeStatus(c.status)}</td>
+          <td class="actions-cell">
+            ${c.status === 'agendada' ? `
+              <button class="btn btn-sm" onclick="mudarStatus(${c.id}, 'realizada')">Realizada</button>
+              <button class="btn btn-sm btn-outline" onclick="mudarStatus(${c.id}, 'falta')">Falta</button>
+              <button class="btn btn-sm btn-danger" onclick="mudarStatus(${c.id}, 'cancelada')">Cancelar</button>
+            ` : `<button class="btn btn-sm btn-outline" onclick="mudarStatus(${c.id}, 'agendada')">Reabrir</button>`}
+          </td>
+        </tr>`;
+      }).join('');
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">Erro ao carregar. Tente novamente.</td></tr>';
+      console.error(e);
+    } finally {
+      loader(false);
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function agendarConsulta(e) {
+    e.preventDefault();
+    loader(true);
+    try {
+      const { data: res, error } = await supabaseClient.rpc('criar_consulta_saude', {
+        p_senha: senhaEquipe,
+        p_profissional_id: Number(document.getElementById('profissionalId').value),
+        p_nome_paciente: document.getElementById('nomePaciente').value,
+        p_telefone: document.getElementById('telefonePaciente').value,
+        p_data_consulta: document.getElementById('dataConsulta').value,
+        p_hora_inicio: document.getElementById('horaConsulta').value,
+        p_duracao_min: Number(document.getElementById('duracaoConsulta').value),
+        p_tipo_atendimento: document.getElementById('tipoAtendimento').value,
+        p_observacoes: document.getElementById('obsConsulta').value,
+        p_criado_por: document.getElementById('criadoPor').value
+      });
+      if (error) throw error;
+      if (!res?.success) {
+        alert(res?.message || 'Não foi possível agendar.');
+        return;
+      }
+      alert('Consulta agendada com sucesso!');
+      document.getElementById('nomePaciente').value = '';
+      document.getElementById('telefonePaciente').value = '';
+      document.getElementById('obsConsulta').value = '';
+      await carregarAgenda();
+    } catch (err) {
+      alert('Erro: ' + (err.message || err));
+    } finally {
+      loader(false);
+    }
+  }
+
+  async function mudarStatus(id, status) {
+    const msg = status === 'cancelada' ? 'Cancelar esta consulta?' : 'Confirmar alteração de status?';
+    if (!confirm(msg)) return;
+    loader(true);
+    try {
+      const { data: res, error } = await supabaseClient.rpc('atualizar_status_consulta_saude', {
+        p_senha: senhaEquipe,
+        p_id: id,
+        p_status: status,
+        p_observacoes: null
+      });
+      if (error) throw error;
+      if (!res?.success) alert(res?.message || 'Falha ao atualizar.');
+      await carregarAgenda();
+    } catch (err) {
+      alert('Erro: ' + err.message);
+    } finally {
+      loader(false);
+    }
+  }
+</script>
+
+<footer style="background:#0f301d;color:#d0e6d8;text-align:center;padding:1.5rem;margin-top:2rem;font-size:0.85rem;">
+  &copy; 2026 CRMAP — Saúde Mental. Uso interno da equipe.
+</footer>
+
+</body>
+</html>

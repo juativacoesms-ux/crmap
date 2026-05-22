@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /painel/
+Disallow: /saude/
 Disallow: /supabase/
 Disallow: /functions/
 Disallow: /functions/v1/
