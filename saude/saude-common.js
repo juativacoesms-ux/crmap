@@ -19,6 +19,50 @@ function loader(on) { document.getElementById('loader').classList.toggle('show',
 function hoje() { return new Date().toISOString().slice(0, 10); }
 function dias(n) { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
 function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+
+/** Nomes corrompidos no seed (F?tima) — exibição até o banco ser corrigido */
+const PROFISSIONAIS_NOMES_FIX = {
+  1: { nome: 'Fátima Maria de Jesus Chaves Soares', cargo: 'Dra. em Psicanálise — Coord. Saúde Mental' },
+  2: { nome: 'Jórsia Chaves Horta Nascimento', cargo: 'Psicanalista — Vice / Diretora Saúde Mental' },
+  3: { nome: 'Rosilaine Ribeiro de Moura Rocha', cargo: 'Psicóloga' },
+  4: { nome: 'Márcia Rodrigues Daian', cargo: 'Psicóloga' },
+  5: { nome: 'Érika Danúbia da Silva', cargo: 'Assistente de Saúde' }
+};
+
+function nomeCorrompido(s) {
+  return /[\uFFFD?]/.test(String(s || '')) && /[a-zA-Z]\?[a-zA-Z]/.test(String(s || ''));
+}
+
+function normalizarProfissional(p) {
+  if (!p) return p;
+  const fix = PROFISSIONAIS_NOMES_FIX[p.id];
+  if (fix && (nomeCorrompido(p.nome) || nomeCorrompido(p.cargo))) {
+    return { ...p, nome: fix.nome, cargo: fix.cargo || p.cargo };
+  }
+  return p;
+}
+
+function nomeProfissionalExibicao(nome, id) {
+  const fix = id && PROFISSIONAIS_NOMES_FIX[id];
+  if (fix && nomeCorrompido(nome)) return fix.nome;
+  return nome || '';
+}
+
+async function corrigirNomesProfissionaisNoBanco() {
+  if (!isCoord() || !state.senha) return;
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/corrigir-nomes-saude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({ senha: state.senha })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data?.success && data.updated > 0) {
+      await carregarProfissionaisSelects();
+      if (typeof carregarListaProfissionaisAdmin === 'function') await carregarListaProfissionaisAdmin();
+    }
+  } catch (e) { /* função pode ainda não estar deployada */ }
+}
 function fmtData(iso) { if (!iso) return '—'; const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; }
 function fmtHora(t) { return String(t || '').slice(0, 5); }
 function fmtMoeda(v) { return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
@@ -36,7 +80,9 @@ function iniciarAppUI() {
   if (isCoord()) {
     document.getElementById('heroMeta').textContent = 'Todas as profissionais · repasses · secretaria';
     document.getElementById('inputPixCrmap').value = state.pixCrmap || '';
-    carregarProfissionaisSelects().then(() => { carregarAgenda(); carregarResumoAdmin(); });
+    corrigirNomesProfissionaisNoBanco().then(() =>
+      carregarProfissionaisSelects().then(() => { carregarAgenda(); carregarResumoAdmin(); })
+    );
   } else {
     document.getElementById('heroMeta').textContent = state.profissionalNome + (state.profissionalCargo ? ' · ' + state.profissionalCargo : '');
     carregarAgenda();
@@ -44,14 +90,15 @@ function iniciarAppUI() {
 }
 
 async function carregarProfissionaisSelects() {
-  const { data } = await sb.from('profissionais_saude').select('id,nome').eq('ativo', true).order('ordem');
-  const opts = (data || []).map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join('');
+  const { data } = await sb.from('profissionais_saude').select('id,nome,cargo').eq('ativo', true).order('ordem');
+  const lista = (data || []).map(normalizarProfissional);
+  const opts = lista.map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   document.getElementById('profissionalId').innerHTML = opts;
   document.getElementById('filtroProf').innerHTML = '<option value="">Todos</option>' + opts;
   const chips = document.getElementById('profChips');
   if (chips) {
     chips.innerHTML = '<button type="button" class="active" data-id="" onclick="filtrarChip(this)">Todos</button>' +
-      (data || []).map(p => `<button type="button" data-id="${p.id}" onclick="filtrarChip(this)">${esc(p.nome.split(' ')[0])}</button>`).join('');
+      lista.map(p => `<button type="button" data-id="${p.id}" onclick="filtrarChip(this)">${esc(p.nome.split(' ')[0])}</button>`).join('');
   }
 }
 
@@ -129,7 +176,9 @@ async function carregarAgenda() {
       const cob = c.tipo_cobranca === 'paga'
         ? `<span class="tag tag-paga">Paga · ${c.numero_sessao}ª</span>`
         : `<span class="tag tag-gratuita">Grátis · ${c.numero_sessao}ª</span>`;
-      const profCell = isCoord() ? `<td><small>${esc((c.profissional_nome || '').split(' ')[0])}</small></td>` : '';
+      const profCell = isCoord()
+        ? `<td><small>${esc(nomeProfissionalExibicao(c.profissional_nome, c.profissional_id).split(' ')[0])}</small></td>`
+        : '';
       const acoes = c.status === 'agendada'
         ? `<button class="btn btn-sm" onclick="mudarStatus(${c.id},'realizada',${c.numero_sessao || 0},'${c.tipo_cobranca || 'gratuita'}')">Realizada</button>
            <button class="btn btn-sm btn-outline" onclick="mudarStatus(${c.id},'falta')">Falta</button>

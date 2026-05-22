@@ -122,6 +122,7 @@ async function entrarCoordenacao() {
   state.pctRepasse = Number(data.percentual_repasse) || 10;
   salvarSessao();
   iniciarAppUI();
+  await corrigirNomesProfissionaisNoBanco();
   await carregarListaProfissionaisAdmin();
 }
 
@@ -129,7 +130,7 @@ async function carregarListaProfissionaisAdmin() {
   const { data } = await sb.rpc('listar_profissionais_coord_saude', { p_senha: state.senha });
   const el = document.getElementById('listaProfissionais');
   if (!data?.success) { el.textContent = 'Erro ao listar.'; return; }
-  const list = data.profissionais || [];
+  const list = (data.profissionais || []).map(normalizarProfissional);
   if (!list.length) { el.textContent = 'Nenhuma profissional cadastrada ainda.'; return; }
   el.innerHTML = '<table><thead><tr><th>Nome</th><th>Cargo</th><th>WhatsApp</th><th>Ativa</th></tr></thead><tbody>' +
     list.map(p => `<tr><td>${esc(p.nome)}</td><td>${esc(p.cargo)}</td><td>${esc(p.telefone || '—')}</td><td>${p.ativo ? 'Sim' : 'Não'}</td></tr>`).join('') +
@@ -138,7 +139,7 @@ async function carregarListaProfissionaisAdmin() {
 
 if (restaurarSessao()) {
   iniciarAppUI();
-  carregarListaProfissionaisAdmin();
+  corrigirNomesProfissionaisNoBanco().then(() => carregarListaProfissionaisAdmin());
 }
 document.getElementById('loginCoordSenha').addEventListener('keydown', e => { if (e.key === 'Enter') entrarCoordenacao(); });
 </script>

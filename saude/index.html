@@ -136,8 +136,9 @@ async function entrarProfissional() {
   if (!data?.success) { alert(data?.message || 'Login falhou'); return; }
   state.senha = document.getElementById('loginSenha').value;
   state.profissionalId = data.profissional_id;
-  state.profissionalNome = data.nome;
-  state.profissionalCargo = data.cargo;
+  const prof = normalizarProfissional({ id: data.profissional_id, nome: data.nome, cargo: data.cargo });
+  state.profissionalNome = prof.nome;
+  state.profissionalCargo = prof.cargo;
   salvarSessao();
   iniciarAppUI();
 }
