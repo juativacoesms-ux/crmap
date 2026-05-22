@@ -69,6 +69,13 @@ function parsePostParams_(e) {
   }
 }
 
+/** Abrir a URL /exec no navegador (GET) — só confirma que o app está no ar; gravação é via POST. */
+function doGet() {
+  return ContentService.createTextOutput(
+    JSON.stringify({ ok: true, service: "CRMAP carteirinha", method: "use POST para registrar na planilha" })
+  ).setMimeType(ContentService.MimeType.JSON);
+}
+
 function doPost(e) {
   e = e || {};
   var params = parsePostParams_(e);
