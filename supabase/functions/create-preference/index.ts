@@ -4,6 +4,22 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const MP_ACCESS_TOKEN = Deno.env.get('MP_ACCESS_TOKEN')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+const GOOGLE_APPS_SCRIPT_URL =
+  Deno.env.get('GOOGLE_APPS_SCRIPT_URL') ??
+  'https://script.google.com/macros/s/AKfycbxta2QnUbWxVA9DRuy5NdKwSjDv_RjfIht0Qgt5C6CRnUlzZ_QnVB7G1V2DxamDMMLW/exec'
+
+async function notificarPlanilha(params: Record<string, string>) {
+  try {
+    await fetch(GOOGLE_APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: new URLSearchParams(params).toString(),
+      redirect: 'follow',
+    })
+  } catch (e) {
+    console.error('Falha ao atualizar planilha:', e)
+  }
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -83,6 +99,13 @@ serve(async (req) => {
         numero_credencial: numero_credencial,
         valor: unitPrice,
         status: 'pending'
+    })
+
+    await notificarPlanilha({
+      evento: 'pagamento_pendente',
+      numero: String(numero_credencial || ''),
+      nome: String(nome || ''),
+      data: new Date().toLocaleDateString('pt-BR'),
     })
 
     return new Response(

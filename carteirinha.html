@@ -307,13 +307,12 @@
 </footer>
 
 <script src="carteirinha-base-data.js"></script>
+<script src="crmap-planilha-client.js"></script>
 <script>
   // CONFIGURAÇÕES (Preencha com seus dados do Mercado Pago e Supabase)
   const MP_PUBLIC_KEY = 'APP_USR-34c58bdf-0820-4d12-91c3-0a615de9117d'; 
   const SUPABASE_URL = 'https://qzjvzbvoxwhggvadaroq.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0'; 
-  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxta2QnUbWxVA9DRuy5NdKwSjDv_RjfIht0Qgt5C6CRnUlzZ_QnVB7G1V2DxamDMMLW/exec";
-
   const mp = new MercadoPago(MP_PUBLIC_KEY);
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -664,19 +663,7 @@
   }
 
   function enviarParaPlanilha(payload) {
-    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'COLOQUE_SUA_URL_AQUI') return;
-    const body = new URLSearchParams(payload).toString();
-    fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-      body,
-      keepalive: true
-    }).catch((err) => {
-      console.error('Erro ao salvar na planilha', err);
-      const blob = new Blob([body], { type: 'application/x-www-form-urlencoded;charset=UTF-8' });
-      if (navigator.sendBeacon) navigator.sendBeacon(GOOGLE_SCRIPT_URL, blob);
-    });
+    if (window.CRMAP_PLANILHA) window.CRMAP_PLANILHA.enviar(payload);
   }
 
   async function registrarDownloadNoBanco(payload) {
@@ -692,15 +679,24 @@
     }
   }
 
-  function efetuarDownload() {
-    // ---- ENVIAR PARA A PLANILHA DO GOOGLE ----
+  async function efetuarDownload() {
     const nome = (assinaturaInput.value || '').trim() || 'NOME_NAO_INFORMADO';
+    const numero = (numeroInput.value || '').trim();
+    const dataEmissao = dataFormatadaBr(emissaoInput.value) || (window.CRMAP_PLANILHA && CRMAP_PLANILHA.dataHojeBr()) || '';
+    let pagoConfirmado = false;
+    try {
+      pagoConfirmado = await verificarPagamentoNoBanco(numero);
+    } catch (e) {
+      console.warn('Verificação de pagamento na planilha:', e);
+    }
+
     const payload = {
-      numero: numeroInput.value || '',
-      data: dataFormatadaBr(emissaoInput.value),
+      numero,
+      data: dataEmissao,
       nome,
       fluxo: 'principal',
-      evento: 'download_pos_pagamento'
+      evento: 'download_pos_pagamento',
+      pago_confirmado: pagoConfirmado ? 'sim' : 'nao'
     };
     enviarParaPlanilha(payload);
     registrarDownloadNoBanco(payload);
