@@ -1,0 +1,248 @@
+/* CRMAP — lógica compartilhada da agenda (profissional + controle) */
+const SUPABASE_URL = 'https://qzjvzbvoxwhggvadaroq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const state = {
+  modo: null,
+  senha: '',
+  profissionalId: null,
+  profissionalNome: '',
+  limiteGratis: 8,
+  pixCrmap: '',
+  pctRepasse: 10,
+  resumoPaciente: null,
+  consultaModalId: null
+};
+
+function loader(on) { document.getElementById('loader').classList.toggle('show', on); }
+function hoje() { return new Date().toISOString().slice(0, 10); }
+function dias(n) { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+function fmtData(iso) { if (!iso) return '—'; const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; }
+function fmtHora(t) { return String(t || '').slice(0, 5); }
+function fmtMoeda(v) { return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
+
+function isCoord() { return state.modo === 'coordenacao'; }
+
+function iniciarAppUI() {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('filtroInicio').value = hoje();
+  document.getElementById('filtroFim').value = dias(30);
+  document.getElementById('dataConsulta').value = hoje();
+  document.getElementById('txtLimiteGratis').textContent = state.limiteGratis;
+  document.getElementById('txtPixInline').textContent = state.pixCrmap || '(configure no controle)';
+  if (isCoord()) {
+    document.getElementById('heroMeta').textContent = 'Todas as profissionais · repasses · secretaria';
+    document.getElementById('inputPixCrmap').value = state.pixCrmap || '';
+    carregarProfissionaisSelects().then(() => { carregarAgenda(); carregarResumoAdmin(); });
+  } else {
+    document.getElementById('heroMeta').textContent = state.profissionalNome + (state.profissionalCargo ? ' · ' + state.profissionalCargo : '');
+    carregarAgenda();
+  }
+}
+
+async function carregarProfissionaisSelects() {
+  const { data } = await sb.from('profissionais_saude').select('id,nome').eq('ativo', true).order('ordem');
+  const opts = (data || []).map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join('');
+  document.getElementById('profissionalId').innerHTML = opts;
+  document.getElementById('filtroProf').innerHTML = '<option value="">Todos</option>' + opts;
+  const chips = document.getElementById('profChips');
+  if (chips) {
+    chips.innerHTML = '<button type="button" class="active" data-id="" onclick="filtrarChip(this)">Todos</button>' +
+      (data || []).map(p => `<button type="button" data-id="${p.id}" onclick="filtrarChip(this)">${esc(p.nome.split(' ')[0])}</button>`).join('');
+  }
+}
+
+function filtrarChip(btn) {
+  document.querySelectorAll('#profChips button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('filtroProf').value = btn.dataset.id || '';
+  carregarAgenda();
+}
+
+async function carregarResumoAdmin() {
+  const { data } = await sb.rpc('painel_resumo_saude', { p_senha: state.senha });
+  if (!data?.success) return;
+  state.pixCrmap = data.pix_crmap || state.pixCrmap;
+  document.getElementById('txtPixInline').textContent = state.pixCrmap;
+  document.getElementById('inputPixCrmap').value = state.pixCrmap;
+  const pendentes = (data.repasses_pendentes || []).length;
+  const acima = (data.pacientes_acima_limite || []).length;
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><span>Repasses pendentes</span><b>${pendentes}</b></div>
+    <div class="stat-card warn"><span>Pacientes ≥ ${data.sessoes_gratuitas} sessões</span><b>${acima}</b></div>
+    <div class="stat-card"><span>Repasse CRMAP</span><b>${data.percentual_repasse}%</b></div>`;
+}
+
+async function salvarPix() {
+  const { data } = await sb.rpc('atualizar_config_saude', { p_senha: state.senha, p_pix_crmap: document.getElementById('inputPixCrmap').value });
+  if (data?.success) {
+    state.pixCrmap = data.pix_crmap;
+    document.getElementById('txtPixInline').textContent = state.pixCrmap;
+    alert('PIX atualizado.');
+  }
+}
+
+async function buscarPaciente() {
+  const tel = document.getElementById('telefonePaciente').value;
+  const box = document.getElementById('pacientePreview');
+  if (!tel || tel.replace(/\D/g, '').length < 10) { box.classList.remove('show'); return; }
+  const params = isCoord()
+    ? { p_telefone: tel, p_senha_coord: state.senha }
+    : { p_telefone: tel, p_profissional_id: state.profissionalId, p_senha_prof: state.senha };
+  const { data } = await sb.rpc('resumo_paciente_saude', params);
+  if (!data?.success) {
+    box.className = 'paciente-preview show pago';
+    box.innerHTML = `<strong>${esc(data?.message)}</strong>`;
+    return;
+  }
+  state.limiteGratis = data.limite_gratuitas || 8;
+  document.getElementById('txtLimiteGratis').textContent = state.limiteGratis;
+  if (data.nome && !document.getElementById('nomePaciente').value) document.getElementById('nomePaciente').value = data.nome;
+  box.className = 'paciente-preview show' + (data.exige_pagamento ? ' pago' : '');
+  box.innerHTML = `<strong>Sessão ${data.proxima_sessao}</strong> — ${esc(data.mensagem)}`;
+  document.getElementById('wrapComunicou').style.display = data.exige_pagamento ? 'flex' : 'none';
+}
+
+async function carregarAgenda() {
+  loader(true);
+  const tbody = document.getElementById('listaConsultas');
+  const profFiltro = isCoord() ? (document.getElementById('filtroProf').value || null) : state.profissionalId;
+  const cols = isCoord() ? 9 : 8;
+  try {
+    const { data, error } = await sb.rpc('listar_consultas_saude_v2', {
+      p_modo: state.modo,
+      p_senha: state.senha,
+      p_profissional_id: state.profissionalId,
+      p_data_inicio: document.getElementById('filtroInicio').value,
+      p_data_fim: document.getElementById('filtroFim').value,
+      p_filtro_prof_id: profFiltro ? Number(profFiltro) : null
+    });
+    if (error) throw error;
+    if (!data?.length) {
+      tbody.innerHTML = `<tr><td colspan="${cols}">Nenhuma consulta no período.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(c => {
+      const cob = c.tipo_cobranca === 'paga'
+        ? `<span class="tag tag-paga">Paga · ${c.numero_sessao}ª</span>`
+        : `<span class="tag tag-gratuita">Grátis · ${c.numero_sessao}ª</span>`;
+      const profCell = isCoord() ? `<td><small>${esc((c.profissional_nome || '').split(' ')[0])}</small></td>` : '';
+      const acoes = c.status === 'agendada'
+        ? `<button class="btn btn-sm" onclick="mudarStatus(${c.id},'realizada',${c.numero_sessao || 0},'${c.tipo_cobranca || 'gratuita'}')">Realizada</button>
+           <button class="btn btn-sm btn-outline" onclick="mudarStatus(${c.id},'falta')">Falta</button>
+           <button class="btn btn-sm btn-danger" onclick="mudarStatus(${c.id},'cancelada')">Cancelar</button>`
+        : `<button class="btn btn-sm btn-outline" onclick="mudarStatus(${c.id},'agendada')">Reabrir</button>`;
+      return `<tr>
+        <td>${fmtData(c.data_consulta)}</td><td>${fmtHora(c.hora_inicio)}</td>
+        <td><span class="tag tag-sessao">${c.numero_sessao}ª</span></td>
+        <td><strong>${esc(c.nome_paciente)}</strong></td>
+        <td><a href="https://wa.me/55${String(c.telefone || '').replace(/\D/g, '')}" target="_blank">${esc(c.telefone)}</a></td>
+        ${profCell}<td>${cob}</td><td>${esc(c.status)}</td><td class="actions">${acoes}</td></tr>`;
+    }).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="${cols}">Erro ao carregar.</td></tr>`;
+    console.error(e);
+  } finally { loader(false); }
+}
+
+async function agendarConsulta(e) {
+  e.preventDefault();
+  const profId = isCoord() ? Number(document.getElementById('profissionalId').value) : state.profissionalId;
+  loader(true);
+  try {
+    const { data, error } = await sb.rpc('criar_consulta_saude_v2', {
+      p_modo: state.modo,
+      p_profissional_id: profId,
+      p_senha: state.senha,
+      p_nome_paciente: document.getElementById('nomePaciente').value,
+      p_telefone: document.getElementById('telefonePaciente').value,
+      p_data_consulta: document.getElementById('dataConsulta').value,
+      p_hora_inicio: document.getElementById('horaConsulta').value,
+      p_duracao_min: Number(document.getElementById('duracaoConsulta').value),
+      p_tipo_atendimento: document.getElementById('tipoAtendimento').value,
+      p_observacoes: document.getElementById('obsConsulta').value,
+      p_criado_por: state.profissionalNome || 'Coordenação',
+      p_comunicou_pagamento: document.getElementById('comunicouPagamento').checked
+    });
+    if (error) throw error;
+    if (!data?.success) { alert(data?.message || 'Erro'); return; }
+    alert(data.exige_pagamento
+      ? `Agendado — sessão ${data.numero_sessao} PAGA. Repasse 10% PIX: ${data.pix_crmap}`
+      : `Agendado — sessão ${data.numero_sessao} gratuita.`);
+    document.getElementById('nomePaciente').value = '';
+    document.getElementById('telefonePaciente').value = '';
+    document.getElementById('obsConsulta').value = '';
+    document.getElementById('pacientePreview').classList.remove('show');
+    await carregarAgenda();
+    if (isCoord()) await carregarResumoAdmin();
+  } catch (err) { alert(err.message); } finally { loader(false); }
+}
+
+function mudarStatus(id, status, numeroSessao, tipoCobranca) {
+  if (status === 'realizada' && tipoCobranca === 'paga' && numeroSessao > state.limiteGratis) {
+    state.consultaModalId = id;
+    document.getElementById('modalPagoTxt').textContent = `Sessão ${numeroSessao} — informe valor e repasse 10%.`;
+    document.getElementById('modalPix').textContent = 'PIX CRMAP: ' + (state.pixCrmap || '—');
+    document.getElementById('valorConsulta').value = '';
+    document.getElementById('repasseConfirmado').checked = false;
+    document.getElementById('valorConsulta').oninput = function () {
+      document.getElementById('valorRepassePreview').textContent = fmtMoeda((Number(this.value) || 0) * state.pctRepasse / 100);
+    };
+    document.getElementById('modalPago').classList.add('show');
+    return;
+  }
+  if (!confirm('Confirmar?')) return;
+  executarStatus(id, status);
+}
+
+async function confirmarRealizadaPaga() {
+  const valor = Number(document.getElementById('valorConsulta').value);
+  if (!valor) { alert('Informe o valor.'); return; }
+  await executarStatus(state.consultaModalId, 'realizada', valor, document.getElementById('repasseConfirmado').checked);
+  document.getElementById('modalPago').classList.remove('show');
+}
+
+async function executarStatus(id, status, valor, repasseOk) {
+  loader(true);
+  try {
+    const { data, error } = await sb.rpc('atualizar_consulta_saude_v2', {
+      p_modo: state.modo, p_senha: state.senha, p_profissional_id: state.profissionalId,
+      p_id: id, p_status: status, p_valor_consulta: valor ?? null, p_repasse_confirmado: repasseOk ?? null
+    });
+    if (error) throw error;
+    if (!data?.success) { alert(data?.message); return; }
+    await carregarAgenda();
+    if (isCoord()) await carregarResumoAdmin();
+  } finally { loader(false); }
+}
+
+function sairAgenda() {
+  state.modo = null;
+  state.senha = '';
+  sessionStorage.removeItem('crmap_saude_sessao');
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('loginOverlay').style.display = 'flex';
+}
+
+function salvarSessao() {
+  sessionStorage.setItem('crmap_saude_sessao', JSON.stringify({
+    page: window.SAUDE_PAGE,
+    modo: state.modo, senha: state.senha, profissionalId: state.profissionalId,
+    profissionalNome: state.profissionalNome, profissionalCargo: state.profissionalCargo,
+    limiteGratis: state.limiteGratis, pixCrmap: state.pixCrmap, pctRepasse: state.pctRepasse
+  }));
+}
+
+function restaurarSessao() {
+  try {
+    const raw = sessionStorage.getItem('crmap_saude_sessao');
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (s.page !== window.SAUDE_PAGE || s.modo !== state.modo) return false;
+    Object.assign(state, s);
+    return true;
+  } catch (e) { return false; }
+}

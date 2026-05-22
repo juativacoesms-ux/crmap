@@ -16,7 +16,9 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 RewriteRule ^index\.html$ / [R=301,L]
 RewriteRule ^index_backup\.html$ / [R=301,L]
 RewriteRule ^(acoes|produtos|terreno|saude)/index\.html$ /$1/ [R=301,L]
+RewriteRule ^saude/controle/index\.html$ /saude/controle/ [R=301,L]
 RewriteRule ^(acoes|produtos|terreno|saude)$ /$1/ [R=301,L]
+RewriteRule ^saude/controle$ /saude/controle/ [R=301,L]
 RewriteRule ^carteirinha/?$ /carteirinha.html [R=301,L]
 
 # Carteirinha voluntário (sem pagamento): URL curta para divulgação

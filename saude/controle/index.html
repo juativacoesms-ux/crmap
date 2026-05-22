@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle Saúde — CRMAP (Diretoria / Secretaria)</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="canonical" href="https://crmapoficial.org.br/saude/controle/">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../saude-common.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="loader">Aguarde…</div>
+<header class="site-header">
+  <div class="wrap">
+    <a href="../../index.html"><img src="../../logo.png" alt="CRMAP" class="logo-img"></a>
+    <div class="nav-links">
+      <a href="../../painel/">Painel geral</a>
+      <a href="../">Área profissionais</a>
+    </div>
+  </div>
+</header>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-panel" style="max-width:400px">
+    <div class="login-body">
+      <h2>Controle — Saúde CRMAP</h2>
+      <p>Diretoria e secretarias: todas as agendas, PIX e repasses.</p>
+      <div class="form-group"><label class="req">Senha institucional</label>
+        <input type="password" id="loginCoordSenha" placeholder="Senha diretoria ou secretaria"></div>
+      <p class="hint">Diretoria: senha do painel geral · Secretaria: <code>secretaria2026</code></p>
+      <button class="btn" style="width:100%" onclick="entrarCoordenacao()">Entrar no controle</button>
+    </div>
+  </div>
+</div>
+
+<main class="app" id="app">
+  <section class="hero">
+    <div><h1>Controle — Saúde Mental</h1><p class="meta" id="heroMeta">Todas as profissionais</p></div>
+    <button class="btn btn-outline" style="border-color:#fff;color:#fff" onclick="sairAgenda()">Sair</button>
+  </section>
+  <div class="alert-box" id="alertaInstitucional">
+    <strong>Política:</strong> <span id="txtLimiteGratis">8</span> sessões gratuitas · 9ª+ paga ·
+    <strong>10% PIX CRMAP:</strong> <span id="txtPixInline">—</span>
+  </div>
+  <div class="stats-row" id="statsRow"></div>
+  <div class="card admin" style="margin-bottom:1rem">
+    <h3>PIX da CRMAP (repasse 10%)</h3>
+    <div class="form-group"><input type="text" id="inputPixCrmap" placeholder="Chave PIX"></div>
+    <button class="btn btn-sm" onclick="salvarPix()">Salvar</button>
+  </div>
+  <div class="prof-chips" id="profChips"></div>
+  <div class="toolbar">
+    <div><label>De</label><input type="date" id="filtroInicio"></div>
+    <div><label>Até</label><input type="date" id="filtroFim"></div>
+    <div><label>Profissional</label><select id="filtroProf"><option value="">Todos</option></select></div>
+    <button class="btn" onclick="carregarAgenda()">Atualizar</button>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Agendar (qualquer profissional)</h3>
+      <form onsubmit="agendarConsulta(event)">
+        <div class="form-group"><label class="req">Profissional</label><select id="profissionalId" required></select></div>
+        <div class="form-group"><label class="req">WhatsApp paciente</label><input type="tel" id="telefonePaciente" required onblur="buscarPaciente()"></div>
+        <div id="pacientePreview" class="paciente-preview"></div>
+        <div class="form-group"><label class="req">Nome</label><input type="text" id="nomePaciente" required></div>
+        <div class="form-group"><label class="req">Data</label><input type="date" id="dataConsulta" required></div>
+        <div class="form-group"><label class="req">Hora</label><input type="time" id="horaConsulta" required></div>
+        <div class="form-group"><label>Duração</label><select id="duracaoConsulta"><option value="50">50 min</option></select></div>
+        <div class="form-group"><label>Tipo</label><select id="tipoAtendimento"><option>Psicologia</option><option>Psicanálise</option></select></div>
+        <div class="form-group"><label>Obs.</label><textarea id="obsConsulta" rows="2"></textarea></div>
+        <div class="check-row" id="wrapComunicou" style="display:none">
+          <input type="checkbox" id="comunicouPagamento">
+          <label for="comunicouPagamento">Paciente avisada — sessão paga</label>
+        </div>
+        <button type="submit" class="btn" style="width:100%">Agendar</button>
+      </form>
+    </div>
+    <div class="card admin">
+      <h3>Agenda geral</h3>
+      <table><thead><tr><th>Data</th><th>Hora</th><th>Sessão</th><th>Paciente</th><th>WhatsApp</th><th>Prof.</th><th>Cobrança</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody id="listaConsultas"></tbody></table>
+    </div>
+  </div>
+  <div class="card admin" style="margin-top:1rem">
+    <h3>Profissionais cadastradas</h3>
+    <div id="listaProfissionais" class="hint">Carregando…</div>
+  </div>
+</main>
+
+<div class="modal" id="modalPago">
+  <div class="modal-box">
+    <h3 style="color:var(--primary);margin-top:0">Consulta paga</h3>
+    <p id="modalPagoTxt"></p>
+    <div class="form-group"><label class="req">Valor (R$)</label><input type="number" id="valorConsulta" step="0.01"></div>
+    <p>Repasse: <strong id="valorRepassePreview">R$ 0,00</strong></p>
+    <div class="pix-box" id="modalPix"></div>
+    <div class="check-row"><input type="checkbox" id="repasseConfirmado"><label for="repasseConfirmado">Repasse PIX confirmado</label></div>
+    <button class="btn" style="width:100%" onclick="confirmarRealizadaPaga()">Realizada</button>
+    <button class="btn btn-outline" style="width:100%;margin-top:.5rem" onclick="document.getElementById('modalPago').classList.remove('show')">Cancelar</button>
+  </div>
+</div>
+
+<script src="../saude-common.js"></script>
+<script>
+window.SAUDE_PAGE = 'controle';
+state.modo = 'coordenacao';
+
+async function entrarCoordenacao() {
+  loader(true);
+  const senha = document.getElementById('loginCoordSenha').value;
+  const { data, error } = await sb.rpc('login_coordenacao_saude', { p_senha: senha });
+  loader(false);
+  if (error || !data?.success) { alert(data?.message || 'Senha incorreta'); return; }
+  state.senha = senha;
+  state.limiteGratis = data.sessoes_gratuitas || 8;
+  state.pixCrmap = data.pix_crmap || '';
+  state.pctRepasse = Number(data.percentual_repasse) || 10;
+  salvarSessao();
+  iniciarAppUI();
+  await carregarListaProfissionaisAdmin();
+}
+
+async function carregarListaProfissionaisAdmin() {
+  const { data } = await sb.rpc('listar_profissionais_coord_saude', { p_senha: state.senha });
+  const el = document.getElementById('listaProfissionais');
+  if (!data?.success) { el.textContent = 'Erro ao listar.'; return; }
+  const list = data.profissionais || [];
+  if (!list.length) { el.textContent = 'Nenhuma profissional cadastrada ainda.'; return; }
+  el.innerHTML = '<table><thead><tr><th>Nome</th><th>Cargo</th><th>WhatsApp</th><th>Ativa</th></tr></thead><tbody>' +
+    list.map(p => `<tr><td>${esc(p.nome)}</td><td>${esc(p.cargo)}</td><td>${esc(p.telefone || '—')}</td><td>${p.ativo ? 'Sim' : 'Não'}</td></tr>`).join('') +
+    '</tbody></table>';
+}
+
+if (restaurarSessao()) {
+  iniciarAppUI();
+  carregarListaProfissionaisAdmin();
+}
+document.getElementById('loginCoordSenha').addEventListener('keydown', e => { if (e.key === 'Enter') entrarCoordenacao(); });
+</script>
+<footer style="background:#0f301d;color:#d0e6d8;text-align:center;padding:1.25rem;font-size:.82rem">
+  Uso interno — Diretoria e Secretaria CRMAP
+</footer>
+</body>
+</html>
