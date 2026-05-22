@@ -182,15 +182,22 @@
             lista.innerHTML = '<tr><td colspan="6" style="text-align:center">Nenhum pagamento registrado.</td></tr>';
             return;
         }
+        const rotuloStatus = (s) => {
+            if (s === 'approved') return 'Pago';
+            if (s === 'pending') return 'Pendente';
+            if (s === 'downloaded') return 'Pago + baixou';
+            if (s === 'downloaded_voluntario') return 'Voluntário (baixou)';
+            return s || '—';
+        };
         lista.innerHTML = data.map(p => `
             <tr>
                 <td>${new Date(p.created_at).toLocaleDateString()}</td>
-                <td>${p.nome_pagador}</td>
-                <td>${p.numero_credencial}</td>
-                <td>R$ ${p.valor}</td>
-                <td><span class="status-badge status-${p.status}">${p.status === 'approved' ? 'Pago' : 'Pendente'}</span></td>
+                <td>${p.nome_pagador || '—'}</td>
+                <td>${p.numero_credencial || '—'}</td>
+                <td>${p.valor != null ? 'R$ ' + p.valor : '—'}</td>
+                <td><span class="status-badge status-${p.status}">${rotuloStatus(p.status)}</span></td>
                 <td>
-                    ${p.status === 'approved' ? '-' : `<button style="width:auto; padding:0.5rem 0.8rem;" onclick="aprovarManual('${p.payment_id || ''}')">Aprovar manual</button>`}
+                    ${p.status === 'approved' || p.status === 'downloaded' || p.status === 'downloaded_voluntario' ? '-' : `<button style="width:auto; padding:0.5rem 0.8rem;" onclick="aprovarManual('${p.payment_id || ''}')">Aprovar manual</button>`}
                 </td>
             </tr>
         `).join('');
@@ -217,6 +224,19 @@
                 alert(res.message || 'Falha ao aprovar manualmente.');
             } else {
                 alert('Pagamento aprovado manualmente com sucesso.');
+                const row = (await supabaseClient.from('pagamentos_carteirinha').select('numero_credencial,nome_pagador').eq('payment_id', paymentId).maybeSingle()).data;
+                if (row?.numero_credencial) {
+                    fetch(`${SUPABASE_URL}/functions/v1/registrar-planilha`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_KEY}` },
+                        body: JSON.stringify({
+                            evento: 'pagamento_aprovado',
+                            numero: row.numero_credencial,
+                            nome: row.nome_pagador || '',
+                            data: new Date().toLocaleDateString('pt-BR')
+                        })
+                    }).catch(() => {});
+                }
                 await carregarPagamentos();
             }
         } catch (err) {

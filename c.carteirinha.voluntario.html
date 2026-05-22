@@ -523,12 +523,12 @@
 
   async function registrarDownloadNoBanco(payload) {
     try {
-      await supabaseClient.from('pagamentos_carteirinha').insert({
-        nome_pagador: payload.nome || null,
-        numero_credencial: payload.numero || null,
-        valor: 0,
-        status: 'downloaded_voluntario'
+      const { error } = await supabaseClient.rpc('registrar_download_carteirinha', {
+        p_numero_credencial: payload.numero || '',
+        p_nome: payload.nome || '',
+        p_voluntario: true
       });
+      if (error) throw error;
     } catch (err) {
       console.error('Falha ao registrar download no banco', err);
     }

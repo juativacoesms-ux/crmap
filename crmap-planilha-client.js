@@ -5,6 +5,9 @@
 (function (global) {
   const GOOGLE_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbxta2QnUbWxVA9DRuy5NdKwSjDv_RjfIht0Qgt5C6CRnUlzZ_QnVB7G1V2DxamDMMLW/exec';
+  const SUPABASE_URL = 'https://qzjvzbvoxwhggvadaroq.supabase.co';
+  const SUPABASE_ANON_KEY =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0';
 
   function dataHojeBr() {
     const d = new Date();
@@ -44,6 +47,17 @@
       body: encoded,
       keepalive: true
     }).catch((err) => console.error('Erro ao salvar na planilha', err));
+
+    // Backup server-side (CORS ok, confirma gravação quando o GAS estiver publicado)
+    fetch(SUPABASE_URL + '/functions/v1/registrar-planilha', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify(payload || {}),
+      keepalive: true
+    }).catch((err) => console.warn('Backup planilha (edge):', err));
   }
 
   global.CRMAP_PLANILHA = {
