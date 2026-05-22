@@ -4,525 +4,595 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Saúde Mental — Agenda CRMAP</title>
-  <meta name="description" content="Agenda de atendimentos em saúde mental da CRMAP — uso da equipe técnica.">
   <meta name="robots" content="noindex,nofollow">
   <link rel="canonical" href="https://crmapoficial.org.br/saude/">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root {
-      --primary: #1b7340;
-      --primary-dark: #0f301d;
-      --accent: #d63222;
-      --bg: #f0f7f2;
-      --white: #fff;
-      --text: #2b332b;
-      --muted: #5a6b5e;
-      --border: #e1efe4;
-    }
-    *, *::before, *::after { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(165deg, #fdfdfb 0%, var(--bg) 100%);
-      color: var(--text);
-      min-height: 100vh;
-    }
-    h1, h2, h3 { font-family: 'Montserrat', sans-serif; letter-spacing: -0.02em; }
-
-    header.site-header {
-      background: rgba(255,255,255,0.95);
-      border-bottom: 1px solid rgba(27,115,64,0.08);
-      padding: 0.85rem 0;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    header .wrap {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 1.25rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-    .logo-img { width: 120px; height: auto; }
-    .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-    .nav-links a {
-      background: #e8f4ec;
-      color: var(--primary);
-      font-weight: 700;
-      font-size: 0.85rem;
-      padding: 0.45rem 0.9rem;
-      border-radius: 999px;
-      text-decoration: none;
-    }
-    .nav-links a:hover { background: var(--primary); color: #fff; }
-
-    .login-overlay {
-      position: fixed; inset: 0;
-      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-      display: flex; align-items: center; justify-content: center;
-      z-index: 2000; padding: 1rem;
-    }
-    .login-box {
-      background: var(--white);
-      padding: 2rem;
-      border-radius: 16px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-      text-align: center;
-    }
-    .login-box h2 { color: var(--primary); margin-top: 0; }
-    .login-box p { color: var(--muted); font-size: 0.9rem; }
-
-    .app { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; display: none; }
-    .app.visible { display: block; }
-
-    .hero-saude {
-      background: linear-gradient(120deg, rgba(15,48,29,0.92), rgba(27,115,64,0.85));
-      color: #fff;
-      border-radius: 16px;
-      padding: 1.75rem 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-    .hero-saude h1 { margin: 0 0 0.5rem; font-size: 1.6rem; }
-    .hero-saude p { margin: 0; opacity: 0.9; font-size: 0.95rem; }
-
-    .toolbar {
-      display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end;
-      margin-bottom: 1.25rem;
-    }
-    .toolbar label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--muted); margin-bottom: 0.25rem; }
-    .toolbar input, .toolbar select {
-      padding: 0.6rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font: inherit;
-    }
-    .btn {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      padding: 0.65rem 1.1rem;
-      border-radius: 8px;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-    .btn:hover { filter: brightness(1.05); }
-    .btn-outline {
-      background: #fff;
-      color: var(--primary);
-      border: 2px solid var(--primary);
-    }
-    .btn-danger { background: var(--accent); }
-    .btn-sm { padding: 0.35rem 0.65rem; font-size: 0.78rem; width: auto; }
-
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
-    @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
-
-    .card {
-      background: var(--white);
-      border-radius: 14px;
-      padding: 1.25rem;
-      box-shadow: 0 4px 18px rgba(15,48,29,0.06);
-      border-top: 5px solid var(--primary);
-    }
-    .card h3 { margin-top: 0; color: var(--primary); font-size: 1.05rem; }
-
-    .form-group { margin-bottom: 0.85rem; }
-    .form-group label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.3rem; }
-    .form-group input, .form-group select, .form-group textarea {
-      width: 100%;
-      padding: 0.65rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font: inherit;
-    }
-
-    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    th, td { text-align: left; padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border); vertical-align: top; }
-    th { color: var(--primary); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
-    tr:hover td { background: #f8fbf9; }
-
-    .badge {
-      display: inline-block;
-      padding: 0.2rem 0.55rem;
-      border-radius: 6px;
-      font-size: 0.72rem;
-      font-weight: 700;
-    }
-    .badge-agendada { background: #dbeafe; color: #1e40af; }
-    .badge-realizada { background: #dcfce7; color: #166534; }
-    .badge-cancelada { background: #f3f4f6; color: #4b5563; }
-    .badge-falta { background: #fee2e2; color: #991b1b; }
-
-    .empty { text-align: center; color: var(--muted); padding: 2rem; }
-    #loader {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(15,48,29,0.5);
-      color: #fff;
-      align-items: center; justify-content: center;
-      z-index: 3000; font-weight: 700;
-    }
-    #loader.show { display: flex; }
-    .actions-cell { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    :root { --primary:#1b7340; --dark:#0f301d; --accent:#d63222; --warn:#b45309; --bg:#f0f7f2; --white:#fff; --text:#2b332b; --muted:#5a6b5e; --border:#e1efe4; }
+    *,*::before,*::after{box-sizing:border-box}
+    body{margin:0;font-family:Inter,sans-serif;background:linear-gradient(165deg,#fdfdfb,var(--bg));color:var(--text);min-height:100vh}
+    h1,h2,h3{font-family:Montserrat,sans-serif}
+    header.site-header{background:rgba(255,255,255,.95);border-bottom:1px solid rgba(27,115,64,.08);padding:.85rem 0;position:sticky;top:0;z-index:100}
+    header .wrap{max-width:1200px;margin:0 auto;padding:0 1.25rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+    .logo-img{width:110px}
+    .nav-links a{background:#e8f4ec;color:var(--primary);font-weight:700;font-size:.85rem;padding:.45rem .9rem;border-radius:999px;text-decoration:none;margin-left:.35rem}
+    .login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,var(--dark),var(--primary));display:flex;align-items:center;justify-content:center;z-index:2000;padding:1rem}
+    .login-panel{background:var(--white);border-radius:16px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+    .login-tabs{display:flex}
+    .login-tabs button{flex:1;border:none;padding:1rem;font-weight:700;cursor:pointer;background:#f3f7f4;color:var(--muted)}
+    .login-tabs button.active{background:var(--white);color:var(--primary);box-shadow:inset 0 -3px 0 var(--primary)}
+    .login-body{padding:1.5rem 1.75rem 1.75rem}
+    .login-body h2{margin:0 0 .35rem;color:var(--primary);font-size:1.2rem}
+    .login-body p{margin:0 0 1rem;color:var(--muted);font-size:.88rem}
+    .app{max-width:1200px;margin:0 auto;padding:1.25rem 1.25rem 3rem;display:none}
+    .app.visible{display:block}
+    .hero{background:linear-gradient(120deg,rgba(15,48,29,.93),rgba(27,115,64,.88));color:#fff;border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem}
+    .hero h1{margin:0;font-size:1.35rem}
+    .hero .meta{font-size:.88rem;opacity:.92}
+    .badge-role{background:rgba(255,255,255,.2);padding:.35rem .75rem;border-radius:999px;font-size:.75rem;font-weight:700}
+    .alert-box{background:#fff8e6;border:1px solid #fcd34d;border-left:4px solid var(--warn);padding:.85rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:.9rem}
+    .alert-box.danger{background:#fff5f4;border-color:#fecaca;border-left-color:var(--accent)}
+    .alert-box strong{display:block;margin-bottom:.25rem}
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-bottom:1rem}
+    .stat-card{background:var(--white);border-radius:10px;padding:.85rem;box-shadow:0 2px 10px rgba(0,0,0,.05);border-left:4px solid var(--primary)}
+    .stat-card.warn{border-left-color:var(--warn)}
+    .stat-card.danger{border-left-color:var(--accent)}
+    .stat-card span{font-size:.72rem;color:var(--muted);text-transform:uppercase;font-weight:700}
+    .stat-card b{display:block;font-size:1.35rem;margin-top:.2rem}
+    .toolbar{display:flex;flex-wrap:wrap;gap:.65rem;align-items:flex-end;margin-bottom:1rem}
+    .toolbar label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:.2rem}
+    .toolbar input,.toolbar select{padding:.55rem .7rem;border:1px solid var(--border);border-radius:8px;font:inherit}
+    .btn{background:var(--primary);color:#fff;border:none;padding:.6rem 1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.88rem}
+    .btn-outline{background:#fff;color:var(--primary);border:2px solid var(--primary)}
+    .btn-sm{padding:.3rem .55rem;font-size:.75rem;width:auto}
+    .btn-danger{background:var(--accent)}
+    .btn-warn{background:var(--warn);color:#fff}
+    .grid-2{display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:1.25rem}
+    @media(max-width:960px){.grid-2{grid-template-columns:1fr}}
+    .card{background:var(--white);border-radius:14px;padding:1.15rem;box-shadow:0 4px 16px rgba(15,48,29,.06);border-top:5px solid var(--primary)}
+    .card.admin{border-top-color:var(--accent)}
+    .card h3{margin:0 0 .85rem;color:var(--primary);font-size:1rem}
+    .form-group{margin-bottom:.75rem}
+    .form-group label{display:block;font-weight:600;font-size:.82rem;margin-bottom:.25rem}
+    .form-group input,.form-group select,.form-group textarea{width:100%;padding:.6rem;border:1px solid var(--border);border-radius:8px;font:inherit}
+    .form-group .hint{font-size:.75rem;color:var(--muted);margin-top:.2rem}
+    .req::after{content:' *';color:var(--accent)}
+    .paciente-preview{display:none;background:#f0faf3;border:1px solid var(--border);border-radius:8px;padding:.75rem;margin-bottom:.75rem;font-size:.85rem}
+    .paciente-preview.show{display:block}
+    .paciente-preview.pago{background:#fff8f4;border-color:#fed7aa}
+    .check-row{display:flex;align-items:flex-start;gap:.5rem;margin:.75rem 0;font-size:.85rem}
+    .check-row input{margin-top:.2rem}
+    table{width:100%;border-collapse:collapse;font-size:.82rem}
+    th,td{text-align:left;padding:.6rem .45rem;border-bottom:1px solid var(--border);vertical-align:top}
+    th{color:var(--primary);font-size:.7rem;text-transform:uppercase}
+    .tag{display:inline-block;padding:.15rem .45rem;border-radius:5px;font-size:.68rem;font-weight:700}
+    .tag-gratuita{background:#dcfce7;color:#166534}
+    .tag-paga{background:#fee2e2;color:#991b1b}
+    .tag-sessao{background:#e0e7ff;color:#3730a3}
+    .actions{display:flex;flex-wrap:wrap;gap:.3rem}
+    #loader{position:fixed;inset:0;background:rgba(15,48,29,.55);color:#fff;display:none;align-items:center;justify-content:center;z-index:3000;font-weight:700}
+    #loader.show{display:flex}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:2500;padding:1rem}
+    .modal.show{display:flex}
+    .modal-box{background:var(--white);border-radius:12px;padding:1.25rem;max-width:400px;width:100%}
+    .prof-chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem}
+    .prof-chips button{border:2px solid var(--border);background:#fff;border-radius:999px;padding:.4rem .85rem;font-size:.78rem;font-weight:600;cursor:pointer}
+    .prof-chips button.active{border-color:var(--primary);background:#e8f4ec;color:var(--primary)}
+    .pix-box{background:#f8fbf9;border:1px dashed var(--primary);padding:.75rem;border-radius:8px;font-size:.85rem;word-break:break-all}
   </style>
 </head>
 <body>
-
 <div id="loader">Aguarde…</div>
 
 <header class="site-header">
   <div class="wrap">
     <a href="../index.html"><img src="../logo.png" alt="CRMAP" class="logo-img" onerror="this.style.display='none'"></a>
-    <nav class="nav-links">
+    <div class="nav-links">
       <a href="../index.html">Início</a>
-      <a href="../acoes/">Ações</a>
-      <a href="../painel/">Painel gestão</a>
-    </nav>
+      <a href="../painel/">Painel geral</a>
+    </div>
   </div>
 </header>
 
 <div class="login-overlay" id="loginOverlay">
-  <div class="login-box">
-    <h2>🩺 Agenda — Saúde CRMAP</h2>
-    <p>Acesso restrito à equipe de saúde mental e coordenação.</p>
-    <input type="password" id="senhaAcesso" placeholder="Senha da equipe" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:8px;margin:1rem 0;">
-    <button class="btn" style="width:100%" onclick="entrar()">Entrar na agenda</button>
+  <div class="login-panel">
+    <div class="login-tabs">
+      <button type="button" id="tabProf" class="active" onclick="setLoginTab('prof')">Profissional</button>
+      <button type="button" id="tabCoord" onclick="setLoginTab('coord')">Diretoria / Secretaria</button>
+    </div>
+    <div class="login-body" id="loginProf">
+      <h2>Minha agenda</h2>
+      <p>Acesse somente os seus agendamentos.</p>
+      <div class="form-group">
+        <label class="req">Profissional</label>
+        <select id="loginProfSelect"></select>
+      </div>
+      <div class="form-group">
+        <label class="req">Senha pessoal</label>
+        <input type="password" id="loginProfSenha" placeholder="Fornecida pela coordenação">
+      </div>
+      <p class="hint" style="font-size:.75rem;color:var(--muted)">Primeiro acesso? Padrão: <code>crmap[ID]2026</code> (ex.: id 3 → crmap32026)</p>
+      <button class="btn" style="width:100%" onclick="entrarProfissional()">Entrar na minha agenda</button>
+    </div>
+    <div class="login-body" id="loginCoord" style="display:none">
+      <h2>Coordenação CRMAP</h2>
+      <p>Visão de todas as agendas, repasses PIX e pacientes.</p>
+      <div class="form-group">
+        <label class="req">Senha institucional</label>
+        <input type="password" id="loginCoordSenha" placeholder="Senha diretoria ou secretaria">
+      </div>
+      <button class="btn" style="width:100%" onclick="entrarCoordenacao()">Entrar no painel completo</button>
+    </div>
   </div>
 </div>
 
 <main class="app" id="app">
-  <section class="hero-saude">
-    <h1>Saúde Mental — Agenda de consultas</h1>
-    <p>Agende e acompanhe atendimentos psicológicos, psicanalíticos e de acolhimento. Visível para toda a equipe autorizada.</p>
+  <section class="hero">
+    <div>
+      <span class="badge-role" id="badgeRole"></span>
+      <h1 id="heroTitle">Agenda de Saúde Mental</h1>
+      <p class="meta" id="heroMeta"></p>
+    </div>
+    <button class="btn btn-outline" style="border-color:#fff;color:#fff" onclick="sair()">Sair</button>
   </section>
 
+  <div class="alert-box" id="alertaInstitucional">
+    <strong>Política CRMAP:</strong> cada paciente tem <span id="txtLimiteGratis">8</span> sessões gratuitas.
+    Da 9ª em diante a consulta é <strong>paga</strong> — comunique a paciente e registre o valor.
+    <strong>10% do valor</strong> deve ser enviado ao PIX da CRMAP: <span id="txtPixInline">—</span>
+  </div>
+
+  <div id="painelAdminExtras" style="display:none">
+    <div class="stats-row" id="statsRow"></div>
+    <div class="card admin" style="margin-bottom:1rem">
+      <h3>Configuração PIX da CRMAP</h3>
+      <div class="form-group">
+        <label>Chave PIX (repasse 10%)</label>
+        <input type="text" id="inputPixCrmap" placeholder="CNPJ, e-mail ou telefone PIX">
+      </div>
+      <button class="btn btn-sm" onclick="salvarPix()">Salvar PIX</button>
+      <p class="hint">Senha secretaria também acessa: <code>secretaria2026</code></p>
+    </div>
+    <div class="prof-chips" id="profChips"></div>
+  </div>
+
   <div class="toolbar">
-    <div>
-      <label>De</label>
-      <input type="date" id="filtroInicio">
+    <div><label>De</label><input type="date" id="filtroInicio"></div>
+    <div><label>Até</label><input type="date" id="filtroFim"></div>
+    <div id="wrapFiltroProf" style="display:none"><label>Profissional</label>
+      <select id="filtroProf"><option value="">Todos</option></select>
     </div>
-    <div>
-      <label>Até</label>
-      <input type="date" id="filtroFim">
-    </div>
-    <div>
-      <label>Profissional</label>
-      <select id="filtroProf" style="min-width:200px">
-        <option value="">Todos</option>
-      </select>
-    </div>
-    <button class="btn" onclick="carregarAgenda()">Atualizar lista</button>
-    <button class="btn btn-outline" onclick="sair()">Sair</button>
+    <button class="btn" onclick="carregarAgenda()">Atualizar</button>
   </div>
 
   <div class="grid-2">
     <div class="card">
-      <h3>Nova consulta</h3>
+      <h3 id="tituloForm">Nova consulta</h3>
       <form id="formAgendar" onsubmit="agendarConsulta(event)">
-        <div class="form-group">
-          <label>Profissional *</label>
+        <div id="wrapProfForm" class="form-group" style="display:none">
+          <label class="req">Profissional</label>
           <select id="profissionalId" required></select>
         </div>
         <div class="form-group">
-          <label>Nome da paciente *</label>
-          <input type="text" id="nomePaciente" required placeholder="Nome completo">
+          <label class="req">WhatsApp da paciente</label>
+          <input type="tel" id="telefonePaciente" required placeholder="(31) 99999-9999" onblur="buscarPaciente()">
+          <span class="hint">Obrigatório — usado para contar sessões e não perder histórico.</span>
+        </div>
+        <div id="pacientePreview" class="paciente-preview"></div>
+        <div class="form-group">
+          <label class="req">Nome da paciente</label>
+          <input type="text" id="nomePaciente" required>
         </div>
         <div class="form-group">
-          <label>Telefone / WhatsApp</label>
-          <input type="tel" id="telefonePaciente" placeholder="(31) 9 9999-9999">
+          <label class="req">Data</label><input type="date" id="dataConsulta" required>
         </div>
         <div class="form-group">
-          <label>Data *</label>
-          <input type="date" id="dataConsulta" required>
+          <label class="req">Horário</label><input type="time" id="horaConsulta" required>
         </div>
         <div class="form-group">
-          <label>Horário *</label>
-          <input type="time" id="horaConsulta" required>
+          <label>Duração</label>
+          <select id="duracaoConsulta"><option value="50" selected>50 min</option><option value="60">60 min</option></select>
         </div>
         <div class="form-group">
-          <label>Duração (min)</label>
-          <select id="duracaoConsulta">
-            <option value="30">30 min</option>
-            <option value="50" selected>50 min</option>
-            <option value="60">60 min</option>
-            <option value="90">90 min</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Tipo de atendimento</label>
+          <label>Tipo</label>
           <select id="tipoAtendimento">
-            <option>Psicologia</option>
-            <option>Psicanálise</option>
-            <option>Acolhimento social</option>
-            <option>Assistente de saúde</option>
-            <option>Retorno</option>
-            <option>Primeira vez</option>
+            <option>Psicologia</option><option>Psicanálise</option>
+            <option>Acolhimento</option><option>Assistente de saúde</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Observações</label>
-          <textarea id="obsConsulta" rows="2" placeholder="Encaminhamento, preferências…"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Registrado por</label>
-          <input type="text" id="criadoPor" placeholder="Seu nome (equipe)">
+        <div class="form-group"><label>Observações</label><textarea id="obsConsulta" rows="2"></textarea></div>
+        <div class="check-row" id="wrapComunicou" style="display:none">
+          <input type="checkbox" id="comunicouPagamento">
+          <label for="comunicouPagamento">Comuniquei à paciente que esta sessão é <strong>paga</strong> (após as 8 gratuitas).</label>
         </div>
         <button type="submit" class="btn" style="width:100%">Confirmar agendamento</button>
       </form>
     </div>
-
-    <div class="card" style="border-top-color: var(--accent);">
-      <h3>Agenda do período</h3>
+    <div class="card">
+      <h3 id="tituloLista">Agenda</h3>
       <div style="overflow-x:auto">
         <table>
           <thead>
             <tr>
-              <th>Data</th>
-              <th>Hora</th>
-              <th>Profissional</th>
-              <th>Paciente</th>
-              <th>Tipo</th>
-              <th>Status</th>
-              <th>Ações</th>
+              <th>Data</th><th>Hora</th><th>Sessão</th><th>Paciente</th><th>WhatsApp</th>
+              <th id="thProf" style="display:none">Prof.</th>
+              <th>Cobrança</th><th>Status</th><th>Ações</th>
             </tr>
           </thead>
-          <tbody id="listaConsultas">
-            <tr><td colspan="7" class="empty">Carregando…</td></tr>
-          </tbody>
+          <tbody id="listaConsultas"><tr><td colspan="9">Carregando…</td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
 </main>
 
+<div class="modal" id="modalPago">
+  <div class="modal-box">
+    <h3 style="margin-top:0;color:var(--primary)">Consulta paga — registrar valores</h3>
+    <p id="modalPagoTxt" style="font-size:.9rem"></p>
+    <div class="form-group">
+      <label class="req">Valor cobrado (R$)</label>
+      <input type="number" id="valorConsulta" min="0" step="0.01" placeholder="0,00">
+    </div>
+    <p style="font-size:.85rem">Repasse CRMAP (10%): <strong id="valorRepassePreview">R$ 0,00</strong></p>
+    <div class="pix-box" id="modalPix"></div>
+    <div class="check-row">
+      <input type="checkbox" id="repasseConfirmado">
+      <label for="repasseConfirmado">Confirmo que o repasse de 10% foi enviado ao PIX da CRMAP.</label>
+    </div>
+    <button class="btn" style="width:100%;margin-top:.5rem" onclick="confirmarRealizadaPaga()">Marcar como realizada</button>
+    <button class="btn btn-outline" style="width:100%;margin-top:.5rem" onclick="fecharModal()">Cancelar</button>
+  </div>
+</div>
+
 <script>
-  const SUPABASE_URL = 'https://qzjvzbvoxwhggvadaroq.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0';
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = 'https://qzjvzbvoxwhggvadaroq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let senhaEquipe = '';
-  let profissionaisMap = {};
+const state = {
+  modo: null,
+  senha: '',
+  profissionalId: null,
+  profissionalNome: '',
+  limiteGratis: 8,
+  pixCrmap: '',
+  pctRepasse: 10,
+  resumoPaciente: null,
+  consultaModalId: null
+};
 
-  function hojeIso() {
-    const d = new Date();
-    return d.toISOString().slice(0, 10);
+function loader(on) { document.getElementById('loader').classList.toggle('show', on); }
+function hoje() { return new Date().toISOString().slice(0, 10); }
+function dias(n) { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+function fmtData(iso) { if(!iso)return'—'; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+function fmtHora(t) { return String(t||'').slice(0,5); }
+function fmtMoeda(v) { return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
+
+function setLoginTab(t) {
+  document.getElementById('tabProf').classList.toggle('active', t === 'prof');
+  document.getElementById('tabCoord').classList.toggle('active', t === 'coord');
+  document.getElementById('loginProf').style.display = t === 'prof' ? 'block' : 'none';
+  document.getElementById('loginCoord').style.display = t === 'coord' ? 'block' : 'none';
+}
+
+async function carregarListaProfissionaisLogin() {
+  const { data } = await sb.from('profissionais_saude').select('id,nome').eq('ativo', true).order('ordem');
+  const sel = document.getElementById('loginProfSelect');
+  sel.innerHTML = (data||[]).map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join('');
+  return data || [];
+}
+
+async function entrarProfissional() {
+  const id = Number(document.getElementById('loginProfSelect').value);
+  const senha = document.getElementById('loginProfSenha').value;
+  loader(true);
+  try {
+    const { data, error } = await sb.rpc('login_profissional_saude', { p_profissional_id: id, p_senha: senha });
+    if (error) throw error;
+    if (!data?.success) { alert(data?.message || 'Login falhou'); return; }
+    state.modo = 'profissional';
+    state.senha = senha;
+    state.profissionalId = data.profissional_id;
+    state.profissionalNome = data.nome;
+    iniciarApp();
+  } catch (e) {
+    alert('Erro ao entrar. Confira se o banco v2 foi aplicado (setup_saude_v2.sql).');
+    console.error(e);
+  } finally { loader(false); }
+}
+
+async function entrarCoordenacao() {
+  const senha = document.getElementById('loginCoordSenha').value;
+  loader(true);
+  try {
+    const { data, error } = await sb.rpc('login_coordenacao_saude', { p_senha: senha });
+    if (error) throw error;
+    if (!data?.success) { alert(data?.message || 'Senha incorreta'); return; }
+    state.modo = 'coordenacao';
+    state.senha = senha;
+    state.profissionalId = null;
+    state.limiteGratis = data.sessoes_gratuitas || 8;
+    state.pixCrmap = data.pix_crmap || '';
+    state.pctRepasse = Number(data.percentual_repasse) || 10;
+    iniciarApp();
+    await carregarResumoAdmin();
+  } catch (e) {
+    alert('Erro ao entrar.');
+    console.error(e);
+  } finally { loader(false); }
+}
+
+function iniciarApp() {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('filtroInicio').value = hoje();
+  document.getElementById('filtroFim').value = dias(30);
+  document.getElementById('dataConsulta').value = hoje();
+  document.getElementById('txtLimiteGratis').textContent = state.limiteGratis;
+  document.getElementById('txtPixInline').textContent = state.pixCrmap || '(configure no painel admin)';
+
+  const isCoord = state.modo === 'coordenacao';
+  document.getElementById('badgeRole').textContent = isCoord ? 'Diretoria / Secretaria' : 'Profissional';
+  document.getElementById('heroTitle').textContent = isCoord ? 'Painel geral — Saúde CRMAP' : 'Minha agenda';
+  document.getElementById('heroMeta').textContent = isCoord
+    ? 'Todas as profissionais · histórico por WhatsApp · repasses'
+    : state.profissionalNome;
+  document.getElementById('painelAdminExtras').style.display = isCoord ? 'block' : 'none';
+  document.getElementById('wrapFiltroProf').style.display = isCoord ? 'block' : 'none';
+  document.getElementById('thProf').style.display = isCoord ? 'table-cell' : 'none';
+  document.getElementById('wrapProfForm').style.display = isCoord ? 'block' : 'none';
+  document.getElementById('tituloForm').textContent = isCoord ? 'Agendar (qualquer profissional)' : 'Nova consulta na minha agenda';
+  document.getElementById('inputPixCrmap').value = state.pixCrmap || '';
+
+  carregarProfissionaisSelects().then(() => carregarAgenda());
+}
+
+async function carregarProfissionaisSelects() {
+  const { data } = await sb.from('profissionais_saude').select('id,nome').eq('ativo', true).order('ordem');
+  const opts = (data||[]).map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join('');
+  document.getElementById('profissionalId').innerHTML = opts;
+  document.getElementById('filtroProf').innerHTML = '<option value="">Todos</option>' + opts;
+  if (state.modo === 'profissional') {
+    document.getElementById('profissionalId').value = state.profissionalId;
+    document.getElementById('profissionalId').disabled = true;
   }
+  const chips = document.getElementById('profChips');
+  chips.innerHTML = '<button type="button" class="active" data-id="" onclick="filtrarChip(this)">Todos</button>' +
+    (data||[]).map(p => `<button type="button" data-id="${p.id}" onclick="filtrarChip(this)">${esc(p.nome.split(' ')[0])}</button>`).join('');
+}
 
-  function daquiDiasIso(n) {
-    const d = new Date();
-    d.setDate(d.getDate() + n);
-    return d.toISOString().slice(0, 10);
-  }
+function filtrarChip(btn) {
+  document.querySelectorAll('#profChips button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('filtroProf').value = btn.dataset.id || '';
+  carregarAgenda();
+}
 
-  function formatarDataBr(iso) {
-    if (!iso) return '—';
-    const [y, m, d] = iso.split('-');
-    return `${d}/${m}/${y}`;
-  }
+async function carregarResumoAdmin() {
+  const { data } = await sb.rpc('painel_resumo_saude', { p_senha: state.senha });
+  if (!data?.success) return;
+  state.pixCrmap = data.pix_crmap || state.pixCrmap;
+  document.getElementById('txtPixInline').textContent = state.pixCrmap;
+  document.getElementById('inputPixCrmap').value = state.pixCrmap;
+  const pendentes = (data.repasses_pendentes || []).length;
+  const acima = (data.pacientes_acima_limite || []).length;
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><span>Consultas pagas sem repasse</span><b>${pendentes}</b></div>
+    <div class="stat-card warn"><span>Pacientes ≥ ${data.sessoes_gratuitas} sessões</span><b>${acima}</b></div>
+    <div class="stat-card"><span>Repasse institucional</span><b>${data.percentual_repasse}%</b></div>`;
+}
 
-  function formatarHora(t) {
-    if (!t) return '—';
-    return String(t).slice(0, 5);
-  }
-
-  function badgeStatus(s) {
-    const map = {
-      agendada: ['Agendada', 'badge-agendada'],
-      realizada: ['Realizada', 'badge-realizada'],
-      cancelada: ['Cancelada', 'badge-cancelada'],
-      falta: ['Falta', 'badge-falta']
-    };
-    const [label, cls] = map[s] || [s, 'badge-agendada'];
-    return `<span class="badge ${cls}">${label}</span>`;
-  }
-
-  function loader(on) {
-    document.getElementById('loader').classList.toggle('show', on);
-  }
-
-  async function entrar() {
-    const pass = document.getElementById('senhaAcesso').value;
-    senhaEquipe = pass;
-    loader(true);
-    try {
-      const { data, error } = await supabaseClient.rpc('listar_consultas_saude', {
-        p_senha: pass,
-        p_data_inicio: hojeIso(),
-        p_data_fim: daquiDiasIso(7),
-        p_profissional_id: null
-      });
-      if (error) throw error;
-      document.getElementById('loginOverlay').style.display = 'none';
-      document.getElementById('app').classList.add('visible');
-      document.getElementById('filtroInicio').value = hojeIso();
-      document.getElementById('filtroFim').value = daquiDiasIso(30);
-      document.getElementById('dataConsulta').value = hojeIso();
-      await carregarProfissionais();
-      await carregarAgenda();
-    } catch (e) {
-      alert('Senha incorreta ou agenda ainda não configurada no servidor. Avise a coordenação.');
-      console.error(e);
-      senhaEquipe = '';
-    } finally {
-      loader(false);
-    }
-  }
-
-  function sair() {
-    senhaEquipe = '';
-    document.getElementById('app').classList.remove('visible');
-    document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('senhaAcesso').value = '';
-  }
-
-  document.getElementById('senhaAcesso').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') entrar();
+async function salvarPix() {
+  const { data } = await sb.rpc('atualizar_config_saude', {
+    p_senha: state.senha,
+    p_pix_crmap: document.getElementById('inputPixCrmap').value
   });
+  if (data?.success) {
+    state.pixCrmap = data.pix_crmap;
+    document.getElementById('txtPixInline').textContent = state.pixCrmap;
+    alert('PIX atualizado.');
+  }
+}
 
-  async function carregarProfissionais() {
-    const { data, error } = await supabaseClient
-      .from('profissionais_saude')
-      .select('id, nome, cargo')
-      .eq('ativo', true)
-      .order('ordem', { ascending: true });
-    if (error) {
-      console.error(error);
+async function buscarPaciente() {
+  const tel = document.getElementById('telefonePaciente').value;
+  const box = document.getElementById('pacientePreview');
+  if (!tel || tel.replace(/\D/g,'').length < 10) { box.classList.remove('show'); return; }
+  const params = state.modo === 'coordenacao'
+    ? { p_telefone: tel, p_senha_coord: state.senha }
+    : { p_telefone: tel, p_profissional_id: state.profissionalId, p_senha_prof: state.senha };
+  const { data } = await sb.rpc('resumo_paciente_saude', params);
+  if (!data?.success) {
+    box.className = 'paciente-preview show pago';
+    box.innerHTML = `<strong>${esc(data?.message)}</strong>`;
+    state.resumoPaciente = null;
+    return;
+  }
+  state.resumoPaciente = data;
+  state.limiteGratis = data.limite_gratuitas || 8;
+  if (data.nome && !document.getElementById('nomePaciente').value) {
+    document.getElementById('nomePaciente').value = data.nome;
+  }
+  box.className = 'paciente-preview show' + (data.exige_pagamento ? ' pago' : '');
+  box.innerHTML = `<strong>Sessão ${data.proxima_sessao}</strong> — ${esc(data.mensagem)}`;
+  document.getElementById('wrapComunicou').style.display = data.exige_pagamento ? 'flex' : 'none';
+  if (!data.exige_pagamento) document.getElementById('comunicouPagamento').checked = false;
+}
+
+async function carregarAgenda() {
+  loader(true);
+  const tbody = document.getElementById('listaConsultas');
+  const profFiltro = state.modo === 'coordenacao'
+    ? (document.getElementById('filtroProf').value || null)
+    : state.profissionalId;
+  try {
+    const { data, error } = await sb.rpc('listar_consultas_saude_v2', {
+      p_modo: state.modo,
+      p_senha: state.senha,
+      p_profissional_id: state.profissionalId,
+      p_data_inicio: document.getElementById('filtroInicio').value,
+      p_data_fim: document.getElementById('filtroFim').value,
+      p_filtro_prof_id: profFiltro ? Number(profFiltro) : null
+    });
+    if (error) throw error;
+    const cols = state.modo === 'coordenacao' ? 9 : 8;
+    if (!data?.length) {
+      tbody.innerHTML = `<tr><td colspan="${cols}">Nenhuma consulta no período.</td></tr>`;
       return;
     }
-    profissionaisMap = {};
-    const selForm = document.getElementById('profissionalId');
-    const selFiltro = document.getElementById('filtroProf');
-    selForm.innerHTML = '';
-    selFiltro.innerHTML = '<option value="">Todos</option>';
-    (data || []).forEach((p) => {
-      profissionaisMap[p.id] = p;
-      const o1 = document.createElement('option');
-      o1.value = p.id;
-      o1.textContent = p.nome;
-      selForm.appendChild(o1);
-      const o2 = document.createElement('option');
-      o2.value = p.id;
-      o2.textContent = p.nome;
-      selFiltro.appendChild(o2);
+    tbody.innerHTML = data.map(c => {
+      const cob = c.tipo_cobranca === 'paga'
+        ? `<span class="tag tag-paga">Paga · ${c.numero_sessao}ª</span>`
+        : `<span class="tag tag-gratuita">Grátis · ${c.numero_sessao}ª</span>`;
+      const valor = c.valor_consulta ? `<br><small>${fmtMoeda(c.valor_consulta)}</small>` : '';
+      const rep = c.valor_repasse_crmap && !c.repasse_confirmado
+        ? `<br><small style="color:var(--accent)">Repasse ${fmtMoeda(c.valor_repasse_crmap)} pendente</small>` : '';
+      const profCell = state.modo === 'coordenacao'
+        ? `<td><small>${esc((c.profissional_nome||'').split(' ')[0])}</small></td>` : '';
+      const acoes = c.status === 'agendada' ? `
+        <button class="btn btn-sm" onclick="mudarStatus(${c.id},'realizada',${c.numero_sessao || 0},'${c.tipo_cobranca || 'gratuita'}')">Realizada</button>
+        <button class="btn btn-sm btn-outline" onclick="mudarStatus(${c.id},'falta')">Falta</button>
+        <button class="btn btn-sm btn-danger" onclick="mudarStatus(${c.id},'cancelada')">Cancelar</button>`
+        : `<button class="btn btn-sm btn-outline" onclick="mudarStatus(${c.id},'agendada')">Reabrir</button>`;
+      return `<tr>
+        <td>${fmtData(c.data_consulta)}</td>
+        <td>${fmtHora(c.hora_inicio)}</td>
+        <td><span class="tag tag-sessao">${c.numero_sessao}ª</span></td>
+        <td><strong>${esc(c.nome_paciente)}</strong></td>
+        <td><a href="https://wa.me/55${String(c.telefone||'').replace(/\D/g,'')}" target="_blank">${esc(c.telefone)}</a></td>
+        ${profCell}
+        <td>${cob}${valor}${rep}</td>
+        <td>${esc(c.status)}</td>
+        <td class="actions">${acoes}</td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="9">Erro ao carregar.</td></tr>';
+    console.error(e);
+  } finally { loader(false); }
+}
+
+async function agendarConsulta(e) {
+  e.preventDefault();
+  const profId = state.modo === 'coordenacao'
+    ? Number(document.getElementById('profissionalId').value)
+    : state.profissionalId;
+  loader(true);
+  try {
+    const { data, error } = await sb.rpc('criar_consulta_saude_v2', {
+      p_modo: state.modo,
+      p_profissional_id: profId,
+      p_senha: state.senha,
+      p_nome_paciente: document.getElementById('nomePaciente').value,
+      p_telefone: document.getElementById('telefonePaciente').value,
+      p_data_consulta: document.getElementById('dataConsulta').value,
+      p_hora_inicio: document.getElementById('horaConsulta').value,
+      p_duracao_min: Number(document.getElementById('duracaoConsulta').value),
+      p_tipo_atendimento: document.getElementById('tipoAtendimento').value,
+      p_observacoes: document.getElementById('obsConsulta').value,
+      p_criado_por: state.profissionalNome || 'Coordenação',
+      p_comunicou_pagamento: document.getElementById('comunicouPagamento').checked
     });
-  }
-
-  async function carregarAgenda() {
-    if (!senhaEquipe) return;
-    loader(true);
-    const tbody = document.getElementById('listaConsultas');
-    try {
-      const profId = document.getElementById('filtroProf').value;
-      const { data, error } = await supabaseClient.rpc('listar_consultas_saude', {
-        p_senha: senhaEquipe,
-        p_data_inicio: document.getElementById('filtroInicio').value || null,
-        p_data_fim: document.getElementById('filtroFim').value || null,
-        p_profissional_id: profId ? Number(profId) : null
-      });
-      if (error) throw error;
-      if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhuma consulta neste período.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = data.map((c) => {
-        const prof = profissionaisMap[c.profissional_id];
-        const nomeProf = prof ? prof.nome.split(' ')[0] + '…' : '—';
-        return `<tr>
-          <td>${formatarDataBr(c.data_consulta)}</td>
-          <td>${formatarHora(c.hora_inicio)}</td>
-          <td title="${prof ? prof.nome : ''}">${nomeProf}</td>
-          <td><strong>${escapeHtml(c.nome_paciente)}</strong><br><small>${escapeHtml(c.telefone || '')}</small></td>
-          <td>${escapeHtml(c.tipo_atendimento || '')}</td>
-          <td>${badgeStatus(c.status)}</td>
-          <td class="actions-cell">
-            ${c.status === 'agendada' ? `
-              <button class="btn btn-sm" onclick="mudarStatus(${c.id}, 'realizada')">Realizada</button>
-              <button class="btn btn-sm btn-outline" onclick="mudarStatus(${c.id}, 'falta')">Falta</button>
-              <button class="btn btn-sm btn-danger" onclick="mudarStatus(${c.id}, 'cancelada')">Cancelar</button>
-            ` : `<button class="btn btn-sm btn-outline" onclick="mudarStatus(${c.id}, 'agendada')">Reabrir</button>`}
-          </td>
-        </tr>`;
-      }).join('');
-    } catch (e) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty">Erro ao carregar. Tente novamente.</td></tr>';
-      console.error(e);
-    } finally {
-      loader(false);
+    if (error) throw error;
+    if (!data?.success) {
+      alert(data?.message || 'Não foi possível agendar.');
+      if (data?.exige_pagamento) document.getElementById('wrapComunicou').style.display = 'flex';
+      return;
     }
-  }
-
-  function escapeHtml(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  async function agendarConsulta(e) {
-    e.preventDefault();
-    loader(true);
-    try {
-      const { data: res, error } = await supabaseClient.rpc('criar_consulta_saude', {
-        p_senha: senhaEquipe,
-        p_profissional_id: Number(document.getElementById('profissionalId').value),
-        p_nome_paciente: document.getElementById('nomePaciente').value,
-        p_telefone: document.getElementById('telefonePaciente').value,
-        p_data_consulta: document.getElementById('dataConsulta').value,
-        p_hora_inicio: document.getElementById('horaConsulta').value,
-        p_duracao_min: Number(document.getElementById('duracaoConsulta').value),
-        p_tipo_atendimento: document.getElementById('tipoAtendimento').value,
-        p_observacoes: document.getElementById('obsConsulta').value,
-        p_criado_por: document.getElementById('criadoPor').value
-      });
-      if (error) throw error;
-      if (!res?.success) {
-        alert(res?.message || 'Não foi possível agendar.');
-        return;
-      }
-      alert('Consulta agendada com sucesso!');
-      document.getElementById('nomePaciente').value = '';
-      document.getElementById('telefonePaciente').value = '';
-      document.getElementById('obsConsulta').value = '';
-      await carregarAgenda();
-    } catch (err) {
-      alert('Erro: ' + (err.message || err));
-    } finally {
-      loader(false);
+    let msg = 'Consulta agendada!';
+    if (data.exige_pagamento) {
+      msg += `\n\nSessão ${data.numero_sessao} — PAGA.\nRepasse 10% PIX CRMAP: ${data.pix_crmap}`;
+    } else {
+      msg += ` (Sessão ${data.numero_sessao} — gratuita)`;
     }
-  }
+    alert(msg);
+    document.getElementById('nomePaciente').value = '';
+    document.getElementById('telefonePaciente').value = '';
+    document.getElementById('obsConsulta').value = '';
+    document.getElementById('pacientePreview').classList.remove('show');
+    await carregarAgenda();
+    if (state.modo === 'coordenacao') await carregarResumoAdmin();
+  } catch (err) {
+    alert('Erro: ' + (err.message || err));
+  } finally { loader(false); }
+}
 
-  async function mudarStatus(id, status) {
-    const msg = status === 'cancelada' ? 'Cancelar esta consulta?' : 'Confirmar alteração de status?';
-    if (!confirm(msg)) return;
-    loader(true);
-    try {
-      const { data: res, error } = await supabaseClient.rpc('atualizar_status_consulta_saude', {
-        p_senha: senhaEquipe,
-        p_id: id,
-        p_status: status,
-        p_observacoes: null
-      });
-      if (error) throw error;
-      if (!res?.success) alert(res?.message || 'Falha ao atualizar.');
-      await carregarAgenda();
-    } catch (err) {
-      alert('Erro: ' + err.message);
-    } finally {
-      loader(false);
-    }
+function mudarStatus(id, status, numeroSessao, tipoCobranca) {
+  if (status === 'realizada' && tipoCobranca === 'paga' && numeroSessao > state.limiteGratis) {
+    state.consultaModalId = id;
+    document.getElementById('modalPagoTxt').textContent =
+      `Sessão ${numeroSessao} — consulta paga. Informe o valor e confirme o repasse de 10% ao PIX da CRMAP.`;
+    document.getElementById('modalPix').textContent = 'PIX CRMAP: ' + (state.pixCrmap || 'configure no painel');
+    document.getElementById('valorConsulta').value = '';
+    document.getElementById('valorRepassePreview').textContent = 'R$ 0,00';
+    document.getElementById('repasseConfirmado').checked = false;
+    document.getElementById('valorConsulta').oninput = function() {
+      const v = Number(this.value) || 0;
+      document.getElementById('valorRepassePreview').textContent = fmtMoeda(v * state.pctRepasse / 100);
+    };
+    document.getElementById('modalPago').classList.add('show');
+    return;
   }
+  if (!confirm('Confirmar alteração?')) return;
+  executarStatus(id, status);
+}
+
+async function confirmarRealizadaPaga() {
+  const valor = Number(document.getElementById('valorConsulta').value);
+  if (!valor || valor <= 0) { alert('Informe o valor da consulta.'); return; }
+  await executarStatus(state.consultaModalId, 'realizada', valor, document.getElementById('repasseConfirmado').checked);
+  fecharModal();
+}
+
+function fecharModal() {
+  document.getElementById('modalPago').classList.remove('show');
+  state.consultaModalId = null;
+}
+
+async function executarStatus(id, status, valor, repasseOk) {
+  loader(true);
+  try {
+    const { data, error } = await sb.rpc('atualizar_consulta_saude_v2', {
+      p_modo: state.modo,
+      p_senha: state.senha,
+      p_profissional_id: state.profissionalId,
+      p_id: id,
+      p_status: status,
+      p_valor_consulta: valor ?? null,
+      p_repasse_confirmado: repasseOk ?? null
+    });
+    if (error) throw error;
+    if (!data?.success) {
+      alert(data?.message || 'Falha');
+      if (data?.exige_valor) mudarStatus(id, 'realizada', 9, 'paga');
+      return;
+    }
+    if (data.valor_repasse_crmap) {
+      alert(`Realizada. Repasse CRMAP: ${fmtMoeda(data.valor_repasse_crmap)} → PIX: ${data.pix_crmap}`);
+    }
+    await carregarAgenda();
+    if (state.modo === 'coordenacao') await carregarResumoAdmin();
+  } catch (err) {
+    alert(err.message);
+  } finally { loader(false); }
+}
+
+function sair() {
+  state.modo = null;
+  state.senha = '';
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('loginOverlay').style.display = 'flex';
+}
+
+document.getElementById('loginProfSenha').addEventListener('keydown', e => { if (e.key === 'Enter') entrarProfissional(); });
+document.getElementById('loginCoordSenha').addEventListener('keydown', e => { if (e.key === 'Enter') entrarCoordenacao(); });
+carregarListaProfissionaisLogin();
 </script>
-
-<footer style="background:#0f301d;color:#d0e6d8;text-align:center;padding:1.5rem;margin-top:2rem;font-size:0.85rem;">
-  &copy; 2026 CRMAP — Saúde Mental. Uso interno da equipe.
+<footer style="background:#0f301d;color:#d0e6d8;text-align:center;padding:1.25rem;font-size:.82rem">
+  CRMAP — Saúde Mental · dados vinculados por WhatsApp · 8 sessões gratuitas por paciente
 </footer>
-
 </body>
 </html>
