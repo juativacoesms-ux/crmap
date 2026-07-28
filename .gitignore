@@ -6,3 +6,8 @@ painel/node_modules/
 .DS_Store
 Thumbs.db
 supabase/.temp/
+
+# Selo de verificação do hook de publicação — vale só na máquina local,
+# nunca deve ser commitado (senão o selo viajaria junto com o commit).
+.claude/push-ok
+.claude/settings.local.json
