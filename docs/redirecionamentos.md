@@ -8,6 +8,13 @@ for apagado.
 
 Última verificação no ar: 28/07/2026.
 
+**Situação em 28/07/2026, 14h40 (Brasília): tudo abaixo está APLICADO e
+verificado no ar.** O "Always Use HTTPS" foi ligado pela Iara no painel; as 3
+Redirect Rules foram criadas via API da Cloudflare (ruleset
+`488b470ce3064f23a8030cd7b92bec9c`, fase `http_request_dynamic_redirect`, zona
+`9643300d83ca240d3c4764c23bd744f1`). O resultado dos testes está no fim deste
+arquivo.
+
 ---
 
 ## O que já funciona sozinho (NÃO criar regra para isto)
@@ -30,19 +37,23 @@ Só sobra o que está listado abaixo.
 
 ## Configuração necessária na Cloudflare
 
-### 1. Always Use HTTPS (chave, não é Redirect Rule)
+### 1. Always Use HTTPS (chave, não é Redirect Rule) — FEITO
 
 `SSL/TLS → Edge Certificates → Always Use HTTPS: ligado`
 
-Resolve: `http://crmapoficial.org.br/` responde **200 em HTTP** hoje, sem
-redirecionar para HTTPS. Substitui as linhas 11–13 do `.htaccess`.
+Ligado em 28/07/2026 às 14h20 (Brasília). O modo SSL da zona está em **Full**,
+então não há risco de laço.
+
+Resolveu: antes disso, `http://crmapoficial.org.br/` respondia **200 em HTTP**,
+sem redirecionar para HTTPS. Substitui as linhas 11–13 do `.htaccess`.
 
 Pré-requisito: `SSL/TLS → Overview` precisa estar em **Full** ou
 **Full (strict)**. Em "Flexible" o Always Use HTTPS gera laço infinito.
 
-### 2. Redirect Rules (Rules → Redirect Rules)
+### 2. Redirect Rules (Rules → Redirect Rules) — FEITO
 
-Todas com código **301** e "Preserve query string" ligado.
+Criadas em 28/07/2026 às 14h35 (Brasília), as três com código **301** e
+"Preserve query string" ligado.
 
 #### Regra 1 — `carteirinha` para a URL curta
 
@@ -52,8 +63,8 @@ Todas com código **301** e "Preserve query string" ligado.
 → `https://crmapoficial.org.br/carteirinha`
 
 Motivo: a URL oficial de divulgação é a curta (decisão de 28/07/2026 no
-`CLAUDE.md`). Hoje `/carteirinha.html` responde 200 — conteúdo duplicado — e
-`/carteirinha/` com barra dá **404**.
+`CLAUDE.md`). Antes da regra, `/carteirinha.html` respondia 200 — conteúdo
+duplicado — e `/carteirinha/` com barra dava **404**.
 
 **ATENÇÃO — nunca usar `starts_with(http.request.uri.path, "/carteirinha")`.**
 Existem na raiz `carteirinha-base-data.js` e `carteirinha-base.png`, que a
@@ -126,3 +137,45 @@ Esperado depois de tudo pronto:
 
 A Cloudflare tem cache próprio. Se algo não mudar, testar de novo alguns
 minutos depois antes de concluir que falhou.
+
+---
+
+## Resultado medido em 28/07/2026, 14h40 (Brasília)
+
+Tudo abaixo foi medido com `curl` **depois** de criar as regras.
+
+| URL | Resultado |
+|---|---|
+| `http://crmapoficial.org.br/` | 301 → `https://crmapoficial.org.br/` |
+| `/carteirinha.html` | 301 → `/carteirinha` |
+| `/carteirinha/` | 301 → `/carteirinha` |
+| `/index.html` | 301 → `/` |
+| `/c.carteirinha.voluntario.html` | 301 → `/c.carteirinha.voluntario` |
+| `/c.carteirinha.voluntario/` | 301 → `/c.carteirinha.voluntario` |
+| `/c.carteirinha.volunt%C3%A1rio` | 301 → `/c.carteirinha.voluntario` |
+| `/carteirinha` | 200 (não redireciona — correto) |
+| `/c.carteirinha.voluntario` | 200 (não redireciona — correto) |
+| `/carteirinha-base-data.js` | 200, 514 KB (intacto) |
+| `/carteirinha-base.png` | 200, 386 KB (intacto) |
+| `/` | 200 |
+| `/carteirinha.html?nome=teste&x=1` | 301 → `/carteirinha?nome=teste&x=1` (query preservada) |
+
+Toda cadeia termina em **1 salto** e HTTP 200. Nenhum laço. As duas
+carteirinhas abrem de verdade (títulos "Gerador de Carteirinha - CRMAP" e
+"Carteirinha Voluntário – CRMAP").
+
+Sobre o acento: a Cloudflare normalizou a forma percent-encoded, então a regra
+pegou. As variantes com acento literal seguem na expressão por segurança.
+
+### Como mexer nessas regras pela API
+
+```
+curl -sS "https://api.cloudflare.com/client/v4/zones/9643300d83ca240d3c4764c23bd744f1/rulesets/488b470ce3064f23a8030cd7b92bec9c" \
+  -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+```
+
+Substituir todas as regras: `PUT` em
+`/zones/{zona}/rulesets/phases/http_request_dynamic_redirect/entrypoint`
+com corpo `{"rules": [...]}` — **só** o campo `rules`; mandar `kind` ou `phase`
+faz a API recusar. O token fica na variável de ambiente
+`CLOUDFLARE_API_TOKEN`, nunca escrito neste repositório.
