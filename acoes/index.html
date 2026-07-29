@@ -130,7 +130,8 @@
   .gallery-card h4 { margin: 0 0 0.5rem; font-size: 1.4rem; color: #1b7340; }
   .gallery-card p { color: #4a5c4f; margin: 0; font-size: 1rem; }
 
-  /* Galeria do Arraiá — miniaturas, desenhada primeiro para o celular.
+  /* Galeria do Arraiá — desenhada primeiro para o celular: 1 foto por linha
+     ocupando a largura toda no telefone, 2 no tablet, 3 no computador.
      O min() impede que a coluna fique mais larga que a tela em aparelhos estreitos. */
   .arraia-legenda {
     text-align: center; color: #4a5c4f; font-size: 1.05rem;
@@ -138,8 +139,8 @@
   }
   .arraia-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
-    gap: 0.6rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+    gap: 0.8rem;
   }
   .arraia-grid a {
     display: block; line-height: 0; border-radius: 8px; overflow: hidden;
@@ -148,7 +149,7 @@
   .arraia-grid a:hover, .arraia-grid a:focus { transform: scale(1.03); }
   .arraia-grid img {
     display: block; width: 100%; height: auto;
-    aspect-ratio: 1 / 1; object-fit: cover;
+    aspect-ratio: 4 / 3; object-fit: cover;
     background: #e1efe4;
   }
   .arraia-credito {
@@ -234,40 +235,40 @@
 
       <div class="arraia-grid">
         <a href="https://www.flickr.com/photos/institutoguaicuy/55427006240/in/album-72177720334888791/" target="_blank" rel="noopener">
-          <img src="https://live.staticflickr.com/65535/55427006240_a0b4c15873_n.jpg" width="320" height="320" loading="lazy" decoding="async" alt="Portal de entrada do Arraiá CRMAP, com bandeirinhas coloridas e as barracas ao fundo">
+          <img src="https://live.staticflickr.com/65535/55427006240_a0b4c15873_z.jpg" width="640" height="480" loading="lazy" decoding="async" alt="Portal de entrada do Arraiá CRMAP, com bandeirinhas coloridas e as barracas ao fundo">
         </a>
         <a href="https://www.flickr.com/photos/institutoguaicuy/55427005790/in/album-72177720334888791/" target="_blank" rel="noopener">
-          <img src="https://live.staticflickr.com/65535/55427005790_c3aa47d7f1_n.jpg" width="320" height="320" loading="lazy" decoding="async" alt="Coração vermelho gigante ao lado da placa Faça parte da CRMAP, inscreva-se aqui">
+          <img src="https://live.staticflickr.com/65535/55427005790_c3aa47d7f1_z.jpg" width="640" height="480" loading="lazy" decoding="async" alt="Coração vermelho gigante ao lado da placa Faça parte da CRMAP, inscreva-se aqui">
         </a>
         <a href="https://www.flickr.com/photos/institutoguaicuy/55426778454/in/album-72177720334888791/" target="_blank" rel="noopener">
-          <img src="https://live.staticflickr.com/65535/55426778454_eb8b156c1f_n.jpg" width="320" height="320" loading="lazy" decoding="async" alt="Artesã sorrindo, segurando um mostruário com os colares que produziu">
+          <img src="https://live.staticflickr.com/65535/55426778454_eb8b156c1f_z.jpg" width="640" height="480" loading="lazy" decoding="async" alt="Artesã sorrindo, segurando um mostruário com os colares que produziu">
         </a>
         <a href="https://www.flickr.com/photos/institutoguaicuy/55426738133/in/album-72177720334888791/" target="_blank" rel="noopener">
-          <img src="https://live.staticflickr.com/65535/55426738133_3ec82c6573_n.jpg" width="320" height="320" loading="lazy" decoding="async" alt="Bonecas Guardiãs com vestidos coloridos, feitas pelas mulheres da CRMAP">
+          <img src="https://live.staticflickr.com/65535/55426738133_3ec82c6573_z.jpg" width="640" height="480" loading="lazy" decoding="async" alt="Bonecas Guardiãs com vestidos coloridos, feitas pelas mulheres da CRMAP">
         </a>
         <a href="https://www.flickr.com/photos/institutoguaicuy/55426737028/in/album-72177720334888791/" target="_blank" rel="noopener">
-          <img src="https://live.staticflickr.com/65535/55426737028_0580eced85_n.jpg" width="320" height="320" loading="lazy" decoding="async" alt="Espetinhos de carne e linguiça assando na brasa da churrasqueira">
+          <img src="https://live.staticflickr.com/65535/55426737028_0580eced85_z.jpg" width="640" height="480" loading="lazy" decoding="async" alt="Espetinhos de carne e linguiça assando na brasa da churrasqueira">
         </a>
         <a href="https://www.flickr.com/photos/institutoguaicuy/55427003890/in/album-72177720334888791/" target="_blank" rel="noopener">
-          <img src="https://live.staticflickr.com/65535/55427003890_2ca0f6cc37_n.jpg" width="320" height="320" loading="lazy" decoding="async" alt="Placas de homenagem da CRMAP enfileiradas na mesa, prontas para a entrega">
+          <img src="https://live.staticflickr.com/65535/55427003890_2ca0f6cc37_z.jpg" width="640" height="480" loading="lazy" decoding="async" alt="Placas de homenagem da CRMAP enfileiradas na mesa, prontas para a entrega">
         </a>
         <a href="https://www.flickr.com/photos/institutoguaicuy/55427003565/in/album-72177720334888791/" target="_blank" rel="noopener">
-          <img src="https://live.staticflickr.com/65535/55427003565_154479f841_n.jpg" width="320" height="320" loading="lazy" decoding="async" alt="Homenageado segurando a placa, ao lado de quatro mulheres da CRMAP">
+          <img src="https://live.staticflickr.com/65535/55427003565_154479f841_z.jpg" width="640" height="480" loading="lazy" decoding="async" alt="Homenageado segurando a placa, ao lado de quatro mulheres da CRMAP">
         </a>
         <a href="https://www.flickr.com/photos/institutoguaicuy/55426607736/in/album-72177720334888791/" target="_blank" rel="noopener">
-          <img src="https://live.staticflickr.com/65535/55426607736_e4e58b33cd_n.jpg" width="320" height="320" loading="lazy" decoding="async" alt="Jovem homenageada segurando a placa da CRMAP, acompanhada de três mulheres">
+          <img src="https://live.staticflickr.com/65535/55426607736_e4e58b33cd_z.jpg" width="640" height="480" loading="lazy" decoding="async" alt="Jovem homenageada segurando a placa da CRMAP, acompanhada de três mulheres">
         </a>
         <a href="https://www.flickr.com/photos/institutoguaicuy/55426606006/in/album-72177720334888791/" target="_blank" rel="noopener">
-          <img src="https://live.staticflickr.com/65535/55426606006_1d18cc993e_n.jpg" width="320" height="320" loading="lazy" decoding="async" alt="Quatro mulheres sorrindo com as placas de homenagem recebidas na festa">
+          <img src="https://live.staticflickr.com/65535/55426606006_1d18cc993e_z.jpg" width="640" height="480" loading="lazy" decoding="async" alt="Quatro mulheres sorrindo com as placas de homenagem recebidas na festa">
         </a>
         <a href="https://www.flickr.com/photos/institutoguaicuy/55426605946/in/album-72177720334888791/" target="_blank" rel="noopener">
-          <img src="https://live.staticflickr.com/65535/55426605946_0022464605_n.jpg" width="320" height="320" loading="lazy" decoding="async" alt="Dois homenageados sorrindo, cada um segurando sua placa da CRMAP">
+          <img src="https://live.staticflickr.com/65535/55426605946_0022464605_z.jpg" width="640" height="480" loading="lazy" decoding="async" alt="Dois homenageados sorrindo, cada um segurando sua placa da CRMAP">
         </a>
         <a href="https://www.flickr.com/photos/institutoguaicuy/55426774499/in/album-72177720334888791/" target="_blank" rel="noopener">
-          <img src="https://live.staticflickr.com/65535/55426774499_fe8d2ce9a0_n.jpg" width="320" height="320" loading="lazy" decoding="async" alt="Abraço no momento da entrega de uma placa de homenagem">
+          <img src="https://live.staticflickr.com/65535/55426774499_fe8d2ce9a0_z.jpg" width="640" height="480" loading="lazy" decoding="async" alt="Abraço no momento da entrega de uma placa de homenagem">
         </a>
         <a href="https://www.flickr.com/photos/institutoguaicuy/55426739098/in/album-72177720334888791/" target="_blank" rel="noopener">
-          <img src="https://live.staticflickr.com/65535/55426739098_2e9f94e02d_n.jpg" width="320" height="320" loading="lazy" decoding="async" alt="Músico tocando teclado no palco do Arraiá CRMAP">
+          <img src="https://live.staticflickr.com/65535/55426739098_2e9f94e02d_z.jpg" width="640" height="480" loading="lazy" decoding="async" alt="Músico tocando teclado no palco do Arraiá CRMAP">
         </a>
       </div>
 
