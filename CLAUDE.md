@@ -84,6 +84,46 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 29/07/2026 — Foto de galeria vem do Flickr, nunca copiada para cá
+**Motivo:** a galeria do Arraiá tem 188 fotos no álbum do Instituto Guaicuy.
+Copiar as escolhidas para o repositório engordaria o Git para sempre (o Git
+guarda cada versão de arquivo binário) e o site já sofre de peso de imagem.
+As 12 fotos são carregadas de `live.staticflickr.com`, com `loading="lazy"`,
+e cada uma leva à sua página no Flickr — o que também cumpre o crédito que o
+Flickr pede. Crédito visível na página: JhenLoure / Instituto Guaicuy.
+**Contrapartida aceita:** se o Instituto Guaicuy apagar o álbum, a galeria
+esvazia. Em troca, o repositório não cresce e a página abre rápido no celular.
+**Como pegar o álbum inteiro:** a página do Flickr só entrega ~50 das 188 no
+HTML (o resto é JavaScript). O caminho é usar a chave pública de API que está
+na própria página e chamar `flickr.photosets.getPhotos`. Está detalhado na
+memória do projeto.
+
+### 29/07/2026 — Grade responsiva usa `minmax(min(Xpx, 100%), 1fr)`
+**Motivo:** as grades antigas usam `minmax(320px, 1fr)` (home) e
+`minmax(350px, 1fr)` (ações). Esse mínimo é absoluto: em celular de 360px de
+largura não sobra espaço suficiente, o bloco fica mais largo que a tela e o
+`overflow: hidden` da `section` **corta** o conteúdo em vez de rolar. O
+`min(Xpx, 100%)` deixa a coluna encolher e resolve.
+**Aplicado em:** só na galeria do Arraiá (`acoes/index.html`). As duas grades
+antigas continuam com o defeito — corrigir exige testar telas e ainda não foi
+autorizado. Serve de modelo para quando for.
+
+### 29/07/2026 — Correção do vazamento do Supabase é por privilégio de coluna
+**Motivo:** as tabelas `pagamentos_carteirinha` e `profissionais_saude` estavam
+legíveis por qualquer pessoa com a chave `anon` (que é pública por natureza —
+o problema nunca foi a chave, foram as regras). Simplesmente bloquear a leitura
+quebraria o site: a carteirinha precisa consultar o status da doação e a área
+da saúde precisa listar as profissionais. A solução é `REVOKE SELECT` na tabela
+e `GRANT SELECT` **só nas colunas que o site realmente usa** — some a
+`senha_acesso`, o telefone e o e-mail, e nada para de funcionar.
+Fechar as escritas abertas é seguro porque **todas** as funções de escrita e de
+login são `SECURITY DEFINER` (conferido uma a uma).
+**Limite:** eu não tenho credencial do Supabase e não consigo executar. O SQL
+pronto está na memória do projeto; só a Iara roda, no SQL Editor.
+**Ainda aberto:** a senha do painel em texto puro em `painel/index.html:167` e
+`painel/setup_supabase.sql:43`, os dois públicos no ar. Sai só tirando
+`painel/` do repositório — depende de autorização explícita.
+
 ### 28/07/2026 — O site fala "doação", não "pagamento"
 **Motivo:** o botão de baixar já dizia "Conferir e doar!" enquanto o de
 verificar dizia "Já paguei". A página falava duas línguas. Trocamos os 10
