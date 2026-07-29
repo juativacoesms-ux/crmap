@@ -8,7 +8,7 @@ for apagado.
 
 Última verificação no ar: 28/07/2026.
 
-**Situação em 28/07/2026, 14h40 (Brasília): tudo abaixo está APLICADO e
+**Situação em 28/07/2026, 16h30 (Brasília): tudo abaixo está APLICADO e
 verificado no ar.** O "Always Use HTTPS" foi ligado pela Iara no painel; as 3
 Redirect Rules foram criadas via API da Cloudflare (ruleset
 `488b470ce3064f23a8030cd7b92bec9c`, fase `http_request_dynamic_redirect`, zona
@@ -52,8 +52,9 @@ Pré-requisito: `SSL/TLS → Overview` precisa estar em **Full** ou
 
 ### 2. Redirect Rules (Rules → Redirect Rules) — FEITO
 
-Criadas em 28/07/2026 às 14h35 (Brasília), as três com código **301** e
-"Preserve query string" ligado.
+Criadas em 28/07/2026 às 16h25 (Brasília) — horário confirmado no campo
+`last_updated` do ruleset —, as três com código **301** e "Preserve query
+string" ligado.
 
 #### Regra 1 — `carteirinha` para a URL curta
 
@@ -140,7 +141,7 @@ minutos depois antes de concluir que falhou.
 
 ---
 
-## Resultado medido em 28/07/2026, 14h40 (Brasília)
+## Resultado medido em 28/07/2026, 16h30 (Brasília)
 
 Tudo abaixo foi medido com `curl` **depois** de criar as regras.
 
