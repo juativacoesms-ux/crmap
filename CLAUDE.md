@@ -84,6 +84,28 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 28/07/2026 — O site fala "doação", não "pagamento"
+**Motivo:** o botão de baixar já dizia "Conferir e doar!" enquanto o de
+verificar dizia "Já paguei". A página falava duas línguas. Trocamos os 10
+textos visíveis de `carteirinha.html` e os 2 de `c.carteirinha.voluntario.html`
+("Sem pagamento" → "Gratuita").
+**Limite consciente:** só texto que a pessoa lê. Nomes de variável, IDs
+(`verificarPagamentoBtn`), a tabela `pagamentos_carteirinha` do Supabase, o SDK
+do Mercado Pago e as chaves de evento continuam com "pag" — mexer neles
+quebraria a integração. Conferido um a um contra a versão publicada.
+**Fora do alcance:** a tela do Mercado Pago continua dizendo "pagamento", e
+isso não está no nosso controle.
+**Não vale para:** `saude/` (ali "consulta paga" é a consulta que a paciente
+paga à terapeuta da 9ª sessão em diante — não é doação), `produtos/` (texto
+jurídico "não intermedeia pagamentos") e `painel/` (interno).
+
+### 28/07/2026 — O token da Cloudflare vive numa variável de ambiente
+**Motivo:** segredo colado no chat fica gravado no histórico e teria que ser
+revogado. O token está em `CLOUDFLARE_API_TOKEN`, nunca escrito no repositório.
+Zona `9643300d83ca240d3c4764c23bd744f1`; ruleset dos redirecionamentos
+`488b470ce3064f23a8030cd7b92bec9c`. Usar sempre como `$CLOUDFLARE_API_TOKEN`
+dentro do comando, sem imprimir o valor e sem `curl -v`.
+
 ### 28/07/2026 — Redirecionamentos vão para a Cloudflare, não para o repositório
 **Motivo:** o `.htaccess` descreve 16 redirecionamentos e **nenhum** funciona
 (GitHub Pages e Cloudflare não leem Apache). Páginas HTML de redirecionamento
