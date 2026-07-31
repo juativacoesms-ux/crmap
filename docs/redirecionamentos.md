@@ -103,6 +103,48 @@ do `.htaccess`.
 
 ---
 
+## PENDENTE — regra 4, Casa de Acolhimento (criada em 31/07/2026, ainda NÃO aplicada)
+
+A página `/casa-de-acolhimento` foi publicada em 31/07/2026. Medido no ar
+logo depois do deploy:
+
+| URL | Hoje | Deveria ser |
+|---|---|---|
+| `/casa-de-acolhimento` | 200 ✅ | 200 |
+| `/casa-de-acolhimento.html` | **200** (conteúdo duplicado) | 301 → `/casa-de-acolhimento` |
+| `/casa-de-acolhimento/` | **404** | 301 → `/casa-de-acolhimento` |
+
+Expressão a criar, no mesmo ruleset das outras três, com 301 e "Preserve
+query string" ligado:
+
+```
+(http.request.uri.path eq "/casa-de-acolhimento.html") or
+(http.request.uri.path eq "/casa-de-acolhimento/")
+```
+→ `https://crmapoficial.org.br/casa-de-acolhimento`
+
+**Correspondência exata (`eq`), nunca `starts_with`** — mesma regra de sempre.
+
+**Por que não foi aplicada:** a variável `CLOUDFLARE_API_TOKEN` não estava
+disponível na sessão de 31/07/2026. Sem ela não dá para chamar a API. A regra
+não é urgente: o endereço oficial já funciona. O que fica pendente é o endereço
+duplicado (ruim para busca) e o 404 de quem digitar com barra no fim.
+
+---
+
+## Observação — a Cloudflare reescreve e-mails nas páginas
+
+Descoberto em 31/07/2026 ao comparar a home publicada com o repositório: o
+que sai no ar **não é byte a byte** igual ao arquivo. A Cloudflare tem o
+"Email Address Obfuscation" ligado e troca todo `mailto:` por um link
+`/cdn-cgi/l/email-protection` mais um script que remonta o endereço.
+
+Serve para atrapalhar robôs de spam, mas **depende de JavaScript**: com o JS
+desligado a pessoa vê "[email protected]" no lugar do endereço. Ao comparar
+arquivo local com o site no ar, essa diferença é esperada e não é erro.
+
+---
+
 ## O que foi deliberadamente NÃO redirecionado
 
 | `.htaccess` | Decisão | Motivo |

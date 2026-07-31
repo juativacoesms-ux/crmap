@@ -84,6 +84,45 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 31/07/2026 — O QR Code do PIX é desenhado no HTML, não é arquivo de imagem
+**Motivo:** a Iara não tinha o código "Pix Copia e Cola" do banco, então o
+código foi montado aqui (padrão BR Code / EMV) a partir do CNPJ e do município
+do `cnpj.pdf`: chave `65198846000123`, recebedor `CRMAP`, cidade `POMPEU`,
+**sem valor fixo** (campo 54 ausente de propósito — quem doa escolhe quanto).
+O QR virou um `<path>` SVG dentro do próprio `casa-de-acolhimento.html`:
+2,3 KB, zero requisição, não borra por mais que a pessoa aproxime a tela.
+**Como refazer se a chave mudar:** o script está descrito na memória do
+projeto. Sempre reler o QR gerado com um leitor independente antes de publicar
+— foi assim que se conferiu este (OpenCV devolveu o código idêntico).
+**Contrapartida aceita:** o código fica congelado no HTML. Se o CNPJ mudar,
+tem que gerar de novo — não é buscado de lugar nenhum.
+
+### 31/07/2026 — Página de campanha usa `logo-leve.png`, não o `logo.png`
+**Motivo:** o `logo.png` tem 4,4 MB e aparece no topo de toda página. Usar ele
+faria a página da campanha nascer com 4,4 MB — o oposto do pedido. O
+`logo-leve.png` tem **18 KB** (260 px, PNG de 128 cores) e é visualmente
+idêntico no tamanho em que aparece (130 px).
+**Testado:** 64 cores dava 10 KB mas perdia a transparência da borda e criava
+um halo rosado. 128 cores é o menor que preserva.
+**Vale só para `casa-de-acolhimento.html`.** As outras páginas continuam com o
+logo de 4,4 MB — trocar em todas ainda não foi autorizado.
+
+### 31/07/2026 — Página de doação não pode depender de JavaScript
+**Motivo:** o resto do site usa a classe `.reveal`, que deixa o bloco com
+`opacity: 0; visibility: hidden` até o JavaScript revelar ao rolar a tela. Numa
+página de arrecadação isso é risco real: se o JS falhar (internet ruim, celular
+antigo, bloqueador), a chave PIX e o QR Code ficam **invisíveis**. A página da
+campanha e o bloco novo da home não usam `.reveal` por isso. O único JS da
+página é o botão de copiar — e ele tem caminho reserva (`execCommand`) para
+celular antigo, mais uma mensagem de erro que manda copiar à mão.
+
+### 31/07/2026 — A campanha entra no menu de todas as páginas, em verde
+**Motivo:** escolha da Iara. Verde comum e não vermelho porque o vermelho já é
+do "Gerar Carteirinha" — dois vermelhos competem e nenhum se destaca. Entrou em
+7 páginas, inclusive a do Terreno (é o terreno onde a casa será construída) e a
+área da Saúde. Na home há também um bloco de destaque logo depois da capa,
+porque é por lá que a maioria do público entra.
+
 ### 29/07/2026 — Foto de galeria vem do Flickr, nunca copiada para cá
 **Motivo:** a galeria do Arraiá tem 188 fotos no álbum do Instituto Guaicuy.
 Copiar as escolhidas para o repositório engordaria o Git para sempre (o Git
