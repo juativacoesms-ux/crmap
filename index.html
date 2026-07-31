@@ -698,6 +698,62 @@
     line-height: 1.65;
     max-width: 36rem;
   }
+
+  /* Chamada da campanha da Casa de Acolhimento — desenhada primeiro para o
+     celular. Não usa a classe .reveal de propósito: se o JavaScript falhar,
+     a chamada continua visível. */
+  .campanha-casa {
+    background: linear-gradient(135deg, #0f301d 0%, #1b7340 100%);
+    padding: 2.5rem 0;
+    color: #ffffff;
+  }
+  .campanha-casa .caixa {
+    max-width: 34rem;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .campanha-casa .selo {
+    display: inline-block;
+    background: #d63222;
+    color: #ffffff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.9rem;
+    border-radius: 20px;
+    margin-bottom: 0.9rem;
+  }
+  .campanha-casa h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5rem;
+    line-height: 1.25;
+    margin: 0 0 0.7rem;
+    color: #ffffff;
+  }
+  .campanha-casa p {
+    font-size: 1.02rem;
+    color: rgba(255,255,255,0.92);
+    margin: 0 0 1.4rem;
+  }
+  .campanha-casa .btn-campanha {
+    display: block;
+    width: 100%;
+    background: #ffffff;
+    color: #0f301d;
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 0.95rem 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+  }
+  .campanha-casa .btn-campanha:hover,
+  .campanha-casa .btn-campanha:focus { background: #e8f4ec; }
+  @media (min-width: 700px) {
+    .campanha-casa { padding: 3.5rem 0; }
+    .campanha-casa h3 { font-size: 2rem; }
+    .campanha-casa .btn-campanha { display: inline-block; width: auto; min-width: 20rem; }
+  }
 </style>
 </head>
 <body>
@@ -713,6 +769,7 @@
       <a href="#atuacao" class="button-link">Atuação</a>
       <a href="#transparencia" class="button-link">Transparência</a>
       <a href="#transparencia" class="button-link" onclick="openTab(null, 'tab-contas')">Doações</a>
+      <a href="/casa-de-acolhimento" class="button-link">Casa de Acolhimento</a>
       <a href="/carteirinha" class="button-link" style="background:#d63222; color:#ffffff; border-color: #d63222;">Gerar Carteirinha</a>
       <a href="produtos/" class="button-link">Produtos</a>
       <a href="acoes/" class="button-link">Ações</a>
@@ -740,6 +797,17 @@
       <div style="display: flex; gap: 1.2rem; flex-wrap: wrap;">
         <a href="#transparencia" class="button-link" onclick="openTab(null, 'tab-contas')" style="background: #d63222; color: #ffffff; font-size: 1rem; padding: 0.9rem 2.2rem; border-radius: 30px; font-weight: 700;">SEJA UM DOADOR</a>
         <a href="#identity" class="button-link" style="background: transparent; border: 2px solid #ffffff; color: #ffffff; font-size: 1rem; padding: 0.9rem 2.2rem; border-radius: 30px; font-weight: 700;">Saiba Mais</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="campanha-casa">
+    <div class="container">
+      <div class="caixa">
+        <span class="selo">🧱 Campanha aberta</span>
+        <h3>🏠 Ajude a construir a Casa de Acolhimento</h3>
+        <p>Um refúgio seguro para as mulheres atingidas da Bacia do Paraopeba e Três Marias, no terreno doado em Pompéu/MG. Doe pelo PIX — você escolhe o valor.</p>
+        <a href="/casa-de-acolhimento" class="btn-campanha">Quero ajudar a construir</a>
       </div>
     </div>
   </section>
