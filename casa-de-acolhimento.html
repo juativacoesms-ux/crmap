@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Casa de Acolhimento — Apoie a construção | CRMAP</title>
+<meta name="description" content="Ajude a construir a Casa de Acolhimento das Mulheres Atingidas da Bacia do Paraopeba e Três Marias, em Pompéu/MG. Doe pelo PIX ou torne-se Guardiã Mantenedora.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://crmapoficial.org.br/casa-de-acolhimento">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Uma Casa de Recomeços — Apoie a construção | CRMAP">
+<meta property="og:description" content="Estamos construindo a Casa de Acolhimento das Mulheres Atingidas em Pompéu/MG. Cada tijolo conta. Doe pelo PIX.">
+<meta property="og:url" content="https://crmapoficial.org.br/casa-de-acolhimento">
+<meta property="og:image" content="https://crmapoficial.org.br/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@800&display=swap" rel="stylesheet">
+<style>
+  /* Casa de Acolhimento — desenhada primeiro para o celular.
+     Sem imagem pesada, sem animação que esconde conteúdo: se o JavaScript
+     falhar, a chave PIX e o QR Code continuam visíveis e legíveis. */
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #fdfdfb;
+    color: #1e261e;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: -0.02em;
+  }
+  a { color: #1b7340; text-decoration: none; transition: all 0.3s ease; }
+  img { max-width: 100%; height: auto; display: block; }
+  .container { max-width: 900px; padding: 0 1.2rem; margin: 0 auto; }
+
+  header {
+    background: #ffffff;
+    padding: 1rem 0;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  header .container {
+    max-width: 1200px;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 1rem;
+  }
+  header .container > a:first-of-type { display: inline-block; line-height: 0; }
+  .logo-img { width: 130px; height: auto; display: block; }
+  nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  nav a.button-link {
+    background: #e8f4ec; color: #1b7340; font-weight: 700;
+    padding: 0.5rem 1rem; border-radius: 25px; font-size: 0.9rem;
+  }
+  nav a.button-link:hover { background: #1b7340; color: #ffffff; }
+  nav a.atual { background: #1b7340; color: #ffffff; }
+
+  /* Faixa de abertura */
+  .capa {
+    background: linear-gradient(135deg, #0f301d 0%, #1b7340 100%);
+    color: #ffffff;
+    padding: 2.5rem 0 2rem;
+    text-align: center;
+  }
+  .capa h1 {
+    font-size: 1.7rem;
+    margin: 0 0 0.8rem;
+    line-height: 1.25;
+  }
+  .capa .frase {
+    font-size: 1.05rem;
+    font-style: italic;
+    color: rgba(255,255,255,0.92);
+    margin: 0 auto;
+    max-width: 34rem;
+  }
+
+  /* Bloco da doação — a coisa mais importante da página, por isso vem primeiro */
+  .doacao {
+    background: #ffffff;
+    border: 2px solid #1b7340;
+    border-radius: 14px;
+    padding: 1.5rem 1.2rem;
+    margin: -1.5rem auto 0;
+    max-width: 34rem;
+    box-shadow: 0 6px 24px rgba(15, 48, 29, 0.12);
+    text-align: center;
+    position: relative;
+  }
+  .doacao h2 {
+    font-size: 1.25rem; color: #1b7340; margin: 0 0 0.3rem;
+  }
+  .doacao .subtitulo { color: #4a5c4f; font-size: 0.98rem; margin: 0 0 1.2rem; }
+
+  /* O QR é desenho vetorial dentro da própria página: não baixa arquivo
+     nenhum e não borra por mais que a pessoa aproxime a tela. */
+  .qr-caixa {
+    width: min(260px, 78vw);
+    margin: 0 auto 1rem;
+    padding: 0.6rem;
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #d7e7dc;
+  }
+  .qr-caixa svg { width: 100%; height: auto; display: block; shape-rendering: crispEdges; }
+
+  .chave-rotulo {
+    font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: #4a5c4f; font-weight: 700; margin: 0 0 0.35rem;
+  }
+  .chave-valor {
+    font-size: 1.35rem; font-weight: 700; color: #0f301d;
+    background: #f0f7f2; border-radius: 8px;
+    padding: 0.7rem 0.5rem; margin: 0 0 0.2rem;
+    word-break: break-all;
+    font-variant-numeric: tabular-nums;
+  }
+  .chave-tipo { font-size: 0.9rem; color: #4a5c4f; margin: 0 0 1rem; }
+
+  .btn {
+    display: block; width: 100%;
+    border: 0; cursor: pointer;
+    font-family: inherit; font-size: 1.05rem; font-weight: 700;
+    padding: 0.95rem 1.2rem; border-radius: 10px;
+    text-align: center;
+    transition: background 0.25s ease;
+  }
+  .btn-copiar { background: #d63222; color: #ffffff; margin-bottom: 0.6rem; }
+  .btn-copiar:hover, .btn-copiar:focus { background: #b5271a; }
+  .btn-copiar-2 { background: #e8f4ec; color: #1b7340; border: 2px solid #1b7340; }
+  .btn-copiar-2:hover, .btn-copiar-2:focus { background: #d7e7dc; }
+  .btn-verde { background: #1b7340; color: #ffffff; }
+  .btn-verde:hover, .btn-verde:focus { background: #14572f; }
+
+  /* Aviso de "copiado" — aparece só depois de a pessoa tocar no botão */
+  .aviso-copia {
+    min-height: 1.4rem; margin: 0.6rem 0 0;
+    font-size: 0.95rem; font-weight: 700; color: #1b7340;
+  }
+  .favorecido {
+    font-size: 0.9rem; color: #4a5c4f;
+    margin: 1rem 0 0; padding-top: 0.9rem;
+    border-top: 1px solid #e4ede7;
+  }
+
+  /* Texto institucional */
+  main section { padding: 2.5rem 0; }
+  main section.alternada { background: #f0f7f2; }
+  h2.titulo {
+    font-size: 1.45rem; color: #1b7340; margin: 0 0 1rem;
+  }
+  h2.titulo::after {
+    content: ''; display: block; width: 50px; height: 4px;
+    background: #d63222; margin: 0.6rem 0 0; border-radius: 2px;
+  }
+  main p { margin: 0 0 1rem; }
+
+  .fases { list-style: none; padding: 0; margin: 0; }
+  .fases li {
+    background: #ffffff; border-left: 5px solid #1b7340;
+    border-radius: 0 8px 8px 0;
+    padding: 0.9rem 1rem; margin-bottom: 0.7rem;
+  }
+  .fases li strong { color: #1b7340; }
+  .fases li.agora { border-left-color: #d63222; }
+  .fases li.agora strong { color: #d63222; }
+
+  .cartao {
+    background: #ffffff; border: 1px solid #d7e7dc; border-radius: 12px;
+    padding: 1.3rem 1.1rem; margin-bottom: 1rem;
+  }
+  .cartao h3 { font-size: 1.15rem; margin: 0 0 0.6rem; color: #1b7340; }
+  .cartao p:last-of-type { margin-bottom: 0; }
+  .cartao .btn { margin-top: 1rem; }
+
+  .zap {
+    display: inline-block; font-weight: 700; font-size: 1.15rem;
+    color: #d63222;
+  }
+
+  /* Espaço reservado para dado que ainda falta */
+  .a-preencher {
+    background: #fff8e6; border: 1px dashed #c8a33a; border-radius: 8px;
+    padding: 0.8rem 1rem; color: #6b5410; font-size: 0.95rem;
+  }
+
+  footer { background: #0f301d; color: #d0e6d8; text-align: center; padding: 2.5rem 1rem; font-size: 0.95rem; }
+  footer a { color: #a8d5b8; }
+
+  /* Telas maiores: a página continua estreita porque é texto para ler */
+  @media (min-width: 700px) {
+    .capa { padding: 3.5rem 0 3rem; }
+    .capa h1 { font-size: 2.3rem; }
+    .capa .frase { font-size: 1.2rem; }
+    .doacao { padding: 2rem; }
+    .doacao h2 { font-size: 1.5rem; }
+    h2.titulo { font-size: 1.9rem; }
+    main section { padding: 3.5rem 0; }
+    .btn { display: inline-block; width: auto; min-width: 16rem; }
+    .btn-copiar { margin-bottom: 0; }
+    .botoes-copia { display: flex; flex-direction: column; gap: 0.6rem; align-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="/" aria-label="Página inicial da CRMAP">
+      <img src="logo-leve.png" alt="Logo CRMAP" class="logo-img" width="260" height="261">
+    </a>
+    <nav>
+      <a href="/" class="button-link">Início</a>
+      <a href="/produtos/" class="button-link">Produtos</a>
+      <a href="/acoes/" class="button-link">Ações</a>
+      <a href="/terreno/" class="button-link">Terreno</a>
+      <a href="/casa-de-acolhimento" class="button-link atual">Casa de Acolhimento</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <div class="capa">
+    <div class="container">
+      <h1>🏠 Uma Casa de Recomeços<br>Apoie a Construção da Nossa Casa de Acolhimento</h1>
+      <p class="frase">“Quando uma mulher se levanta, todas as outras se levantam com ela.”</p>
+    </div>
+  </div>
+
+  <!-- O bloco de doação vem antes de qualquer texto: quem chega decidido a
+       doar não precisa rolar a página para achar o QR Code e a chave. -->
+  <section style="padding-top:0;">
+    <div class="container">
+      <div class="doacao">
+        <h2>📱 Doe agora pelo PIX</h2>
+        <p class="subtitulo">Escaneie o QR Code ou copie a chave. Você escolhe o valor.</p>
+
+        <div class="qr-caixa">
+          <svg viewBox="0 0 41 41" role="img" aria-label="QR Code do PIX da CRMAP"><path stroke="#0f301d" d="M2 2.5h7m1 0h3m3 0h2m2 0h2m1 0h2m1 0h4m2 0h7m-37 1h1m5 0h1m2 0h1m2 0h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h4m2 0h1m5 0h1m-37 1h1m1 0h3m1 0h1m3 0h1m1 0h3m1 0h2m1 0h4m1 0h1m1 0h1m3 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m1 0h1m3 0h1m1 0h4m1 0h1m3 0h1m4 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m2 0h2m1 0h1m3 0h3m1 0h2m1 0h1m2 0h1m1 0h1m1 0h3m1 0h1m-37 1h1m5 0h1m1 0h3m1 0h5m1 0h1m5 0h2m2 0h1m1 0h1m5 0h1m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-29 1h4m4 0h3m2 0h1m1 0h1m2 0h1m1 0h1m-29 1h1m3 0h1m1 0h6m1 0h2m3 0h2m4 0h4m1 0h5m2 0h1m-36 1h1m1 0h1m3 0h2m5 0h1m1 0h1m2 0h3m1 0h1m2 0h4m1 0h3m2 0h1m-33 1h3m2 0h2m2 0h1m2 0h2m2 0h2m1 0h4m2 0h1m1 0h1m1 0h1m1 0h1m-34 1h3m2 0h1m6 0h1m2 0h1m3 0h3m2 0h1m2 0h1m1 0h1m2 0h2m-35 1h7m2 0h1m1 0h2m1 0h1m2 0h2m8 0h2m1 0h3m2 0h1m-35 1h1m1 0h1m2 0h1m2 0h2m2 0h2m1 0h2m2 0h1m1 0h2m3 0h1m1 0h4m2 0h1m-36 1h1m1 0h2m1 0h4m3 0h2m3 0h1m4 0h2m4 0h2m2 0h3m-36 1h3m1 0h2m2 0h1m1 0h5m1 0h1m3 0h4m1 0h1m4 0h1m2 0h3m-36 1h1m5 0h2m1 0h1m2 0h1m3 0h1m2 0h3m2 0h7m1 0h1m2 0h2m-36 1h1m3 0h1m1 0h3m1 0h2m1 0h1m3 0h2m4 0h1m1 0h1m1 0h1m5 0h1m1 0h1m-36 1h1m1 0h1m1 0h2m1 0h3m1 0h1m1 0h2m1 0h1m1 0h1m1 0h1m2 0h2m8 0h2m-36 1h2m1 0h1m1 0h1m1 0h1m1 0h2m2 0h1m1 0h3m1 0h2m3 0h1m1 0h1m4 0h3m1 0h1m-36 1h1m1 0h1m1 0h3m1 0h1m3 0h1m3 0h1m1 0h1m3 0h2m6 0h3m3 0h1m-37 1h1m6 0h1m3 0h2m2 0h1m2 0h1m2 0h2m1 0h4m2 0h3m2 0h1m-36 1h2m1 0h2m1 0h1m1 0h1m2 0h5m1 0h1m2 0h1m7 0h1m2 0h1m1 0h4m-36 1h1m2 0h2m1 0h2m1 0h1m2 0h2m1 0h3m4 0h1m3 0h3m1 0h2m1 0h2m-34 1h5m1 0h2m1 0h1m2 0h1m3 0h3m2 0h5m2 0h2m3 0h1m-36 1h2m1 0h1m4 0h2m2 0h1m3 0h1m2 0h2m3 0h1m1 0h1m1 0h2m2 0h1m1 0h1m1 0h1m-35 1h3m1 0h4m1 0h4m1 0h2m3 0h3m3 0h1m3 0h6m-35 1h1m1 0h2m1 0h2m2 0h2m1 0h1m2 0h1m3 0h3m2 0h1m1 0h1m2 0h1m2 0h2m-36 1h2m1 0h4m1 0h2m1 0h2m1 0h2m2 0h3m7 0h5m1 0h3m-29 1h1m1 0h3m1 0h1m2 0h2m1 0h1m3 0h3m1 0h1m3 0h1m3 0h1m-37 1h7m1 0h2m2 0h1m2 0h2m1 0h1m2 0h1m1 0h1m1 0h2m1 0h1m1 0h1m1 0h1m-33 1h1m5 0h1m2 0h2m2 0h4m5 0h3m1 0h3m3 0h4m-36 1h1m1 0h3m1 0h1m1 0h2m4 0h1m1 0h1m2 0h2m3 0h3m1 0h5m2 0h2m-37 1h1m1 0h3m1 0h1m4 0h1m2 0h1m3 0h1m4 0h11m1 0h1m-36 1h1m1 0h3m1 0h1m4 0h5m2 0h1m1 0h3m5 0h1m1 0h1m1 0h1m1 0h2m-36 1h1m5 0h1m2 0h4m2 0h4m2 0h3m3 0h4m3 0h3m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m2 0h4m3 0h3m3 0h3m3 0h1"/></svg>
+        </div>
+
+        <p class="chave-rotulo">Chave PIX</p>
+        <p class="chave-valor" id="chave-pix">65.198.846/0001-23</p>
+        <p class="chave-tipo">Tipo da chave: CNPJ</p>
+
+        <div class="botoes-copia">
+          <button type="button" class="btn btn-copiar" id="btn-chave">Copiar chave PIX</button>
+          <button type="button" class="btn btn-copiar-2" id="btn-codigo">Copiar código Pix completo</button>
+        </div>
+        <p class="aviso-copia" id="aviso" role="status" aria-live="polite"></p>
+
+        <p class="favorecido">
+          <strong>Favorecido:</strong> Centro de Referência das Mulheres Atingidas do Paraopeba<br>
+          Confira o nome na tela do seu banco antes de confirmar.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <h2 class="titulo">Por que esta casa</h2>
+      <p>O CRMAP (Centro de Referência das Mulheres Atingidas da Bacia do Paraopeba e Três Marias) atua na linha de frente oferecendo escuta, suporte psicossocial, atendimento psicológico e projetos de autonomia financeira para centenas de mulheres. Mas para que o cuidado seja completo e contínuo, precisamos de um porto seguro físico.</p>
+      <p>Estamos em uma grande mobilização regional para construir a nossa <strong>Casa de Acolhimento das Mulheres Atingidas da Bacia do Paraopeba e Três Marias</strong>. Este espaço, que será erguido no <a href="/terreno/">terreno doado à nossa instituição</a> em Pompéu/MG, funcionará como um refúgio seguro, um polo de capacitação profissional e o coração de nossa rede de saúde mental para mulheres de toda a região.</p>
+    </div>
+  </section>
+
+  <section class="alternada">
+    <div class="container">
+      <h2 class="titulo">🧱 Como sua doação será aplicada?</h2>
+      <p>Nossa campanha está dividida em etapas claras para garantir transparência absoluta:</p>
+      <ul class="fases">
+        <li class="agora"><strong>Fase 1 (Atual):</strong> Limpeza do terreno, fundação e alvenaria estrutural.</li>
+        <li><strong>Fase 2:</strong> Cobertura, instalações elétricas e hidráulicas.</li>
+        <li><strong>Fase 3:</strong> Acabamento, pintura e mobiliário para receber as salas de atendimento e oficinas.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <h2 class="titulo">🔴 Faça parte dessa construção agora mesmo</h2>
+      <p>Cada tijolo conta. Escolha a forma mais fácil para você contribuir:</p>
+
+      <div class="cartao">
+        <h3>📱 Doação direta via PIX</h3>
+        <p>Abra o aplicativo do seu banco, escolha “Pagar com Chave PIX” ou escaneie o QR Code no topo desta página.</p>
+        <p><strong>Favorecido:</strong> Centro de Referência das Mulheres Atingidas do Paraopeba</p>
+        <a href="#chave-pix" class="btn btn-verde">Ir para o QR Code e a chave</a>
+      </div>
+
+      <div class="cartao">
+        <h3>💳 Seja uma Guardiã Mantenedora</h3>
+        <p>Se você deseja apoiar nossa causa de forma contínua, ou fazer uma doação de fora da nossa região, emita sua Carteirinha Oficial de Guardiã do CRMAP atrelando seu cadastro a uma contribuição para a nossa obra.</p>
+        <a href="/carteirinha" class="btn btn-verde">Quero ser Guardiã Mantenedora</a>
+      </div>
+
+      <div class="cartao">
+        <h3>📦 Doação de materiais de construção</h3>
+        <p>Se você está na região de Pompéu ou municípios vizinhos e deseja doar cimento, tijolos, ferragens ou acabamentos, fale com a nossa equipe de coordenação:</p>
+        <p>🟢 <strong>WhatsApp Oficial:</strong> <a href="https://wa.me/5531996177729" class="zap">(31) 99617-7729</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="alternada">
+    <div class="container">
+      <h2 class="titulo">📊 Transparência e prestação de contas</h2>
+      <p>O CRMAP compromete-se publicamente a atualizar a cada etapa concluída a evolução financeira da arrecadação e as fotos do avanço físico do canteiro de obras. Acompanhe nossa diretoria e conselho fiscal na <a href="/#transparencia">aba de Governança do site</a>.</p>
+
+      <p class="a-preencher">
+        <strong>Falta preencher:</strong> e-mail de contato da campanha.
+        <!-- IARA: troque a linha acima por algo como
+             <strong>E-mail:</strong> <a href="mailto:SEU@EMAIL">SEU@EMAIL</a>
+             e apague a classe a-preencher. O e-mail que já aparece na home é
+             contato@crmapoficial.org.br — use esse se for o mesmo. -->
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2026 CRMAP – Centro de Referência das Mulheres Atingidas do Paraopeba.</p>
+    <p>Avenida Beira Rio 13, Fazendinhas Baú, Pompéu – MG · <a href="https://wa.me/5531996177729">(31) 99617-7729</a></p>
+  </div>
+</footer>
+
+<script>
+  // Único JavaScript da página: os botões de copiar.
+  // O código Pix abaixo foi montado a partir do CNPJ do cartão da instituição,
+  // sem valor fixo — quem doa escolhe quanto.
+  var CODIGO_PIX = '00020126360014BR.GOV.BCB.PIX0114651988460001235204000053039865802BR5905CRMAP6006POMPEU62070503***6304A39B';
+  var aviso = document.getElementById('aviso');
+
+  function copiar(texto, mensagem) {
+    function deuCerto() {
+      aviso.textContent = '✅ ' + mensagem;
+      setTimeout(function () { aviso.textContent = ''; }, 4000);
+    }
+    function deuErrado() {
+      aviso.textContent = '⚠️ Não consegui copiar. Toque e segure no texto para copiar à mão.';
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(texto).then(deuCerto, function () { antigo(texto, deuCerto, deuErrado); });
+    } else {
+      antigo(texto, deuCerto, deuErrado);
+    }
+  }
+
+  // Caminho reserva para celular antigo, onde o copiar moderno não existe.
+  function antigo(texto, ok, erro) {
+    try {
+      var campo = document.createElement('textarea');
+      campo.value = texto;
+      campo.setAttribute('readonly', '');
+      campo.style.position = 'fixed';
+      campo.style.opacity = '0';
+      document.body.appendChild(campo);
+      campo.select();
+      campo.setSelectionRange(0, texto.length);
+      var deu = document.execCommand('copy');
+      document.body.removeChild(campo);
+      deu ? ok() : erro();
+    } catch (e) {
+      erro();
+    }
+  }
+
+  document.getElementById('btn-chave').addEventListener('click', function () {
+    copiar(document.getElementById('chave-pix').textContent.trim(), 'Chave PIX copiada! Agora é só colar no app do seu banco.');
+  });
+
+  document.getElementById('btn-codigo').addEventListener('click', function () {
+    copiar(CODIGO_PIX, 'Código Pix copiado! Cole em “PIX Copia e Cola” no app do seu banco.');
+  });
+</script>
+</body>
+</html>
