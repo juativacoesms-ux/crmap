@@ -1,0 +1,39 @@
+# ---------------------------------------------------------------------------
+# Configuração do GitHub Pages (Jekyll) — crmapoficial.org.br
+# Criado em 01/08/2026 (horário de Brasília)
+#
+# PARA QUE SERVE: o GitHub Pages serve a raiz deste repositório. Sem este
+# arquivo, TUDO que está commitado vira endereço público — inclusive
+# documentação interna e scripts de banco. O `exclude` abaixo é a única
+# coisa que impede isso.
+#
+# Antes deste arquivo, https://crmapoficial.org.br/CLAUDE.md abria para
+# qualquer pessoa, e os 9 arquivos .sql do painel também — um deles com a
+# senha do painel em texto puro.
+#
+# ATENÇÃO: mexer aqui muda o que vai para o ar. Ao acrescentar um arquivo
+# interno novo ao repositório, conferir se ele precisa entrar nesta lista.
+# ---------------------------------------------------------------------------
+
+exclude:
+  # Instruções e memória de trabalho
+  - CLAUDE.md
+  - backup.md
+  - backup-2026-04-30.md
+  - backup-2026-05-03.md
+  - backup-2026-05-22.md
+
+  # Documentação interna e scripts
+  - docs/
+  - scripts/
+
+  # Scripts de banco de dados — nunca devem ser públicos.
+  # Um deles (painel/setup_supabase.sql) contém senha.
+  - "*.sql"
+  - painel/*.sql
+
+  # Documento com o CNPJ da instituição
+  - cnpj.zip
+
+# Não gerar índice de diretório para pastas sem index.html
+plugins: []
