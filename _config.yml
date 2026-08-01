@@ -35,5 +35,11 @@ exclude:
   # Documento com o CNPJ da instituição
   - cnpj.zip
 
+  # Original de 6,9 MB do fundo da home. Foi substituído por
+  # fotopginicial.jpg (196 KB) em 01/08/2026 e nenhuma página o usa mais.
+  # Continua no repositório porque apagar arquivo exige autorização da Iara;
+  # fica só de fora da publicação para não pesar no celular de ninguém.
+  - fotopginicial.png
+
 # Não gerar índice de diretório para pastas sem index.html
 plugins: []
