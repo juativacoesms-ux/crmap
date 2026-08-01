@@ -96,6 +96,10 @@ projeto. Sempre reler o QR gerado com um leitor independente antes de publicar
 — foi assim que se conferiu este (OpenCV devolveu o código idêntico).
 **Contrapartida aceita:** o código fica congelado no HTML. Se o CNPJ mudar,
 tem que gerar de novo — não é buscado de lugar nenhum.
+**CONFIRMADO NA PRÁTICA em 31/07/2026:** a Iara escaneou o QR publicado e
+transferiu R$ 1,00. O valor caiu na conta da CRMAP. A partir daí a página está
+liberada para divulgação. Repetir esse teste sempre que o código Pix mudar —
+conferência técnica não substitui a transferência de verdade.
 
 ### 31/07/2026 — Página de campanha usa `logo-leve.png`, não o `logo.png`
 **Motivo:** o `logo.png` tem 4,4 MB e aparece no topo de toda página. Usar ele
