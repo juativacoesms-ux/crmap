@@ -162,17 +162,33 @@
     
     let senhaGeral = "";
 
-    function verificarSenha() {
+    // A senha NÃO fica escrita aqui. Este arquivo é público na internet —
+    // até 01/08/2026 a senha estava em texto puro nesta linha, e qualquer
+    // pessoa podia lê-la abrindo o código da página.
+    //
+    // Agora quem julga a senha é o banco, pela função validar_senha_painel.
+    // Enquanto essa função não existir (antes da migração), o painel deixa
+    // entrar e a senha é conferida na primeira ação de verdade, que já
+    // devolve "Senha incorreta" quando está errada.
+    async function verificarSenha() {
         const pass = document.getElementById('senhaAcesso').value;
-        if (pass === '270797crmap*') {
-            senhaGeral = pass;
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainContainer').style.display = 'flex';
-            carregarProdutos();
-            carregarPagamentos();
-        } else {
-            alert('Senha incorreta!');
+        if (!pass) { alert('Digite a senha.'); return; }
+
+        let liberar = null;   // null = não deu para perguntar ao banco
+        try {
+            const { data, error } = await supabaseClient.rpc('validar_senha_painel', { p_senha: pass });
+            if (!error && data && typeof data.success === 'boolean') liberar = data.success;
+        } catch (e) {
+            liberar = null;
         }
+
+        if (liberar === false) { alert('Senha incorreta!'); return; }
+
+        senhaGeral = pass;
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('mainContainer').style.display = 'flex';
+        carregarProdutos();
+        carregarPagamentos();
     }
 
     function showSection(sectionId) {
@@ -180,8 +196,21 @@
         document.getElementById('section-' + sectionId).classList.add('active-section');
     }
 
+    // Lê as doações pela função listar_pagamentos_painel, que exige a senha.
+    // Quando a leitura pública da tabela for fechada, este é o único caminho
+    // que continua funcionando. Enquanto a função não existir, cai no jeito
+    // antigo — assim o painel funciona antes e depois da migração.
     async function carregarPagamentos() {
-        const { data } = await supabaseClient.from('pagamentos_carteirinha').select('*').order('created_at', { ascending: false });
+        let data = null;
+        try {
+            const r = await supabaseClient.rpc('listar_pagamentos_painel', { p_senha: senhaGeral });
+            if (!r.error && Array.isArray(r.data)) data = r.data;
+        } catch (e) { /* função ainda não existe */ }
+
+        if (data === null) {
+            data = (await supabaseClient.from('pagamentos_carteirinha')
+                      .select('*').order('created_at', { ascending: false })).data;
+        }
         const lista = document.getElementById('listaPagamentos');
         if (!data || data.length === 0) {
             lista.innerHTML = '<tr><td colspan="6" style="text-align:center">Nenhum pagamento registrado.</td></tr>';
@@ -229,7 +258,17 @@
                 alert(res.message || 'Falha ao aprovar manualmente.');
             } else {
                 alert('Pagamento aprovado manualmente com sucesso.');
-                const row = (await supabaseClient.from('pagamentos_carteirinha').select('numero_credencial,nome_pagador').eq('payment_id', paymentId).maybeSingle()).data;
+                // Busca o registro pela função com senha. A leitura direta da
+                // tabela deixa de enxergar nome_pagador quando a leitura
+                // pública for fechada; por isso o caminho antigo virou reserva.
+                let row = null;
+                try {
+                    const r = await supabaseClient.rpc('listar_pagamentos_painel', { p_senha: senhaGeral });
+                    if (!r.error && Array.isArray(r.data)) row = r.data.find(x => x.payment_id === paymentId) || null;
+                } catch (e) { /* função ainda não existe */ }
+                if (!row) {
+                    row = (await supabaseClient.from('pagamentos_carteirinha').select('numero_credencial,nome_pagador').eq('payment_id', paymentId).maybeSingle()).data;
+                }
                 if (row?.numero_credencial) {
                     fetch(`${SUPABASE_URL}/functions/v1/registrar-planilha`, {
                         method: 'POST',
