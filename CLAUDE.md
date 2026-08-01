@@ -84,6 +84,56 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 01/08/2026 — O que vai para o ar passa a ser uma lista, não o repositório inteiro
+**Motivo:** o GitHub Pages serve a raiz, então tudo que está commitado vira
+endereço público. Estavam abertos: `CLAUDE.md`, os 4 `backup*.md`,
+`docs/redirecionamentos.md`, os **9 arquivos `.sql` do painel** (um deles com
+a senha em texto puro) e o `cnpj.zip`. O Jekyll já estava ligado (não existe
+`.nojekyll`), então bastou criar `_config.yml` com `exclude:`.
+**Consequência prática:** ao acrescentar arquivo interno novo ao repositório,
+conferir se precisa entrar nessa lista. O `_config.yml` é hoje a única coisa
+que separa "está no Git" de "está na internet".
+
+### 01/08/2026 — A senha nunca mais fica escrita em arquivo do repositório
+**Motivo:** a senha do painel estava em texto puro em `painel/index.html:167`,
+e a senha da secretaria estava **renderizada na tela** de `/saude/controle/`,
+visível para qualquer pessoa que abrisse a página. As duas são públicas há
+tempo indeterminado e precisam ser trocadas, não só escondidas.
+**Como fica:** quem julga a senha é o banco, pela função
+`validar_senha_painel`, com hash bcrypt guardado em `painel_config`. O painel
+só envia o que a pessoa digitou. O SQL está em
+`painel/migracao-seguranca-2026-08-01.sql`.
+**Limite consciente:** eu não tenho credencial do Supabase e **não consigo
+executar nem testar** esse SQL. Ele foi escrito lendo os `.sql` e o código do
+site, e traz seção de teste e de desfazimento. A coluna `senha_acesso` não é
+apagada de propósito — é a rede de segurança até os logins com hash serem
+confirmados por uma profissional de verdade, do celular dela.
+
+### 01/08/2026 — O token da Cloudflare mora nas Chaves do macOS, não no `.zshrc`
+**Motivo:** o `~/.zshrc` só é lido em terminal interativo. As sessões de
+comando do Claude Code são não-interativas e **não** leem esse arquivo —
+testado: o terminal da Iara enxergava a variável e eu não. Por isso a linha
+está no `~/.zshenv`, que vale para as duas situações. O token em si fica nas
+Chaves (`cloudflare-crmap-api-token`), nunca em arquivo; `~/bin/token-cloudflare`
+abre uma caixa do macOS com texto escondido para guardar ou trocar.
+**Contrapartida aceita:** depende do Keychain estar destravado.
+
+### 01/08/2026 — O logo tinha a grade de transparência gravada nos pixels
+**Motivo:** o `logo.png` original trazia 263.596 pixels **opacos** formando um
+xadrez cinza numa meia-lua embaixo do círculo — resquício de exportação com a
+grade do editor visível. Aparecia em todas as páginas, gritante sobre fundo
+escuro. A grade estava toda FORA do desenho, então foi removida sem tocar na
+arte, junto com a compressão (4.442 KB → 45 KB).
+**Vale também para o `logo-leve.png`,** que herdava o mesmo defeito.
+
+### 01/08/2026 — Grade responsiva: o `min()` vale para o site inteiro, não só para a galeria
+**Motivo:** a regra de 29/07 tinha ficado só na galeria do Arraiá. Medido com
+navegador em tela de 360px: na página Ações os cartões chegavam a **374px**, e
+como a `section` tem `overflow: hidden`, o excedente era **cortado** — sumia,
+não rolava. Corrigido em `.grid-gallery` (Ações) e `.board-grid` (home).
+**Padrão do projeto agora:** toda grade nova usa
+`minmax(min(Xpx, 100%), 1fr)`. Nunca `minmax(Xpx, 1fr)` puro.
+
 ### 31/07/2026 — O QR Code do PIX é desenhado no HTML, não é arquivo de imagem
 **Motivo:** a Iara não tinha o código "Pix Copia e Cola" do banco, então o
 código foi montado aqui (padrão BR Code / EMV) a partir do CNPJ e do município
