@@ -2,13 +2,39 @@
 -- CRMAP — migração de segurança
 -- Escrito em 01/08/2026 (horário de Brasília)
 --
--- ONDE RODAR: supabase.com -> projeto qzjvzbvoxwhggvadaroq -> SQL Editor
---             -> New query -> colar TUDO -> Run.
+-- ############################################################################
+-- ✅ APLICADO E CONFERIDO EM 01/08/2026, à noite.
 --
--- ATENÇÃO: eu (Claude) NÃO consigo executar nem testar nada disto. Não há
--- credencial do Supabase nesta máquina e o CLI não está instalado. Este
--- arquivo foi escrito lendo os .sql do repositório e o código do site, mas
--- nunca rodou. Leia a seção "COMO TESTAR" no fim ANTES de considerar pronto.
+-- As PARTES 1 e 2 foram rodadas pela Iara no SQL Editor. As PARTES 3 e 4
+-- foram rodadas por mim pela Management API, depois que ela me passou um
+-- token de acesso pessoal pela caixa segura do macOS.
+--
+-- Conferido depois de aplicar, com a chave anon (a mesma do site):
+--   - lista de profissionais: 31 (igual a antes)
+--   - produtos: 59 (igual a antes)
+--   - carteirinha: continua respondendo
+--   - senha_acesso, senha_hash, telefone, email, email_pagador,
+--     nome_pagador e payment_id: TODOS bloqueados
+--   - RLS ligado e ZERO políticas de escrita nas 4 tabelas
+--   - os 31 hashes conferem com a senha atual de cada profissional
+--   - '270797crmap*' e 'secretaria2026' não valem mais
+--
+-- O QUE NÃO FOI FEITO, DE PROPÓSITO: apagar a coluna senha_acesso (o último
+-- bloco, comentado no fim). Ela já não é legível de fora, então o vazamento
+-- está fechado do mesmo jeito. Apagar destrói as senhas originais para
+-- sempre, e nenhuma profissional de verdade entrou ainda. Fica como rede de
+-- segurança até esse teste acontecer.
+--
+-- ACHADO NÃO RELACIONADO À MIGRAÇÃO: 5 das 31 profissionais estão com o
+-- campo telefone VAZIO, então não conseguem entrar pela tela de login (que
+-- pede WhatsApp). Testado que a regra ANTIGA falhava para as mesmas 5 —
+-- é defeito anterior, não foi a migração. Só se resolve cadastrando o
+-- telefone delas.
+-- ############################################################################
+--
+-- ONDE RODAR (se precisar refazer): supabase.com -> projeto
+-- qzjvzbvoxwhggvadaroq -> SQL Editor -> New query -> colar -> Run.
+-- Copie SÓ o SQL: título em português colado junto vira erro de sintaxe.
 --
 -- ORDEM IMPORTA. As partes estão na ordem em que devem rodar:
 --   PARTE 1 — senha do painel vira hash e sai do código
