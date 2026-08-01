@@ -185,7 +185,7 @@
 
         lista.innerHTML = data.map(p => `
             <div class="card glass-card reveal">
-                <img src="${p.foto_url}" alt="${p.nome}" onerror="this.src='../foto-padrao.jpg'">
+                <img src="${p.foto_url}" alt="${p.nome}" loading="lazy" onerror="this.onerror=null; this.src='../foto-padrao.jpg'">
                 <h4>${p.nome}</h4>
                 <p class="price">R$ ${p.preco}</p>
                 <p class="desc">${p.descricao}</p>
