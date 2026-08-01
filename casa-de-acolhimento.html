@@ -56,6 +56,7 @@
   nav a.button-link {
     background: #e8f4ec; color: #1b7340; font-weight: 700;
     padding: 0.5rem 1rem; border-radius: 25px; font-size: 0.9rem;
+    display: inline-flex; align-items: center; min-height: 44px;
   }
   nav a.button-link:hover { background: #1b7340; color: #ffffff; }
   nav a.atual { background: #1b7340; color: #ffffff; }
@@ -110,7 +111,9 @@
   .qr-caixa svg { width: 100%; height: auto; display: block; shape-rendering: crispEdges; }
 
   .chave-rotulo {
-    font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em;
+    /* Rótulo da chave PIX numa página de doação: 0.85rem dava 13,6px.
+       Subiu para 14,4px, o mínimo confortável de leitura. */
+    font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.06em;
     color: #4a5c4f; font-weight: 700; margin: 0 0 0.35rem;
   }
   .chave-valor {

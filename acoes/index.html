@@ -58,7 +58,9 @@
     filter: drop-shadow(0 1px 3px rgba(15, 48, 29, 0.12));
   }
   nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-  nav a.button-link { background: #e8f4ec; color: #1b7340; font-weight: 700; padding: 0.5rem 1rem; border-radius: 25px; font-size: 0.9rem; }
+  nav a.button-link { background: #e8f4ec; color: #1b7340; font-weight: 700; padding: 0.5rem 1rem; border-radius: 25px; font-size: 0.9rem;
+    display: inline-flex; align-items: center; min-height: 44px;
+  }
   nav a.button-link:hover { background: #1b7340; color: #ffffff; }
 
   /* Seção Hero */
@@ -115,7 +117,11 @@
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
   }
 
-  .grid-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2.5rem; }
+  /* min(350px, 100%) e não 350px puro: num celular de 360px sobram 312px
+     úteis, então a coluna de 350px ficava mais larga que a tela. Como a
+     section tem overflow: hidden, o excedente era CORTADO em vez de rolar —
+     sumia da tela. O min() deixa a coluna encolher. */
+  .grid-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr)); gap: 2.5rem; }
   .gallery-card { 
     border-radius: 12px; overflow: hidden; position: relative;
     transition: all 0.4s ease;

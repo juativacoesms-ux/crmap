@@ -103,6 +103,7 @@
     border-radius: 25px; 
     font-size: 0.9rem;
     border: 1px solid transparent;
+    display: inline-flex; align-items: center; min-height: 44px;
   }
   nav a.button-link:hover,
   nav a.button-link:focus {
@@ -424,9 +425,13 @@
   .doc-download-btn:hover { background: #1b7340; color: #ffffff; }
 
   /* Diretoria e Governança */
+  /* min(320px, 100%) e não 320px puro: num celular de 360px sobram 312px
+     úteis, então o cartão de 320px ficava mais largo que a tela e a section,
+     que tem overflow: hidden, CORTAVA a borda direita em vez de rolar. Em
+     telas de 320px o corte chegava ao texto. */
   .board-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
     gap: 1.5rem;
   }
   .board-card {
@@ -663,7 +668,8 @@
     gap: 0.85rem;
   }
   .top-support-banner .apoio-label {
-    font-size: 0.7rem;
+    /* 0.7rem dava 11,2px — pequeno demais para ler no celular. */
+    font-size: 0.82rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.18em;
@@ -716,7 +722,8 @@
     display: inline-block;
     background: #d63222;
     color: #ffffff;
-    font-size: 0.78rem;
+    /* 0.78rem dava 12,5px; subiu para 13,6px. */
+    font-size: 0.85rem;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
