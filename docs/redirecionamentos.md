@@ -103,19 +103,10 @@ do `.htaccess`.
 
 ---
 
-## PENDENTE — regra 4, Casa de Acolhimento (criada em 31/07/2026, ainda NÃO aplicada)
+### 4. Regra 4 — Casa de Acolhimento para a URL curta — FEITO
 
-A página `/casa-de-acolhimento` foi publicada em 31/07/2026. Medido no ar
-logo depois do deploy:
-
-| URL | Hoje | Deveria ser |
-|---|---|---|
-| `/casa-de-acolhimento` | 200 ✅ | 200 |
-| `/casa-de-acolhimento.html` | **200** (conteúdo duplicado) | 301 → `/casa-de-acolhimento` |
-| `/casa-de-acolhimento/` | **404** | 301 → `/casa-de-acolhimento` |
-
-Expressão a criar, no mesmo ruleset das outras três, com 301 e "Preserve
-query string" ligado:
+Aplicada em **01/08/2026 às 19h40 (Brasília)**, no mesmo ruleset das outras
+três, com 301 e "Preserve query string" ligado.
 
 ```
 (http.request.uri.path eq "/casa-de-acolhimento.html") or
@@ -125,10 +116,35 @@ query string" ligado:
 
 **Correspondência exata (`eq`), nunca `starts_with`** — mesma regra de sempre.
 
-**Por que não foi aplicada:** a variável `CLOUDFLARE_API_TOKEN` não estava
-disponível na sessão de 31/07/2026. Sem ela não dá para chamar a API. A regra
-não é urgente: o endereço oficial já funciona. O que fica pendente é o endereço
-duplicado (ruim para busca) e o 404 de quem digitar com barra no fim.
+Antes da regra, `/casa-de-acolhimento.html` respondia 200 (conteúdo duplicado)
+e `/casa-de-acolhimento/` dava 404.
+
+**Ficou parada desde 31/07/2026** porque a variável `CLOUDFLARE_API_TOKEN` não
+estava disponível na sessão. Em 01/08/2026 o token passou a ser permanente
+(Chaves do macOS + `~/.zshenv`), e a regra foi aplicada na mesma hora.
+
+**Cuidado ao aplicar pela API:** o `PUT` no endpoint `entrypoint` **substitui
+todas as regras do ruleset**. É obrigatório fazer o `GET` antes, remontar as
+regras existentes e mandar as quatro juntas — mandar só a nova apagaria as
+outras três.
+
+**Cache:** logo depois do `PUT`, os testes sem query string ainda devolveram o
+resultado antigo (200 e 404) por ~2 minutos, enquanto com `?cb=1` já vinha 301.
+Isso é o cache da Cloudflare, não falha da regra. Confirmar com query string
+antes de concluir que deu errado.
+
+Medido no ar depois de aplicar:
+
+| URL | Resultado |
+|---|---|
+| `/casa-de-acolhimento.html` | 301 → `/casa-de-acolhimento` ✅ |
+| `/casa-de-acolhimento/` | 301 → `/casa-de-acolhimento` ✅ |
+| `/casa-de-acolhimento` | 200 (não redireciona — correto) ✅ |
+
+Regressão conferida na mesma hora: as regras 1, 2 e 3 continuam respondendo
+301, e `/carteirinha` (200), `/carteirinha-base-data.js` (514.080 bytes) e
+`/carteirinha-base.png` (385.507 bytes) continuam intactos. A chave Pix segue
+em HTML puro na página do ar.
 
 ---
 
