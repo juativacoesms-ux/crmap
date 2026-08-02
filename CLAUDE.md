@@ -84,6 +84,27 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 02/08/2026 — Foto de produto comprimida entra com nome novo, o original fica
+**Motivo:** as 59 fotos somavam **42,2 MB** no armazenamento do Supabase
+(média de 733 KB, a maior com 3,7 MB) e a página `/produtos/` era a mais pesada
+do site. O redimensionamento por URL da Supabase (`/render/image/`) responde
+**403** — é recurso de plano pago e não está ligado, então a única saída era
+reenviar as fotos.
+**Como foi feito:** lado maior de 1000px (o cartão mostra 320px; 1000px cobre
+tela 3× com folga), JPEG qualidade 80, progressivo. Resultado: **42,2 MB → 5,0
+MB, 88% menor**. Na página: ao abrir caiu de 7,7 MB para **0,72 MB**; rolando
+tudo, de 28 MB para **3,35 MB**.
+**A parte que importa:** as comprimidas subiram com nome NOVO (sufixo
+`-menor.jpg`) e só o campo `foto_url` do banco mudou. **Nenhum original foi
+apagado ou sobrescrito** — eles continuam no armazenamento, ao lado. Desfazer é
+rodar um `update` que devolve os endereços antigos, sem reenviar nada.
+**Onde está o desfazimento:** `~/Documents/crmap-fotos-originais-2026-08-02/`
+(fora do repositório, porque são 52 MB de imagem). Tem os 70 originais
+conferidos byte a byte, o `desfazer.sql`, o `mapa-troca.json` e um `LEIA-ME.txt`.
+**Ao cadastrar produto novo pelo painel:** a foto entra como veio do celular,
+sem compressão. Vale repetir esse processo de tempos em tempos, ou um dia
+comprimir no próprio painel antes de enviar.
+
 ### 01/08/2026 — O que vai para o ar passa a ser uma lista, não o repositório inteiro
 **Motivo:** o GitHub Pages serve a raiz, então tudo que está commitado vira
 endereço público. Estavam abertos: `CLAUDE.md`, os 4 `backup*.md`,
