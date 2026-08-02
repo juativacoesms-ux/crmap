@@ -4,9 +4,38 @@
  * Planilha (colunas): A=última atualização | B=número | C=nome | D=data emissão | E=status pagamento | F=voluntário | G=baixou
  *
  * DEPLOY: Cole no editor script.google.com, Salvar, Implantar > Nova implantação > App da Web > Executar como EU > Acesso: Qualquer pessoa.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ANTES DE IMPLANTAR — cadastrar o token do Mercado Pago (uma vez só)
+ *
+ * No editor do Apps Script:
+ *   ⚙️ Configurações do projeto  →  Propriedades do script  →  Adicionar
+ *      Propriedade: MP_ACCESS_TOKEN
+ *      Valor:       (cole aqui o Access Token de PRODUÇÃO do Mercado Pago)
+ *   → Salvar propriedades do script
+ *
+ * POR QUE ASSIM: até 02/08/2026 o token ficava escrito nesta linha, e este
+ * arquivo estava PÚBLICO em crmapoficial.org.br/google_apps_script.gs —
+ * qualquer pessoa lia a chave que movimenta os pagamentos. Guardando nas
+ * Propriedades do Script, o segredo fica só dentro do Google e este arquivo
+ * pode ser lido por qualquer um sem risco.
+ *
+ * Se a propriedade não estiver cadastrada, as funções de pagamento param e
+ * devolvem uma mensagem clara — em vez de falharem em silêncio.
+ * ─────────────────────────────────────────────────────────────────────────
  */
 
-const MP_ACCESS_TOKEN = "APP_USR-5952635800834737-032621-b4f384773f3b340c4edaee6e08d0a250-3291408548";
+function mpToken_() {
+  var t = PropertiesService.getScriptProperties().getProperty("MP_ACCESS_TOKEN");
+  if (!t) {
+    throw new Error(
+      "MP_ACCESS_TOKEN não cadastrado. Vá em Configurações do projeto > " +
+      "Propriedades do script e cadastre a propriedade MP_ACCESS_TOKEN."
+    );
+  }
+  return t;
+}
+
 const SUPABASE_URL = "https://qzjvzbvoxwhggvadaroq.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0";
 const SPREADSHEET_ID = "1k1QTl5-OXekR_0MtWZRmd18RWLJn_SovZBV3MW9imak";
@@ -101,7 +130,7 @@ function createPreference(params) {
   var options = {
     method: "post",
     headers: {
-      Authorization: "Bearer " + MP_ACCESS_TOKEN,
+      Authorization: "Bearer " + mpToken_(),
       "Content-Type": "application/json"
     },
     payload: JSON.stringify({
@@ -145,7 +174,7 @@ function handleWebhook(contents) {
     var paymentId = data.data ? data.data.id : data.id;
     var url = "https://api.mercadopago.com/v1/payments/" + paymentId;
     var response = UrlFetchApp.fetch(url, {
-      headers: { Authorization: "Bearer " + MP_ACCESS_TOKEN }
+      headers: { Authorization: "Bearer " + mpToken_() }
     });
     var paymentData = JSON.parse(response.getContentText());
 
@@ -168,6 +197,24 @@ function handleWebhook(contents) {
   return ContentService.createTextOutput("OK").setMimeType(ContentService.MimeType.TEXT);
 }
 
+/**
+ * ⚠️ ESTA FUNÇÃO NÃO FUNCIONA MAIS — e falha em SILÊNCIO.
+ *
+ * Ela insere direto na tabela usando a chave `anon`. Em 01/08/2026 a
+ * escrita anônima em pagamentos_carteirinha foi fechada (era o vazamento
+ * que permitia a qualquer pessoa criar doação falsa). Com o
+ * `muteHttpExceptions: true` abaixo, a falha não aparece em lugar nenhum.
+ *
+ * NÃO É PROBLEMA HOJE: o site não usa este caminho. O pagamento passa
+ * pelas funções da Supabase (create-preference e mp-webhook), que escrevem
+ * com a chave de serviço e continuam funcionando. Este Apps Script só é
+ * chamado para gravar na PLANILHA (salvarNaPlanilha).
+ *
+ * SE UM DIA VOLTAR A USAR ESTE CAMINHO: trocar por uma chamada à função
+ * SECURITY DEFINER do banco, ou guardar a chave de serviço nas
+ * Propriedades do Script (como foi feito com MP_ACCESS_TOKEN). Inserir com
+ * a chave `anon` não volta a funcionar — e não deve mesmo.
+ */
 function registrarNoSupabase(nome, numero, status) {
   var url = SUPABASE_URL + "/rest/v1/pagamentos_carteirinha";
   var headers = {
