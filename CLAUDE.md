@@ -84,6 +84,42 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 02/08/2026 — Segredo nunca mais dentro de arquivo do repositório
+**Motivo:** o `google_apps_script.gs` tinha o **Access Token de produção do
+Mercado Pago** em texto puro, e estava público em
+`crmapoficial.org.br/google_apps_script.gs` (respondia 200). É a chave que
+movimenta pagamento — mais grave que a senha do painel. A falha foi da lista
+de exclusão que criei em 01/08: bloqueei `.sql`, `.md`, `docs/` e `scripts/`,
+e não pensei em `.gs`.
+**Como fica:** o token saiu do código e passou a vir das **Propriedades do
+Script** do Google, por `mpToken_()`, que falha com mensagem clara se não
+estiver cadastrado. O arquivo pode ser lido por qualquer um sem risco.
+**Bloquear não basta:** o token esteve exposto por tempo indeterminado e
+**precisa ser trocado** no painel do Mercado Pago. Depois, atualizar também a
+variável `MP_ACCESS_TOKEN` das funções da Supabase.
+**Varredura feita na mesma hora, e o que NÃO é problema:** todas as chaves
+Supabase nos arquivos do site são `anon` (públicas por natureza, e agora sem
+nada atrás por causa do RLS); o `APP_USR` de `carteirinha.html` é a chave
+**pública** do Mercado Pago, que o site precisa ter; as 4 funções de servidor
+usam `Deno.env.get` e não têm segredo embutido. Saíram da publicação também
+`supabase/` e qualquer `.py` solto.
+**Regra que fica:** ao acrescentar tipo de arquivo novo ao repositório,
+conferir se precisa entrar no `exclude` do `_config.yml`. Ele é a única coisa
+que separa "está no Git" de "está na internet".
+
+### 02/08/2026 — O e-mail do site não depende mais de JavaScript
+**Motivo:** a Cloudflare tinha o *Email Address Obfuscation* ligado e trocava
+todo `mailto:` por um script. Quem estivesse sem JavaScript — conexão ruim,
+celular antigo, bloqueador — via `[email protected]` no lugar do
+endereço, inclusive **na página de doação**. Isso contrariava a decisão de
+31/07 (a página de doação não pode depender de JavaScript).
+**Contrapartida aceita:** o endereço fica visível para robôs de spam. A Iara
+escolheu assim: spam se filtra, doadora que não acha o contato é doação
+perdida.
+**Junto disso:** o site inteiro passou a usar `contato@crmapoficial.org.br`.
+A página da campanha mostrava um Gmail; dois endereços obrigavam a olhar duas
+caixas de entrada.
+
 ### 02/08/2026 — Foto de produto comprimida entra com nome novo, o original fica
 **Motivo:** as 59 fotos somavam **42,2 MB** no armazenamento do Supabase
 (média de 733 KB, a maior com 3,7 MB) e a página `/produtos/` era a mais pesada
