@@ -32,6 +32,20 @@ exclude:
   - "*.sql"
   - painel/*.sql
 
+  # Google Apps Script — contém o TOKEN DE ACESSO do Mercado Pago em texto
+  # puro. Ficou público de 02/08/2026 para trás; descoberto e bloqueado em
+  # 02/08/2026. O token precisa ser trocado no painel do Mercado Pago:
+  # bloquear o arquivo não desfaz o tempo em que ele esteve exposto.
+  - "*.gs"
+
+  # Código das funções de servidor da Supabase. Elas usam variável de
+  # ambiente e NÃO têm segredo embutido (conferido em 02/08/2026), mas não
+  # há motivo para publicar código de servidor.
+  - supabase/
+
+  # Scripts em Python soltos, se algum dia sair da pasta scripts/
+  - "*.py"
+
   # Documento com o CNPJ da instituição
   - cnpj.zip
 
