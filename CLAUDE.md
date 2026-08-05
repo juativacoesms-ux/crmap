@@ -84,6 +84,55 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 05/08/2026 — A senha do painel se troca por caixa segura, nunca por SQL colado
+**Motivo:** a diretora não conseguia entrar, e a senha definida em 01/08 tinha
+se perdido — ela é bcrypt no banco, não existe jeito de ler de volta. Trocar
+exigia rodar SQL com a senha nova dentro, e colar senha no chat a grava no
+histórico para sempre.
+**Como fica:** `~/bin/senha-painel` abre uma caixa do macOS com texto
+escondido, pede duas vezes, grava o hash pela Management API e confere
+sozinho (senha nova aceita? antiga derrubada?). A senha não passa pelo chat,
+não vai para arquivo nenhum, não aparece no `ps`. `--testar` só confere, sem
+alterar. Recusa senha com menos de 10 caracteres ou com espaço nas pontas —
+espaço nas pontas é a causa clássica de "digitei certo e não entra", e
+aparar em silêncio deixaria a pessoa com senha diferente da que pensa.
+**Onde a senha mora:** uma linha só, `senha_painel_hash` em `painel_config`.
+Nenhum arquivo do repositório guarda senha. Sete funções a conferem, todas
+por `_senha_painel_ok` — inclusive a `confirmar_pagamento`, que aprova doação
+manual. Por isso trocar a senha **não quebra nada**: é um `update` e pronto.
+**Atenção que não é óbvia:** as funções `_saude_senha_ok` e
+`_saude_senha_coord_ok` também apontam para esse mesmo hash, e delas dependem
+outras 13 funções da Saúde. **A senha do painel é também a senha de
+`/saude/controle/`.** Trocar uma troca as duas.
+**Lição cara desta sessão:** a primeira versão do script embutia o programa
+Python por `/dev/fd/3`; dentro de um cano, no macOS, isso entrega um programa
+**vazio**. Ele saiu com código 0 sem fazer nada, e a Iara achou que tinha
+trocado a senha. Eu tinha testado a sintaxe e as partes separadas, **não o
+script montado**. Testar o artefato inteiro, sempre.
+
+### 05/08/2026 — Botão que dispara ação lenta vira "carregando" no primeiro toque
+**Motivo:** no painel a pessoa apertava e a tela não mudava até o banco
+responder, então apertava de novo. Não era só incômodo: **"Publicar Agora"
+cadastrava o produto duplicado** e "Aprovar manual" aprovava e avisava a
+planilha duas vezes. O "Entrar" não dava sinal nenhum, e os outros três
+mostravam uma caixinha "Aguardando..." que **não impedia clique**.
+**Padrão do projeto agora:** toda ação que fala com o banco usa
+`ocupar(botao, texto)`, que desativa o botão, põe uma roda girando e troca o
+texto (`Entrando...`, `Publicando...`, `Aprovando...`, `Excluindo...`), e
+devolve a função que libera — chamada sempre no `finally`. Se o botão já
+estiver ocupado, `ocupar` devolve `null` e a ação **não roda de novo**. A tela
+de espera passou a cobrir a tela inteira, então nada mais é clicável enquanto
+a ação corre.
+**Corrigido junto, achado na revisão:** `excluirProduto` não tinha
+`try/finally` — um erro deixava a tela de espera travada e o painel parecia
+congelado; e `carregarProdutos` estourava se a consulta voltasse nula,
+derrubando o carregamento inteiro.
+**Como foi conferido:** Chromium 390×800 com respostas do Supabase fingidas e
+rede lenta de propósito; 18 verificações, rodadas contra o arquivo local **e
+contra o site no ar**, incluindo "3 toques = 1 chamada só" nos quatro botões.
+Mais um teste sem fingimento nenhum, com senha errada, contra o Supabase de
+verdade. Armadilhas do Playwright ficaram anotadas na memória do projeto.
+
 ### 02/08/2026 — Segredo nunca mais dentro de arquivo do repositório
 **Motivo:** o `google_apps_script.gs` tinha o **Access Token de produção do
 Mercado Pago** em texto puro, e estava público em
