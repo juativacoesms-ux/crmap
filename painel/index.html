@@ -51,21 +51,38 @@
         .product-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
         .btn-delete { background: #fee2e2; color: #dc2626; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.8rem; width: auto; }
         
-        #loader { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:rgba(0,0,0,0.7); color:white; padding:2rem; border-radius:12px; z-index:3000; }
-        
+        /* Aviso de "estou trabalhando". Cobre a tela inteira de propósito:
+           antes era uma caixinha no meio que NÃO impedia clique, então dava
+           para apertar "Publicar" de novo e cadastrar o produto duplicado. */
+        #loader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:3000; justify-content:center; align-items:center; padding:1rem; }
+        #loader .caixa-espera { background:var(--white); color:var(--text); padding:1.5rem 2rem; border-radius:12px; font-weight:700; box-shadow:0 10px 30px rgba(0,0,0,0.25); display:flex; align-items:center; gap:0.8rem; max-width:100%; text-align:left; }
+
+        /* Roda que gira. Usa currentColor, então serve tanto no botão verde
+           quanto no botão vermelho de excluir e na caixa branca. */
+        .girando { display:inline-block; width:1.1rem; height:1.1rem; flex:0 0 auto; border:3px solid rgba(128,128,128,0.35); border-top-color:currentColor; border-radius:50%; animation:girar 0.8s linear infinite; vertical-align:-0.2rem; }
+        button .girando { width:0.9rem; height:0.9rem; border-width:2px; margin-right:0.45rem; }
+        @keyframes girar { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) { .girando { animation: none; } }
+
+        /* Botão que já foi apertado: apagado e sem responder a novo toque. */
+        button:disabled { opacity:0.65; cursor:progress; }
+
+
         @media(max-width: 800px) { .grid-layout { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div id="loader">Aguardando...</div>
+<div id="loader" role="status" aria-live="polite">
+    <div class="caixa-espera"><span class="girando"></span><span id="loaderTexto">Aguardando...</span></div>
+</div>
 
 <div class="login-overlay" id="loginOverlay">
     <div class="login-box">
         <h2>Painel CRMAP</h2>
         <p>Digite a senha para acessar:</p>
         <input type="password" id="senhaAcesso" placeholder="Sua senha...">
-        <button onclick="verificarSenha()">Entrar</button>
+        <button id="btnEntrar" onclick="verificarSenha(this)">Entrar</button>
     </div>
 </div>
 
@@ -162,6 +179,40 @@
     
     let senhaGeral = "";
 
+    // ---- Aviso de "estou trabalhando" -------------------------------------
+    // Antes o painel não dava sinal nenhum no primeiro toque, então a pessoa
+    // apertava de novo — e no "Publicar Agora" isso cadastrava o produto
+    // duas vezes. Agora o botão vira "carregando" e para de aceitar toque.
+
+    function mostrarEspera(texto) {
+        document.getElementById('loaderTexto').textContent = texto || 'Aguardando...';
+        document.getElementById('loader').style.display = 'flex';
+    }
+
+    function esconderEspera() {
+        document.getElementById('loader').style.display = 'none';
+    }
+
+    // Ocupa o botão e devolve a função que o libera.
+    // Devolve null se ele JÁ estava ocupado — é assim que o segundo toque
+    // é ignorado, em vez de disparar a ação de novo.
+    function ocupar(botao, texto) {
+        if (!botao) return () => {};
+        if (botao.disabled) return null;
+        const original = botao.innerHTML;
+        botao.disabled = true;
+        botao.setAttribute('aria-busy', 'true');
+        botao.innerHTML = '<span class="girando"></span>' + texto;
+        let liberado = false;
+        return () => {
+            if (liberado) return;
+            liberado = true;
+            botao.disabled = false;
+            botao.removeAttribute('aria-busy');
+            botao.innerHTML = original;
+        };
+    }
+
     // A senha NÃO fica escrita aqui. Este arquivo é público na internet —
     // até 01/08/2026 a senha estava em texto puro nesta linha, e qualquer
     // pessoa podia lê-la abrindo o código da página.
@@ -170,25 +221,36 @@
     // Enquanto essa função não existir (antes da migração), o painel deixa
     // entrar e a senha é conferida na primeira ação de verdade, que já
     // devolve "Senha incorreta" quando está errada.
-    async function verificarSenha() {
+    async function verificarSenha(botao) {
         const pass = document.getElementById('senhaAcesso').value;
         if (!pass) { alert('Digite a senha.'); return; }
 
-        let liberar = null;   // null = não deu para perguntar ao banco
+        const liberarBotao = ocupar(botao, 'Entrando...');
+        if (!liberarBotao) return;   // já está conferindo, ignora o toque repetido
+
+        let entrar = null;   // null = não deu para perguntar ao banco
         try {
             const { data, error } = await supabaseClient.rpc('validar_senha_painel', { p_senha: pass });
-            if (!error && data && typeof data.success === 'boolean') liberar = data.success;
+            if (!error && data && typeof data.success === 'boolean') entrar = data.success;
         } catch (e) {
-            liberar = null;
+            entrar = null;
         }
 
-        if (liberar === false) { alert('Senha incorreta!'); return; }
+        if (entrar === false) { liberarBotao(); alert('Senha incorreta!'); return; }
 
         senhaGeral = pass;
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('mainContainer').style.display = 'flex';
-        carregarProdutos();
-        carregarPagamentos();
+
+        // O painel só aparece depois que as duas listas chegam. Antes ele
+        // abria vazio e parecia quebrado enquanto os dados vinham.
+        mostrarEspera('Carregando o painel...');
+        try {
+            await Promise.all([carregarProdutos(), carregarPagamentos()]);
+        } finally {
+            esconderEspera();
+            liberarBotao();
+        }
     }
 
     function showSection(sectionId) {
@@ -231,21 +293,23 @@
                 <td>${p.valor != null ? 'R$ ' + p.valor : '—'}</td>
                 <td><span class="status-badge status-${p.status}">${rotuloStatus(p.status)}</span></td>
                 <td>
-                    ${p.status === 'approved' || p.status === 'downloaded' || p.status === 'downloaded_voluntario' ? '-' : `<button style="width:auto; padding:0.5rem 0.8rem;" onclick="aprovarManual('${p.payment_id || ''}')">Aprovar manual</button>`}
+                    ${p.status === 'approved' || p.status === 'downloaded' || p.status === 'downloaded_voluntario' ? '-' : `<button style="width:auto; padding:0.5rem 0.8rem;" onclick="aprovarManual('${p.payment_id || ''}', this)">Aprovar manual</button>`}
                 </td>
             </tr>
         `).join('');
     }
 
-    async function aprovarManual(paymentId) {
+    async function aprovarManual(paymentId, botao) {
         if (!paymentId) {
             alert('Registro sem payment_id. Não é possível aprovar manualmente.');
             return;
         }
         if (!confirm('Confirmar aprovação manual deste pagamento?')) return;
 
-        const loader = document.getElementById('loader');
-        loader.style.display = 'block';
+        const liberarBotao = ocupar(botao, 'Aprovando...');
+        if (!liberarBotao) return;   // já está aprovando, ignora o toque repetido
+
+        mostrarEspera('Aprovando a doação...');
         try {
             const { data: res, error } = await supabaseClient.rpc('confirmar_pagamento', {
                 p_senha: senhaGeral,
@@ -286,27 +350,35 @@
         } catch (err) {
             alert('Erro ao aprovar manualmente: ' + err.message);
         } finally {
-            loader.style.display = 'none';
+            esconderEspera();
+            liberarBotao();
         }
     }
 
     async function carregarProdutos() {
         const { data } = await supabaseClient.from('produtos').select('*').order('created_at', { ascending: false });
         const lista = document.getElementById('listaProdutos');
+        // Se a consulta falhar, data vem nulo. Sem esta linha o .map abaixo
+        // estourava e derrubava o carregamento do painel inteiro.
+        if (!data) { lista.innerHTML = '<p>Não consegui carregar os produtos. Recarregue a página.</p>'; return; }
         lista.innerHTML = data.map(p => `
             <div class="product-item">
                 <img src="${p.foto_url}">
                 <div style="flex:1"><strong>${p.nome}</strong><br><small>R$ ${p.preco}</small></div>
-                <button class="btn-delete" onclick="excluirProduto(${p.id})">Excluir</button>
+                <button class="btn-delete" onclick="excluirProduto(${p.id}, this)">Excluir</button>
             </div>
         `).join('');
     }
 
     document.getElementById('produtoForm').onsubmit = async (e) => {
         e.preventDefault();
-        const loader = document.getElementById('loader');
-        loader.style.display = 'block';
 
+        // e.submitter não existe no Safari antigo; por isso o caminho reserva.
+        const botao = e.submitter || document.querySelector('#produtoForm button[type="submit"]');
+        const liberarBotao = ocupar(botao, 'Publicando...');
+        if (!liberarBotao) return;   // já está publicando — era isto que duplicava o produto
+
+        mostrarEspera('Enviando a foto e publicando o produto...');
         try {
             const fotoFile = document.getElementById('foto-prod').files[0];
             const fileName = Date.now() + '-' + fotoFile.name;
@@ -339,23 +411,35 @@
         } catch (err) {
             alert('Erro ao publicar: ' + err.message);
         } finally {
-            loader.style.display = 'none';
+            esconderEspera();
+            liberarBotao();
         }
     };
 
-    async function excluirProduto(id) {
+    async function excluirProduto(id, botao) {
         if (!confirm('Excluir este produto?')) return;
-        const loader = document.getElementById('loader');
-        loader.style.display = 'block';
 
-        await supabaseClient.rpc('gerenciar_produto', {
-            p_acao: 'deletar',
-            p_senha: senhaGeral,
-            p_id: id
-        });
+        const liberarBotao = ocupar(botao, 'Excluindo...');
+        if (!liberarBotao) return;   // já está excluindo, ignora o toque repetido
 
-        await carregarProdutos();
-        loader.style.display = 'none';
+        mostrarEspera('Excluindo o produto...');
+        try {
+            const { data: res, error } = await supabaseClient.rpc('gerenciar_produto', {
+                p_acao: 'deletar',
+                p_senha: senhaGeral,
+                p_id: id
+            });
+            if (error) throw error;
+            if (res && res.success === false) alert(res.message || 'Falha ao excluir.');
+            await carregarProdutos();
+        } catch (err) {
+            // Antes não havia try/finally aqui: se desse erro, a tela de
+            // espera ficava travada e o painel parecia congelado.
+            alert('Erro ao excluir: ' + err.message);
+        } finally {
+            esconderEspera();
+            liberarBotao();
+        }
     }
 </script>
 
