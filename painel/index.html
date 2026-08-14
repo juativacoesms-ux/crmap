@@ -43,9 +43,37 @@
         th, td { text-align: left; padding: 1rem; border-bottom: 1px solid #eee; }
         th { background: #f8fbf9; color: var(--primary); }
         
-        .status-badge { padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .status-badge { padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; white-space: nowrap; }
         .status-approved { background: #dcfce7; color: #166534; }
         .status-pending { background: #fef9c3; color: #854d0e; }
+        .status-downloaded { background: #dcfce7; color: #166534; }
+        .status-downloaded_voluntario { background: #dbeafe; color: #1e40af; }
+
+        /* Resumo em números, no topo da lista de carteirinhas. A diretora
+           quer saber "quantas ao todo" sem precisar contar linha por linha. */
+        .resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); gap: 0.8rem; margin-bottom: 1.5rem; }
+        .resumo div { background: #f8fbf9; border-radius: 10px; padding: 0.9rem 1rem; }
+        .resumo strong { display: block; font-size: 1.6rem; color: var(--primary); line-height: 1.2; }
+        .resumo span { font-size: 0.8rem; color: #5a665a; }
+
+        .busca-linha { display: flex; gap: 0.6rem; align-items: center; margin-bottom: 0.5rem; }
+        .busca-linha input { margin-bottom: 0; }
+        .btn-limpar { background: #eee; color: #555; width: auto; padding: 0.8rem 1rem; white-space: nowrap; }
+
+        /* No celular a tabela de 6 colunas fica ilegível — cada linha vira um
+           cartão com o rótulo do lado do valor. O público (e a diretoria) é
+           quase todo celular. */
+        @media (max-width: 700px) {
+            table, tbody, tr, th, td { display: block; }
+            /* O cabeçalho some porque cada campo já leva o próprio rótulo
+               pelo data-rotulo logo abaixo. */
+            thead { display: none; }
+            tbody tr { background: #fff; border: 1px solid #e6ece7; border-radius: 10px; padding: 0.6rem 0.9rem; margin-bottom: 0.8rem; }
+            tbody td { border: none; padding: 0.35rem 0; display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+            tbody td::before { content: attr(data-rotulo); font-weight: 700; color: var(--primary); font-size: 0.8rem; flex: 0 0 auto; }
+            tbody td[data-rotulo="Nome"] { font-size: 1.05rem; font-weight: 700; }
+            tbody td.celula-vazia { display: none; }
+        }
 
         .product-item { display: flex; align-items: center; gap: 1rem; padding: 0.8rem 0; border-bottom: 1px solid #eee; }
         .product-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
@@ -90,7 +118,9 @@
     
     <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; margin-bottom: 2rem; padding: 1.5rem; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
         <span style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--primary); opacity: 0.7;">Apoio Oficial</span>
-        <img src="../images/logo_secretaria_cultura.jpg" alt="Apoio Oficial" style="max-height: 80px; width: auto; object-fit: contain;">
+        <!-- max-width evita que o logo (2204x441) fique com 400px de largura e
+             estoure a tela do celular, empurrando a página para o lado. -->
+        <img src="../images/logo_secretaria_cultura.jpg" alt="Apoio Oficial" style="max-height: 80px; max-width: 100%; width: auto; object-fit: contain;">
     </div>
     
     <!-- MENU PRINCIPAL (HUB) -->
@@ -104,8 +134,9 @@
             </div>
             <div class="hub-card" onclick="showSection('pagamentos')">
                 <span>📑</span>
-                <h3>Relatório Pagamentos</h3>
-                <p>Veja quem pagou as carteirinhas.</p>
+                <h3>Carteirinhas</h3>
+                <p>Todo mundo que já fez carteirinha, com nome, número e situação da doação.</p>
+                <p id="hubContagem" style="font-weight:700; color:var(--primary); margin-bottom:0;"></p>
             </div>
             <div class="hub-card" onclick="window.location.href='../saude/controle/'">
                 <span>🩺</span>
@@ -149,17 +180,26 @@
     <div id="section-pagamentos" class="view-section">
         <div class="header-section">
             <button class="btn-back" onclick="showSection('hub')">← Voltar ao Menu</button>
-            <h2>Relatório de Pagamentos</h2>
+            <h2>Carteirinhas emitidas</h2>
         </div>
         <div class="panel-box" style="border-top-width: 0;">
+            <div class="resumo" id="resumoPagamentos"></div>
+
+            <div class="busca-linha">
+                <input type="search" id="buscaPagamento" placeholder="Procurar por nome ou número..."
+                       oninput="filtrarPagamentos()" aria-label="Procurar por nome ou número da carteirinha">
+                <button type="button" class="btn-limpar" onclick="limparBusca()">Limpar</button>
+            </div>
+            <p id="contagemFiltro" style="font-size:0.85rem; color:#5a665a; margin:0 0 0.5rem;"></p>
+
             <table>
                 <thead>
                     <tr>
                         <th>Data</th>
                         <th>Nome</th>
-                        <th>Credencial</th>
+                        <th>Nº da carteirinha</th>
                         <th>Valor</th>
-                        <th>Status</th>
+                        <th>Situação</th>
                         <th>Ação</th>
                     </tr>
                 </thead>
@@ -258,42 +298,145 @@
         document.getElementById('section-' + sectionId).classList.add('active-section');
     }
 
-    // Lê as doações pela função listar_pagamentos_painel, que exige a senha.
-    // Quando a leitura pública da tabela for fechada, este é o único caminho
-    // que continua funcionando. Enquanto a função não existir, cai no jeito
-    // antigo — assim o painel funciona antes e depois da migração.
+    // Todas as carteirinhas que chegaram do banco. Fica guardado aqui para a
+    // busca filtrar sem precisar perguntar ao banco de novo a cada letra.
+    let todasCarteirinhas = [];
+
+    // O nome vem de um formulário público, então NUNCA pode ser jogado como
+    // HTML dentro da página: quem doasse com um <script> no nome executaria
+    // código dentro do painel da diretora, já logado.
+    function esc(v) {
+        return String(v ?? '').replace(/[&<>"']/g, c =>
+            ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    }
+
+    // Data e hora sempre no fuso de Brasília, não no fuso do aparelho.
+    function dataBrasilia(iso) {
+        if (!iso) return '—';
+        const d = new Date(iso);
+        if (isNaN(d)) return '—';
+        return d.toLocaleString('pt-BR', {
+            timeZone: 'America/Sao_Paulo',
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+    }
+
+    function dinheiro(v) {
+        if (v == null || v === '') return '—';
+        const n = Number(v);
+        return isNaN(n) ? '—' : n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function rotuloStatus(s) {
+        if (s === 'approved') return 'Doação paga';
+        if (s === 'pending') return 'Doação pendente';
+        if (s === 'downloaded') return 'Paga + baixou';
+        if (s === 'downloaded_voluntario') return 'Voluntária (gratuita)';
+        return s || '—';
+    }
+
+    function jaResolvida(s) {
+        return s === 'approved' || s === 'downloaded' || s === 'downloaded_voluntario';
+    }
+
+    // Lê as carteirinhas pela função listar_pagamentos_painel, que exige a
+    // senha. Desde 01/08/2026 a leitura direta da tabela é bloqueada para a
+    // chave pública, então este é o único caminho que funciona.
     async function carregarPagamentos() {
+        const lista = document.getElementById('listaPagamentos');
         let data = null;
         try {
             const r = await supabaseClient.rpc('listar_pagamentos_painel', { p_senha: senhaGeral });
             if (!r.error && Array.isArray(r.data)) data = r.data;
-        } catch (e) { /* função ainda não existe */ }
+        } catch (e) { /* rede fora do ar */ }
 
         if (data === null) {
-            data = (await supabaseClient.from('pagamentos_carteirinha')
-                      .select('*').order('created_at', { ascending: false })).data;
-        }
-        const lista = document.getElementById('listaPagamentos');
-        if (!data || data.length === 0) {
-            lista.innerHTML = '<tr><td colspan="6" style="text-align:center">Nenhum pagamento registrado.</td></tr>';
+            todasCarteirinhas = [];
+            lista.innerHTML = '<tr><td colspan="6" style="text-align:center">Não consegui falar com o banco. Confira a internet e recarregue a página.</td></tr>';
+            atualizarResumo();
             return;
         }
-        const rotuloStatus = (s) => {
-            if (s === 'approved') return 'Pago';
-            if (s === 'pending') return 'Pendente';
-            if (s === 'downloaded') return 'Pago + baixou';
-            if (s === 'downloaded_voluntario') return 'Voluntário (baixou)';
-            return s || '—';
-        };
-        lista.innerHTML = data.map(p => `
+
+        // Lista vazia tem DOIS motivos possíveis: ninguém fez carteirinha, ou
+        // a senha não passou (a função devolve lista vazia nos dois casos).
+        // Dizer "nenhuma carteirinha" quando o caso é senha errada faria a
+        // diretora concluir que ninguém se cadastrou. Por isso, perguntamos.
+        if (data.length === 0) {
+            let senhaOk = null;
+            try {
+                const v = await supabaseClient.rpc('validar_senha_painel', { p_senha: senhaGeral });
+                if (!v.error && v.data && typeof v.data.success === 'boolean') senhaOk = v.data.success;
+            } catch (e) { /* deixa como indefinido */ }
+
+            todasCarteirinhas = [];
+            lista.innerHTML = senhaOk === false
+                ? '<tr><td colspan="6" style="text-align:center">A senha não confere. Saia e entre de novo.</td></tr>'
+                : '<tr><td colspan="6" style="text-align:center">Nenhuma carteirinha emitida até agora.</td></tr>';
+            atualizarResumo();
+            return;
+        }
+
+        // Mais recente primeiro. A função já ordena, mas ordenar aqui também
+        // garante a ordem caso o caminho de leitura mude um dia.
+        todasCarteirinhas = data.slice().sort(
+            (a, b) => new Date(b.created_at) - new Date(a.created_at));
+        atualizarResumo();
+        filtrarPagamentos();
+    }
+
+    function atualizarResumo() {
+        const t = todasCarteirinhas;
+        const conta = (f) => t.filter(f).length;
+        const pagas = conta(p => p.status === 'approved' || p.status === 'downloaded');
+        const pendentes = conta(p => p.status === 'pending');
+        const voluntarias = conta(p => p.status === 'downloaded_voluntario');
+
+        document.getElementById('resumoPagamentos').innerHTML = `
+            <div><strong>${t.length}</strong><span>carteirinhas ao todo</span></div>
+            <div><strong>${pagas}</strong><span>com doação paga</span></div>
+            <div><strong>${pendentes}</strong><span>doação pendente</span></div>
+            <div><strong>${voluntarias}</strong><span>voluntárias (gratuitas)</span></div>
+        `;
+
+        const hub = document.getElementById('hubContagem');
+        if (hub) hub.textContent = t.length ? `${t.length} carteirinhas` : '';
+    }
+
+    function limparBusca() {
+        document.getElementById('buscaPagamento').value = '';
+        filtrarPagamentos();
+    }
+
+    function filtrarPagamentos() {
+        const termo = (document.getElementById('buscaPagamento').value || '')
+                        .trim().toLowerCase();
+        const visiveis = termo
+            ? todasCarteirinhas.filter(p =>
+                  String(p.nome_pagador || '').toLowerCase().includes(termo) ||
+                  String(p.numero_credencial || '').toLowerCase().includes(termo))
+            : todasCarteirinhas;
+
+        const contagem = document.getElementById('contagemFiltro');
+        contagem.textContent = termo
+            ? `${visiveis.length} de ${todasCarteirinhas.length} carteirinhas`
+            : `Mostrando todas as ${todasCarteirinhas.length} carteirinhas, da mais recente para a mais antiga.`;
+
+        const lista = document.getElementById('listaPagamentos');
+        if (visiveis.length === 0) {
+            lista.innerHTML = '<tr><td colspan="6" style="text-align:center">Nenhuma carteirinha com esse nome ou número.</td></tr>';
+            return;
+        }
+
+        lista.innerHTML = visiveis.map(p => `
             <tr>
-                <td>${new Date(p.created_at).toLocaleDateString()}</td>
-                <td>${p.nome_pagador || '—'}</td>
-                <td>${p.numero_credencial || '—'}</td>
-                <td>${p.valor != null ? 'R$ ' + p.valor : '—'}</td>
-                <td><span class="status-badge status-${p.status}">${rotuloStatus(p.status)}</span></td>
-                <td>
-                    ${p.status === 'approved' || p.status === 'downloaded' || p.status === 'downloaded_voluntario' ? '-' : `<button style="width:auto; padding:0.5rem 0.8rem;" onclick="aprovarManual('${p.payment_id || ''}', this)">Aprovar manual</button>`}
+                <td data-rotulo="Data">${dataBrasilia(p.created_at)}</td>
+                <td data-rotulo="Nome">${esc(p.nome_pagador) || '—'}</td>
+                <td data-rotulo="Nº">${esc(p.numero_credencial) || '—'}</td>
+                <td data-rotulo="Valor">${dinheiro(p.valor)}</td>
+                <td data-rotulo="Situação"><span class="status-badge status-${esc(p.status)}">${rotuloStatus(p.status)}</span></td>
+                <td data-rotulo="Ação" class="${jaResolvida(p.status) ? 'celula-vazia' : ''}">
+                    ${jaResolvida(p.status) ? '—' : `<button style="width:auto; padding:0.5rem 0.8rem;" onclick="aprovarManual('${esc(p.payment_id) || ''}', this)">Aprovar manual</button>`}
                 </td>
             </tr>
         `).join('');
@@ -361,11 +504,13 @@
         // Se a consulta falhar, data vem nulo. Sem esta linha o .map abaixo
         // estourava e derrubava o carregamento do painel inteiro.
         if (!data) { lista.innerHTML = '<p>Não consegui carregar os produtos. Recarregue a página.</p>'; return; }
+        // Mesmo cuidado da lista de carteirinhas: nada de texto do banco
+        // entrando como HTML. Ver o comentário da função esc().
         lista.innerHTML = data.map(p => `
             <div class="product-item">
-                <img src="${p.foto_url}">
-                <div style="flex:1"><strong>${p.nome}</strong><br><small>R$ ${p.preco}</small></div>
-                <button class="btn-delete" onclick="excluirProduto(${p.id}, this)">Excluir</button>
+                <img src="${esc(p.foto_url)}" alt="">
+                <div style="flex:1"><strong>${esc(p.nome)}</strong><br><small>R$ ${esc(p.preco)}</small></div>
+                <button class="btn-delete" onclick="excluirProduto(${Number(p.id)}, this)">Excluir</button>
             </div>
         `).join('');
     }
