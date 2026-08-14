@@ -1,6 +1,12 @@
 # Arte PNG só local; no site usa carteirinha-base-data.js (regenerar com: node -e "...")
 carteirinha-base.png
 
+# Fotos originais dos produtos, antes da compressão de 02/08/2026 (52 MB).
+# É a única cópia fora do Supabase e por isso mora dentro do projeto — mas
+# NÃO pode ir para o Git: engordaria o repositório para sempre (o Git guarda
+# cada versão de arquivo binário) e o GitHub Pages publicaria tudo na internet.
+fotos-originais-2026-08-02/
+
 node_modules/
 painel/node_modules/
 .DS_Store
