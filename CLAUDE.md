@@ -84,6 +84,39 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 14/08/2026 — Texto que veio do banco nunca entra como HTML no painel
+**Motivo:** o nome de quem faz carteirinha vem de um formulário **público**, e
+o painel jogava esse nome direto no HTML da página (`${p.nome_pagador}`). Quem
+doasse usando `<img src=x onerror=...>` como nome executaria código dentro do
+painel **já logado da diretora** — com a senha na memória da página. O mesmo
+valia para nome, preço e endereço de foto dos produtos.
+**Como fica:** existe a função `esc()` em `painel/index.html`, e **todo** texto
+vindo do banco passa por ela antes de virar HTML. O `id` do produto passa por
+`Number()`. Provado com um nome malicioso de verdade no teste: o texto aparece
+na tela como texto e nenhuma tag é criada.
+**Regra que fica:** ao montar HTML com `innerHTML` a partir de dado do banco,
+passar por `esc()`. Não existe dado "confiável" numa tabela que o público
+alimenta.
+
+### 14/08/2026 — A tela de carteirinhas é a lista de todo mundo, não só de quem pagou
+**Motivo:** a diretora precisava ver quem já fez carteirinha. A tela existia,
+mas se chamava "Relatório Pagamentos" e prometia "veja quem **pagou**" — o que
+esconde justamente as 13 pendentes. A tabela `pagamentos_carteirinha` guarda
+**todo mundo que passou pelo fluxo**: a linha nasce quando a pessoa clica para
+doar (`create-preference`), não quando o pagamento é confirmado.
+**Como fica:** a tela virou "Carteirinhas emitidas", com resumo em números
+(total / pagas / pendentes / voluntárias), busca por nome ou número, e data e
+hora sempre em Brasília. No celular cada linha vira um cartão com rótulos —
+tabela de 6 colunas em tela de 360px é ilegível, e a diretoria usa celular.
+**Nenhum SQL foi preciso:** a função `listar_pagamentos_painel` já existia
+desde a migração de 01/08 e já devolvia todas as colunas. Conferido no banco:
+ela enxerga as 21 linhas e a chave pública pode chamá-la.
+**Armadilha corrigida junto:** lista vazia tinha dois motivos possíveis —
+ninguém fez carteirinha, ou a senha não passou (a função devolve `[]` nos dois
+casos). Os dois diziam "nenhum pagamento registrado", o que faria a diretora
+concluir que ninguém se cadastrou. Agora a tela pergunta ao banco qual é o
+caso e diz a frase certa.
+
 ### 05/08/2026 — A senha do painel se troca por caixa segura, nunca por SQL colado
 **Motivo:** a diretora não conseguia entrar, e a senha definida em 01/08 tinha
 se perdido — ela é bcrypt no banco, não existe jeito de ler de volta. Trocar
