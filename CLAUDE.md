@@ -84,6 +84,43 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 28/08/2026 — Tela de gestão mostra QUEM NÃO CONSEGUE ENTRAR, não só "ativo sim/não"
+**Motivo:** a tela da coordenação da Saúde listava uma coluna "Ativa: Sim/Não",
+e com isso ninguém percebeu que **a Coordenadora de Saúde Mental e a
+Vice/Diretora estavam sem acesso desde agosto**. Elas foram desativadas por
+estarem sem WhatsApp — e o login é por WhatsApp. "Ativa: Não" não conta essa
+história; "Desativada — não entra" conta.
+**Como fica:** a coluna chama-se "Situação" e diz o motivo em vermelho. O
+resumo no topo separa quem entra de quem não entra. **"Pode entrar" exige as
+duas coisas: estar ativa E ter WhatsApp** — contar só as ativas mentiria para
+quem está ativa sem telefone (erro que os testes pegaram antes de publicar).
+**Regra que fica:** em tela de gestão, mostrar a consequência, não o campo do
+banco. Quem lê precisa saber o que fazer, não qual coluna está marcada.
+
+### 28/08/2026 — Como testar função do banco sem ter a senha do painel
+**Motivo:** as funções do painel são protegidas por `_senha_painel_ok`, e a
+senha é bcrypt — eu não a tenho e não posso lê-la. Sem isso eu só conseguiria
+testar o caminho do erro. Trocar a senha de produção para testar está fora de
+questão: derrubaria a diretora.
+**Como se faz:** gerar do próprio arquivo uma cópia da função com nome de
+teste e **sem a checagem de senha**, criar registros fictícios, rodar todos os
+casos (inclusive o login de verdade no fim), e então **apagar a cópia e os
+registros** e conferir que a contagem voltou ao normal. O corpo testado é o
+mesmo do código real — só a porta de entrada muda.
+**Não fazer:** testar dentro de `begin/rollback` mexendo na senha. Se a
+transação não fechar como esperado, a senha de produção fica trocada.
+
+### 28/08/2026 — Tabela de gestão vira cartão no celular
+**Motivo:** a tabela de profissionais tem 5 colunas e 3 botões, e precisa de
+~580px. Numa tela de 360px o conteúdo **vazava sem rolagem** — os botões
+ficavam fora do alcance, e a diretoria usa celular. Mesmo problema já resolvido
+no painel em 14/08.
+**Como fica:** abaixo de 700px o `thead` some, cada linha vira um cartão e o
+rótulo da coluna aparece como etiqueta, vindo de `data-rotulo` na `<td>`.
+Botões com 44px de altura mínima.
+**Regra que fica:** toda tabela nova de gestão nasce com esse tratamento.
+Conferir medindo `scrollWidth` contra `clientWidth`, não no olho.
+
 ### 28/08/2026 — A "Data de Registro" da planilha nunca é sobrescrita
 **Motivo:** o código novo do Apps Script procura a carteirinha pelo número e
 regrava a linha inteira — o que acabou com as linhas repetidas, mas apagava a
