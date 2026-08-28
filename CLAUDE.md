@@ -84,6 +84,42 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 28/08/2026 — Texto editável mora no HTML; o banco só guarda o que mudou
+**Motivo:** a diretora precisa trocar frases e cards da home sem pedir para
+ninguém. A saída óbvia — a página buscar todo o texto do banco — quebraria a
+regra de 31/07/2026: se o JavaScript falhar, a página fica **vazia**.
+**Como fica:** o texto original continua escrito no `index.html` e é o que
+aparece. Cada pedaço editável leva `data-site="chave"`. Depois que a página já
+apareceu, um trecho no fim do `index.html` busca `conteudo_site_publico()` e
+troca só o que estiver diferente. Sem JavaScript, o site fica com o texto
+original — completo, nunca vazio.
+**Segurança:** a troca usa **`textContent`, nunca `innerHTML`**. Um `<` num
+texto digitado pela diretora vira letra na tela, não tag. Provado com um
+texto malicioso de verdade.
+**Quem lê e quem escreve:** o site **lê sem senha** (é conteúdo público, com
+policy de select para `anon`). Escrever e listar no painel exigem a senha, por
+`salvar_conteudo_site` e `listar_conteudo_site`. Escrita direta na tabela está
+revogada para `anon`.
+**Ao acrescentar um pedaço editável:** marcar com `data-site` no HTML **e**
+inserir a linha em `conteudo_site` com o texto atual, o rótulo que a diretora
+vai ler e o grupo. Se faltar a linha no banco, o campo não aparece no painel;
+se faltar a marcação no HTML, o texto salvo não vai para lugar nenhum.
+
+### 28/08/2026 — A diretora troca a própria senha, e a senha é uma só
+**Motivo:** até aqui a senha só era trocada por script no terminal da Iara. Em
+05/08/2026 a senha se perdeu e a diretora ficou sem acesso esperando a Iara ter
+tempo. Autonomia de verdade inclui a própria chave da porta.
+**Como fica:** `trocar_senha_painel(atual, nova)` em Configurações. Exige a
+senha **atual** — sem isso, quem encontrasse um painel aberto trancaria a
+diretora para fora. Recusa menos de 10 caracteres, espaço nas pontas (causa
+clássica de "digitei certo e não entra") e senha igual à anterior.
+**A tela precisa continuar avisando** que essa senha abre o painel **e** o
+`/saude/controle/`, e que ninguém consegue vê-la depois de salva.
+**Como testar sem a senha de produção:** criar uma chave separada em
+`painel_config` (`senha_teste_hash`), apontar uma cópia da função para ela,
+testar e apagar. Conferir a impressão digital (`md5(valor)`) do hash real
+antes e depois: tem que ser idêntica.
+
 ### 28/08/2026 — Tela de gestão mostra QUEM NÃO CONSEGUE ENTRAR, não só "ativo sim/não"
 **Motivo:** a tela da coordenação da Saúde listava uma coluna "Ativa: Sim/Não",
 e com isso ninguém percebeu que **a Coordenadora de Saúde Mental e a
