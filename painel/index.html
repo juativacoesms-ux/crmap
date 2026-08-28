@@ -391,6 +391,7 @@
         if (s === 'pending') return 'Doação pendente';
         if (s === 'downloaded') return 'Paga + baixou';
         if (s === 'downloaded_voluntario') return 'Voluntária (gratuita)';
+        if (s === 'cancelado') return 'Cancelada';
         return s || '—';
     }
 
@@ -616,11 +617,73 @@
                 <td data-rotulo="Nº">${esc(p.numero_credencial) || '—'}</td>
                 <td data-rotulo="Valor">${dinheiro(p.valor)}</td>
                 <td data-rotulo="Situação"><span class="status-badge status-${esc(p.status)}">${rotuloStatus(p.status)}</span></td>
-                <td data-rotulo="Ação" class="${jaResolvida(p.status) ? 'celula-vazia' : ''}">
-                    ${jaResolvida(p.status) ? '—' : `<button style="width:auto; padding:0.5rem 0.8rem;" onclick="aprovarManual('${esc(p.payment_id) || ''}', this)">Aprovar manual</button>`}
-                </td>
+                <td data-rotulo="Ação">${botoesDaCarteirinha(p)}</td>
             </tr>
         `).join('');
+    }
+
+    // Cada situação pede botões diferentes. Quem já baixou precisa de
+    // "Liberar de novo" — o site só deixa baixar quando o status é 'approved',
+    // e ele vira 'downloaded' assim que a pessoa baixa a primeira vez.
+    function botoesDaCarteirinha(p) {
+        const id = Number(p.id);
+        const est = 'width:auto; padding:0.45rem 0.8rem; font-size:0.85rem; margin:0.15rem 0.2rem 0.15rem 0;';
+        const claro = est + ' background:#eef4f0; color:#1b7340;';
+        const vermelho = est + ' background:#fee2e2; color:#b3261e;';
+        const botoes = [];
+
+        if (p.status === 'cancelado') {
+            botoes.push(`<button style="${claro}" onclick="acaoCarteirinha(${id},'reabrir',this)">Reabrir</button>`);
+            return botoes.join('');
+        }
+
+        if (p.status === 'pending' && p.payment_id) {
+            botoes.push(`<button style="${est}" onclick="aprovarManual('${esc(p.payment_id)}', this)">Aprovar manual</button>`);
+        }
+        if (p.status === 'downloaded' || p.status === 'downloaded_voluntario') {
+            botoes.push(`<button style="${claro}" onclick="acaoCarteirinha(${id},'liberar_download',this)">Liberar de novo</button>`);
+        }
+        botoes.push(`<button style="${claro}" onclick="corrigirNomeCarteirinha(${id})">Corrigir nome</button>`);
+        botoes.push(`<button style="${vermelho}" onclick="acaoCarteirinha(${id},'cancelar',this)">Cancelar</button>`);
+        return botoes.join('');
+    }
+
+    // Pede o nome novo e manda corrigir. O prompt é simples de propósito:
+    // é a forma que a diretora já conhece e não exige aprender tela nova.
+    function corrigirNomeCarteirinha(id) {
+        const atual = (todasCarteirinhas.find(c => Number(c.id) === Number(id)) || {}).nome_pagador || '';
+        const novo = prompt('Nome correto da pessoa:', atual);
+        if (novo === null) return;                       // desistiu
+        if (!novo.trim()) { alert('O nome não pode ficar vazio.'); return; }
+        acaoCarteirinha(id, 'corrigir_nome', null, novo.trim());
+    }
+
+    async function acaoCarteirinha(id, acao, botao, texto) {
+        const carteirinha = todasCarteirinhas.find(c => Number(c.id) === Number(id)) || {};
+        const quem = carteirinha.nome_pagador || carteirinha.numero_credencial || 'esta carteirinha';
+
+        if (acao === 'cancelar' &&
+            !confirm('Cancelar a carteirinha de ' + quem + '?\n\nEla deixa de conseguir baixar. Dá para reabrir depois.')) return;
+
+        const liberarBotao = ocupar(botao, 'Aguarde...');
+        if (liberarBotao === null) return;                // toque repetido
+        mostrarEspera('Salvando...');
+        try {
+            const { data, error } = await supabaseClient.rpc('gerenciar_carteirinha', {
+                p_senha: senhaGeral,
+                p_acao: acao,
+                p_id: Number(id),
+                p_texto: texto ?? null
+            });
+            if (error) throw error;
+            alert(data?.message || 'Não deu certo.');
+            if (data?.success) await carregarPagamentos();
+        } catch (e) {
+            alert('Não consegui falar com o sistema. Tente de novo.');
+        } finally {
+            esconderEspera();
+            if (liberarBotao) liberarBotao();
+        }
     }
 
     async function aprovarManual(paymentId, botao) {
