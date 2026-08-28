@@ -143,6 +143,11 @@
                 <h3>Controle Saúde</h3>
                 <p>Agendas de todas as profissionais, PIX e repasses.</p>
             </div>
+            <div class="hub-card" onclick="abrirTextosDoSite()">
+                <span>📝</span>
+                <h3>Textos do Site</h3>
+                <p>Trocar frases e cards da página inicial.</p>
+            </div>
             <div class="hub-card" onclick="showSection('config')">
                 <span>⚙️</span>
                 <h3>Configurações</h3>
@@ -173,6 +178,24 @@
                 <h3>Produtos Ativos</h3>
                 <div id="listaProdutos"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO TEXTOS DO SITE -->
+    <div id="section-textos" class="view-section">
+        <div class="header-section">
+            <button class="btn-back" onclick="showSection('hub')">← Voltar ao Menu</button>
+            <h2>Textos do Site</h2>
+        </div>
+        <div class="panel-box" style="border-top-width: 0;">
+            <p style="font-size:.92rem; color:#5a665a; line-height:1.5; margin-top:0">
+                Aqui você troca as frases e os cards da <strong>página inicial</strong>.
+                Altere o texto e clique em <strong>Salvar</strong> logo abaixo dele.
+                A mudança aparece no site em alguns instantes —
+                <a href="https://crmapoficial.org.br/" target="_blank" rel="noopener">abrir o site</a>
+                para conferir.
+            </p>
+            <div id="listaTextosSite">Carregando…</div>
         </div>
     </div>
 
@@ -483,6 +506,87 @@
         } finally {
             liberar();
         }
+    }
+
+    // ---- Textos do site -------------------------------------------------
+    // Cada pedaço editável da home vira um campo aqui, agrupado por seção,
+    // já preenchido com o texto que está publicado.
+    async function abrirTextosDoSite() {
+        showSection('textos');
+        await carregarTextosSite();
+    }
+
+    async function carregarTextosSite() {
+        const alvo = document.getElementById('listaTextosSite');
+        alvo.textContent = 'Carregando…';
+        try {
+            const { data, error } = await supabaseClient.rpc('listar_conteudo_site', { p_senha: senhaGeral });
+            if (error) throw error;
+            if (!data?.success) { alvo.textContent = data?.message || 'Não consegui carregar.'; return; }
+
+            const itens = data.itens || [];
+            if (!itens.length) { alvo.textContent = 'Nenhum texto cadastrado.'; return; }
+
+            // Agrupa por seção do site, na ordem que o banco já devolveu.
+            const grupos = [];
+            itens.forEach(it => {
+                let g = grupos.find(x => x.nome === it.grupo);
+                if (!g) { g = { nome: it.grupo, itens: [] }; grupos.push(g); }
+                g.itens.push(it);
+            });
+
+            alvo.innerHTML = grupos.map(g => `
+                <fieldset style="border:1px solid #e6ece7; border-radius:12px; padding:1rem 1.2rem; margin:0 0 1.2rem;">
+                  <legend style="color:var(--primary); font-weight:700; padding:0 .4rem">${esc(g.nome)}</legend>
+                  ${g.itens.map(it => `
+                    <label for="txt_${esc(it.chave)}" style="display:block; font-size:.85rem; color:#5a665a; margin-bottom:.25rem">${esc(it.rotulo)}</label>
+                    ${Number(it.linhas) > 1
+                        ? `<textarea id="txt_${esc(it.chave)}" rows="${Number(it.linhas)}">${esc(it.valor)}</textarea>`
+                        : `<input type="text" id="txt_${esc(it.chave)}" value="${esc(it.valor)}">`}
+                    <button type="button" id="btn_${esc(it.chave)}"
+                            style="width:auto; padding:.5rem 1.1rem; font-size:.9rem; margin:-.5rem 0 1.2rem"
+                            onclick="salvarTextoSite('${esc(it.chave)}', this)">Salvar</button>
+                  `).join('')}
+                </fieldset>`).join('');
+        } catch (e) {
+            alvo.textContent = 'Não consegui falar com o sistema. Tente de novo.';
+        }
+    }
+
+    async function salvarTextoSite(chave, botao) {
+        const campo = document.getElementById('txt_' + chave);
+        if (!campo) return;
+        const liberar = ocupar(botao, 'Salvando...');
+        if (!liberar) return;               // toque repetido é ignorado
+        try {
+            const { data, error } = await supabaseClient.rpc('salvar_conteudo_site', {
+                p_senha: senhaGeral,
+                p_chave: chave,
+                p_valor: campo.value
+            });
+            if (error) throw error;
+            avisarAoLadoDoBotao(botao, data?.message || 'Não deu certo.', !!data?.success);
+        } catch (e) {
+            avisarAoLadoDoBotao(botao, 'Não consegui salvar. Tente de novo.', false);
+        } finally {
+            liberar();
+        }
+    }
+
+    // Mensagem curta ao lado do próprio botão, para a diretora não precisar
+    // procurar o aviso no topo da página depois de salvar.
+    function avisarAoLadoDoBotao(botao, texto, ok) {
+        let span = botao.nextElementSibling;
+        if (!span || !span.classList?.contains('aviso-inline')) {
+            span = document.createElement('span');
+            span.className = 'aviso-inline';
+            span.style.marginLeft = '.6rem';
+            span.style.fontSize = '.88rem';
+            botao.insertAdjacentElement('afterend', span);
+        }
+        span.textContent = texto;
+        span.style.color = ok ? '#1b6b3a' : '#b3261e';
+        if (ok) setTimeout(() => { if (span.textContent === texto) span.textContent = ''; }, 6000);
     }
 
     function filtrarPagamentos() {

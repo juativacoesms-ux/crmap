@@ -798,8 +798,8 @@
 <main>
   <section class="hero reveal">
     <div class="hero-glass-box">
-      <h2>Transformando Realidades</h2>
-      <span class="quote">Apoiamos e fortalecemos mulheres atingidas, promovendo autonomia, direitos e dignidade.</span>
+      <h2 data-site="home.capa.titulo">Transformando Realidades</h2>
+      <span class="quote" data-site="home.capa.frase">Apoiamos e fortalecemos mulheres atingidas, promovendo autonomia, direitos e dignidade.</span>
       
       <div style="display: flex; gap: 1.2rem; flex-wrap: wrap;">
         <a href="#transparencia" class="button-link" onclick="openTab(null, 'tab-contas')" style="background: #d63222; color: #ffffff; font-size: 1rem; padding: 0.9rem 2.2rem; border-radius: 30px; font-weight: 700;">SEJA UM DOADOR</a>
@@ -811,17 +811,17 @@
   <section class="campanha-casa">
     <div class="container">
       <div class="caixa">
-        <span class="selo">🧱 Campanha aberta</span>
-        <h3>🏠 Ajude a construir a Casa de Acolhimento</h3>
-        <p>Um refúgio seguro para as mulheres atingidas da Bacia do Paraopeba e Três Marias, no terreno doado em Pompéu/MG. Doe pelo PIX — você escolhe o valor.</p>
-        <a href="/casa-de-acolhimento" class="btn-campanha">Quero ajudar a construir</a>
+        <span class="selo" data-site="home.campanha.selo">🧱 Campanha aberta</span>
+        <h3 data-site="home.campanha.titulo">🏠 Ajude a construir a Casa de Acolhimento</h3>
+        <p data-site="home.campanha.texto">Um refúgio seguro para as mulheres atingidas da Bacia do Paraopeba e Três Marias, no terreno doado em Pompéu/MG. Doe pelo PIX — você escolhe o valor.</p>
+        <a href="/casa-de-acolhimento" class="btn-campanha" data-site="home.campanha.botao">Quero ajudar a construir</a>
       </div>
     </div>
   </section>
 
   <section id="identity" class="reveal">
     <div class="container">
-      <h3 class="section-title">Nossa Identidade</h3>
+      <h3 class="section-title" data-site="home.identidade.titulo">Nossa Identidade</h3>
       <div class="grid-cards">
         <div class="card glass-card reveal">
           <h4>🏛️ Missão</h4>
@@ -848,28 +848,28 @@
 
   <section id="atuacao" style="background-color: #f0f7f2;" class="reveal">
     <div class="container">
-      <h3 class="section-title">Pilares de Atuação</h3>
-      <p class="texto-central">O CRMAP atua em diversas frentes estatutárias para apoiar, fortalecer e promover o desenvolvimento comunitário e individual das mulheres.</p>
+      <h3 class="section-title" data-site="home.pilares.titulo">Pilares de Atuação</h3>
+      <p class="texto-central" data-site="home.pilares.texto">O CRMAP atua em diversas frentes estatutárias para apoiar, fortalecer e promover o desenvolvimento comunitário e individual das mulheres.</p>
       
       <div class="grid-cards">
         <div class="card glass-card reveal">
-          <h4>Apoio em Saúde Mental</h4>
-          <p>Atendimento psicológico, psicanalítico e social, visando o acolhimento e fortalecimento das mulheres atingidas.</p>
+          <h4 data-site="home.pilar1.titulo">Apoio em Saúde Mental</h4>
+          <p data-site="home.pilar1.texto">Atendimento psicológico, psicanalítico e social, visando o acolhimento e fortalecimento das mulheres atingidas.</p>
           <p style="margin-top:0.75rem;">
             <a href="saude/" class="button-link" style="display:inline-block;">Profissionais — minha agenda</a>
           </p>
         </div>
         <div class="card glass-card reveal">
-          <h4>Geração de Renda</h4>
-          <p>Iniciativas de impacto, incluindo cooperativa solidária, feiras, horta comunitária e projetos estruturantes.</p>
+          <h4 data-site="home.pilar2.titulo">Geração de Renda</h4>
+          <p data-site="home.pilar2.texto">Iniciativas de impacto, incluindo cooperativa solidária, feiras, horta comunitária e projetos estruturantes.</p>
         </div>
         <div class="card glass-card reveal">
-          <h4>Formação e Projetos</h4>
-          <p>Desenvolvimento de oficinas, cursos, Farmácia Viva e programas educacionais focados na autonomia.</p>
+          <h4 data-site="home.pilar3.titulo">Formação e Projetos</h4>
+          <p data-site="home.pilar3.texto">Desenvolvimento de oficinas, cursos, Farmácia Viva e programas educacionais focados na autonomia.</p>
         </div>
         <div class="card glass-card reveal">
-          <h4>Defesa de Direitos</h4>
-          <p>Representação institucional, defesa de políticas públicas e reparação justa e igualitária na Bacia do Paraopeba.</p>
+          <h4 data-site="home.pilar4.titulo">Defesa de Direitos</h4>
+          <p data-site="home.pilar4.texto">Representação institucional, defesa de políticas públicas e reparação justa e igualitária na Bacia do Paraopeba.</p>
         </div>
       </div>
     </div>
@@ -1271,6 +1271,40 @@
   document.querySelectorAll('.reveal').forEach(el => {
     observer.observe(el);
   });
+
+  // ---- Frases e cards que a diretora edita pelo painel ---------------------
+  // O texto que está escrito aqui no HTML é o PADRÃO e continua sendo o que
+  // aparece se este trecho falhar (internet ruim, celular antigo, bloqueador).
+  // O banco só devolve o que foi alterado no painel, e a troca acontece depois
+  // que a página já apareceu. A página nunca fica vazia esperando o banco.
+  (async function aplicarTextosDoPainel() {
+    const alvos = document.querySelectorAll('[data-site]');
+    if (!alvos.length) return;
+    try {
+      const resposta = await fetch(SUPABASE_URL + '/rest/v1/rpc/conteudo_site_publico', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_KEY,
+          Authorization: 'Bearer ' + SUPABASE_KEY
+        },
+        body: '{}'
+      });
+      if (!resposta.ok) return;
+      const textos = await resposta.json();
+      if (!textos || typeof textos !== 'object') return;
+      alvos.forEach(el => {
+        const novo = textos[el.dataset.site];
+        // textContent, nunca innerHTML: o que vem do painel entra como TEXTO.
+        // Assim nem um erro de digitação com < > quebra a página.
+        if (typeof novo === 'string' && novo.trim() && novo !== el.textContent) {
+          el.textContent = novo;
+        }
+      });
+    } catch (e) {
+      // De propósito sem alarde: a página já está correta com o texto original.
+    }
+  })();
 </script>
 
 </body>
