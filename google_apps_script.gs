@@ -333,7 +333,9 @@ function salvarNaPlanilha(params) {
   linha.numero = numero;
   if (nome) linha.nome = nome;
   if (dataEmissao) linha.dataEmissao = dataEmissao;
-  linha.atualizado = new Date();
+  // A coluna A é a "Data de Registro": só é preenchida quando a linha nasce.
+  // Em atualização, preserva a data original (decisão de 28/08/2026).
+  if (rowIdx <= 0 || !linha.atualizado) linha.atualizado = new Date();
 
   var aprovadoSupabase = pagamentoAprovado(numero);
 

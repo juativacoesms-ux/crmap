@@ -1,73 +1,121 @@
-# Publicar o Apps Script da planilha — PENDENTE desde 22/05/2026
+# Publicar o Apps Script da planilha — FEITO em 28/08/2026
 
-## Situação, medida em 02/08/2026
+## Situação atual (28/08/2026)
 
-**O código publicado no Google ainda é o antigo.** A implantação descrita
-aqui nunca foi feita.
+**Publicado e conferido no ar.** A implantação do site está na **Versão 3**,
+de 28/08/2026 17:36 (Brasília), com o código deste repositório.
 
-Como se provou, sem escrever nada na planilha: o arquivo
-`google_apps_script.gs` deste repositório tem a função `doGet`, e a URL
-publicada respondeu **"Função de script não encontrada: doGet"**. São
-códigos diferentes. O do repositório também abre a planilha por
-`openById(SPREADSHEET_ID)` — a correção do erro
-`Cannot read properties of null (reading 'getActiveSheet')` que impedia a
-gravação desde maio.
+## ⚠️ O diagnóstico de 02/08/2026 estava ERRADO
 
-**Consequência provável:** as doações não estão sendo gravadas na planilha
-desde 22/05/2026. Os registros no Supabase estão íntegros (20 em 02/08); só
-a planilha ficou para trás. Conferir abrindo a planilha.
+Ficou registrado por quase um mês que "as doações não chegam à planilha desde
+22/05/2026". **Isso nunca foi verdade.** As doações sempre chegaram.
 
-## Antes de implantar — trocar o token do Mercado Pago
+O erro: o teste feito em 02/08 abriu a URL `/exec` no navegador (um GET) e viu
+"Função de script não encontrada: doGet". Isso só provava que a versão
+publicada não tinha a função de **teste**. Quem grava é o `doPost`, que estava
+lá e funcionando.
 
-Em 02/08/2026 descobriu-se que `google_apps_script.gs` estava **público** em
-`crmapoficial.org.br/google_apps_script.gs`, com o Access Token de produção
-do Mercado Pago em texto puro. O arquivo já saiu do ar (`_config.yml`), mas
-**o token precisa ser trocado** — bloquear não desfaz a exposição.
+Conferido em 28/08/2026 abrindo a planilha: 33 linhas, com registros contínuos
+em junho, julho e agosto — o mais recente era 18/08/2026 14:53:31 (293/2026).
 
-1. Painel do Mercado Pago → Suas integrações → sua aplicação →
-   **Credenciais de produção** → gerar novo **Access Token**
-2. Atualizar a variável `MP_ACCESS_TOKEN` nas funções da Supabase
-   (`create-preference` e `mp-webhook`)
+**Lição:** um GET que falha não diz nada sobre o POST. Para concluir que a
+gravação parou, é preciso olhar a planilha.
 
-## Passo a passo da implantação
+## Como se publica (o jeito certo — mantém a URL)
 
-1. Abra <https://script.google.com> e o projeto ligado à URL
-   `/macros/s/AKfycbzRPMVu--BYlX51qU0Mj6P1SBTikDE7RKJhym0c_RMCJ-CoRM_4T4mNHjRudcvx6EK1/exec`
+O passo a passo antigo mandava "Implantar → **Nova** implantação". Isso está
+errado para este projeto: cria uma URL `/exec` **nova**, e o site continuaria
+chamando a antiga.
 
-2. **⚙️ Configurações do projeto → Propriedades do script → Adicionar:**
+O certo:
 
-   | Propriedade | Valor |
-   |---|---|
-   | `MP_ACCESS_TOKEN` | o Access Token **novo** do Mercado Pago |
+1. Abra o projeto: <https://script.google.com/u/0/home/projects/196yDQI-doZraeKIAd_Z_Rd93BGjflUfElFL9eSkZk-VrGWVjJbU36Z60/edit>
+   (é o script vinculado à planilha; dá para chegar nele pela planilha, em
+   **Extensões → Apps Script**)
+2. Cole todo o conteúdo de `google_apps_script.gs` por cima do que está lá.
+3. **Salvar** (Cmd+S). Salvar **não** publica nada — as implantações usam
+   versões congeladas.
+4. **Implantar → Gerenciar implantações**
+5. Selecione a implantação **"Sem título"** (é a que o site usa).
+6. Clique no **lápis (Editar)**.
+7. Em **Versão**, escolha **"Nova versão"**. Preencha a Descrição com a data
+   e o que mudou.
+8. Confira: Executar como **Eu**, Quem tem acesso **Qualquer pessoa**.
+9. **Implantar**. O "Código de implantação" tem que continuar o mesmo —
+   é assim que a URL não muda.
 
-   → **Salvar propriedades do script**
+## ⚠️ Existem DUAS implantações — não confunda
 
-   O token não fica mais escrito dentro do código (mudança de 02/08/2026).
-   Se a propriedade não existir, as funções de pagamento param com uma
-   mensagem clara em vez de falharem em silêncio.
+| Nome | Para que serve | Versão em 28/08/2026 |
+|---|---|---|
+| **Sem título** | É a que o **site** chama (`crmap-planilha-client.js` e a função `registrar-planilha` da Supabase) | Versão 3, de 28/08/2026 |
+| **Webhook CRMAP** | URL separada, provavelmente ligada ao Mercado Pago. **Não foi tocada.** | Versão 1, de 22/03/2026 |
 
-3. Substitua todo o código pelo arquivo `google_apps_script.gs` deste
-   repositório.
+A "Webhook CRMAP" ficou de propósito na versão antiga: o código novo busca o
+token do Mercado Pago nas Propriedades do Script, que ainda não foram
+preenchidas. Mexer nela sem o token quebraria o webhook.
 
-4. **Salvar** (Ctrl+S).
+## Ainda pendente: o token do Mercado Pago
 
-5. **Implantar → Nova implantação →** tipo **App da Web** →
-   Executar como **Eu** → Quem tem acesso: **Qualquer pessoa**.
+O token de produção esteve público em `crmapoficial.org.br/google_apps_script.gs`
+até 02/08/2026. O arquivo saiu do ar, mas **o token precisa ser trocado** —
+bloquear não desfaz a exposição.
 
-6. Use a mesma URL `/exec`. Se mudar, atualizar
-   `crmap-planilha-client.js`.
+Depois de gerar o token novo (Mercado Pago → Suas integrações → Credenciais de
+produção):
 
-## Como conferir que deu certo
+1. No Apps Script: **⚙️ Configurações do projeto → Propriedades do script →
+   Adicionar**, com o nome `MP_ACCESS_TOKEN` → **Salvar**.
+2. Nas funções da Supabase (`create-preference` e `mp-webhook`): atualizar a
+   variável `MP_ACCESS_TOKEN`.
 
-Abra a URL `/exec` no navegador. Tem que responder:
+Boa notícia: desde 28/08/2026 o token **não está mais escrito dentro do
+código** publicado no Google. Saiu junto com a nova versão.
+
+## Como conferir que está no ar
+
+```
+curl -s https://script.google.com/macros/s/AKfycbzRPMVu--BYlX51qU0Mj6P1SBTikDE7RKJhym0c_RMCJ-CoRM_4T4mNHjRudcvx6EK1/exec
+```
+
+Tem que responder:
 
 ```json
 {"ok":true,"service":"CRMAP carteirinha","method":"use POST para registrar na planilha"}
 ```
 
-Se aparecer a página de erro do Google dizendo "Função de script não
-encontrada: doGet", a implantação **não** pegou — o código publicado ainda é
-o antigo. Esse teste não escreve nada na planilha.
+Esse teste não escreve nada na planilha.
 
-Colunas na planilha: **Pagamento** (PENDENTE / PAGO / Voluntário) e
-**Baixou** (SIM/NÃO).
+**Para testar a gravação de verdade**, use a função da Supabase (é o caminho
+que o site usa; o POST direto por `curl` esbarra num redirecionamento do
+Google e não serve como teste):
+
+```
+curl -s -X POST https://qzjvzbvoxwhggvadaroq.supabase.co/functions/v1/registrar-planilha \
+  -H "Content-Type: application/json" -H "Authorization: Bearer <chave anon>" \
+  -d '{"numero":"999/2026","nome":"TESTE - PODE APAGAR","data":"28/08/2026","evento":"pagamento_pendente"}'
+```
+
+Resposta esperada: `{"ok":true,"status":200,"gas":"{\"success\":true}"}`.
+Depois **apague a linha de teste da planilha.**
+
+Evento inválido (ex.: `"evento":"coisa_invalida"`) responde `success` sem
+escrever nada — serve para testar sem sujar a planilha.
+
+## O que mudou com a Versão 3
+
+- **Acabaram as linhas repetidas.** O código antigo sempre criava linha nova;
+  o novo procura o número e atualiza a linha que já existe. Por isso a
+  planilha tem a 128/2026 três vezes e a 134/2026 três vezes — de antes.
+- **A "Data de Registro" (coluna A) é preservada.** O código do repositório
+  sobrescrevia com a data da última alteração; corrigido em 28/08/2026 a
+  pedido da Iara. Agora só é preenchida quando a linha nasce.
+- Ganhou o `doGet` de teste e o token saiu de dentro do código.
+
+Conferido no ar em 28/08/2026: três envios seguidos no número 999/2026
+geraram **uma única linha**, e a Data de Registro (17:38:48) continuou
+intacta depois de envios às 17:39:59 e 17:40:02.
+
+Colunas da planilha: A=Data de Registro | B=Número | C=Nome da Guardiã |
+D=Data Emissão | E=Pagamento | F=Voluntário | G=Baixou (sem título na
+linha 1).
