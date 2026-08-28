@@ -9,6 +9,53 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../saude-common.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* No celular a tabela de profissionais vira cartão. Cinco colunas com três
+       botões precisam de ~580px; numa tela de 360px o conteúdo vazava e os
+       botões ficavam fora do alcance. A diretoria usa celular. */
+    @media (max-width: 700px) {
+      #listaProfissionais thead { display: none; }
+      #listaProfissionais table,
+      #listaProfissionais tbody,
+      #listaProfissionais tr,
+      #listaProfissionais td { display: block; width: auto; }
+      #listaProfissionais tr {
+        border: 1px solid #d8e5dc;
+        border-radius: 12px;
+        padding: .75rem .9rem;
+        margin-bottom: .75rem;
+        background: #fff;
+      }
+      #listaProfissionais td {
+        border: none;
+        padding: .2rem 0;
+      }
+      /* O rótulo da coluna vira etiqueta antes do valor. */
+      #listaProfissionais td::before {
+        content: attr(data-rotulo);
+        display: block;
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #6b7d72;
+        margin-top: .35rem;
+      }
+      #listaProfissionais td:first-child {
+        font-weight: 700;
+        font-size: 1.02rem;
+      }
+      #listaProfissionais td:first-child::before { content: none; }
+      /* Os botões ocupam a linha inteira e ficam grandes o bastante para o dedo. */
+      #listaProfissionais td.acoes { white-space: normal !important; margin-top: .5rem; }
+      #listaProfissionais td.acoes::before { content: none; }
+      #listaProfissionais td.acoes button {
+        display: inline-block;
+        min-width: 31%;
+        min-height: 44px;
+        margin: .15rem .1rem 0 0;
+      }
+    }
+  </style>
 </head>
 <body>
 <div id="loader">Aguarde…</div>
@@ -91,9 +138,43 @@
   </div>
   <div class="card admin" style="margin-top:1rem">
     <h3>Profissionais cadastradas</h3>
+    <div id="resumoProfissionais" class="hint" style="margin-bottom:.75rem"></div>
     <div id="listaProfissionais" class="hint">Carregando…</div>
   </div>
 </main>
+
+<div class="modal" id="modalProf">
+  <div class="modal-box">
+    <h3 style="color:var(--primary);margin-top:0" id="tituloModalProf">Editar profissional</h3>
+    <input type="hidden" id="profId">
+    <label class="hint">Nome</label>
+    <input id="profNome" type="text" placeholder="Nome completo">
+    <label class="hint">Função / cargo</label>
+    <input id="profCargo" type="text" placeholder="Ex: Psicóloga">
+    <label class="hint">WhatsApp (com DDD)</label>
+    <input id="profTelefone" type="tel" placeholder="67 99999-9999">
+    <p class="hint" style="margin:.25rem 0 .75rem">É por este número que ela entra no sistema. Sem ele, ela não consegue acessar.</p>
+    <label class="hint">E-mail (opcional)</label>
+    <input id="profEmail" type="email" placeholder="nome@exemplo.com">
+    <div id="avisoProf" class="hint" style="margin-top:.75rem"></div>
+    <button class="btn" style="width:100%;margin-top:.75rem" id="btnSalvarProf" onclick="salvarProfissional()">Salvar</button>
+    <button class="btn btn-outline" style="width:100%;margin-top:.5rem" onclick="fecharModalProf()">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal" id="modalSenhaProf">
+  <div class="modal-box">
+    <h3 style="color:var(--primary);margin-top:0">Definir senha</h3>
+    <p class="hint" id="senhaProfQuem"></p>
+    <input type="hidden" id="senhaProfId">
+    <label class="hint">Senha nova (mínimo 6 letras ou números)</label>
+    <input id="senhaProfValor" type="text" placeholder="Ex: crmap2026saude">
+    <p class="hint">Depois de salvar, avise ela qual é a senha. Ninguém consegue ver a senha antiga — ela é guardada embaralhada.</p>
+    <div id="avisoSenhaProf" class="hint" style="margin-top:.5rem"></div>
+    <button class="btn" style="width:100%;margin-top:.75rem" id="btnSalvarSenhaProf" onclick="salvarSenhaProfissional()">Salvar senha</button>
+    <button class="btn btn-outline" style="width:100%;margin-top:.5rem" onclick="document.getElementById('modalSenhaProf').classList.remove('show')">Cancelar</button>
+  </div>
+</div>
 
 <div class="modal" id="modalPago">
   <div class="modal-box">
@@ -129,15 +210,167 @@ async function entrarCoordenacao() {
   await carregarListaProfissionaisAdmin();
 }
 
+// Guarda a lista carregada para os botoes nao precisarem consultar de novo.
+let profissionaisCarregadas = [];
+
 async function carregarListaProfissionaisAdmin() {
   const { data } = await sb.rpc('listar_profissionais_coord_saude', { p_senha: state.senha });
   const el = document.getElementById('listaProfissionais');
+  const elResumo = document.getElementById('resumoProfissionais');
   if (!data?.success) { el.textContent = 'Erro ao listar.'; return; }
   const list = (data.profissionais || []).map(normalizarProfissional);
+  profissionaisCarregadas = list;
   if (!list.length) { el.textContent = 'Nenhuma profissional cadastrada ainda.'; return; }
-  el.innerHTML = '<table><thead><tr><th>Nome</th><th>Cargo</th><th>WhatsApp</th><th>Ativa</th></tr></thead><tbody>' +
-    list.map(p => `<tr><td>${esc(p.nome)}</td><td>${esc(p.cargo)}</td><td>${esc(p.telefone || '—')}</td><td>${p.ativo ? 'Sim' : 'Não'}</td></tr>`).join('') +
+
+  // Quem nao consegue entrar: desativada, ou ativa sem WhatsApp.
+  const semAcesso = list.filter(p => !p.ativo || !String(p.telefone || '').trim());
+  if (elResumo) {
+    // "Pode entrar" exige as DUAS coisas: estar ativa e ter WhatsApp.
+    // Contar só as ativas mentiria para quem está ativa mas sem telefone.
+    const entram = list.length - semAcesso.length;
+    elResumo.innerHTML =
+      `<strong>${list.length}</strong> ${list.length === 1 ? 'cadastrada' : 'cadastradas'}` +
+      ` · <strong>${entram}</strong> ${entram === 1 ? 'pode' : 'podem'} entrar hoje` +
+      (semAcesso.length
+        ? ` · <span style="color:#b3261e"><strong>${semAcesso.length}</strong> sem acesso</span>`
+        : '');
+  }
+
+  el.innerHTML = '<table><thead><tr><th>Nome</th><th>Cargo</th><th>WhatsApp</th><th>Situação</th><th>O que fazer</th></tr></thead><tbody>' +
+    list.map(p => {
+      const semWhats = !String(p.telefone || '').trim();
+      const situacao = !p.ativo
+        ? '<span style="color:#b3261e">Desativada — não entra</span>'
+        : (semWhats ? '<span style="color:#b3261e">Sem WhatsApp — não entra</span>' : 'Pode entrar');
+      // data-rotulo alimenta a etiqueta que aparece no cartão do celular.
+      return `<tr>
+        <td data-rotulo="Nome">${esc(p.nome)}</td>
+        <td data-rotulo="Cargo">${esc(p.cargo)}</td>
+        <td data-rotulo="WhatsApp">${semWhats ? '<span style="color:#b3261e">falta</span>' : esc(p.telefone)}</td>
+        <td data-rotulo="Situação">${situacao}</td>
+        <td class="acoes" style="white-space:nowrap">
+          <button class="btn btn-sm btn-outline" onclick="abrirEditarProfissional(${Number(p.id)})">Editar</button>
+          <button class="btn btn-sm btn-outline" onclick="abrirSenhaProfissional(${Number(p.id)})">Senha</button>
+          <button class="btn btn-sm btn-outline" onclick="alternarAtivaProfissional(${Number(p.id)}, ${p.ativo ? 'false' : 'true'}, this)">${p.ativo ? 'Desativar' : 'Reativar'}</button>
+        </td>
+      </tr>`;
+    }).join('') +
     '</tbody></table>';
+}
+
+function acharProfissional(id) {
+  return profissionaisCarregadas.find(p => Number(p.id) === Number(id));
+}
+
+function fecharModalProf() {
+  document.getElementById('modalProf').classList.remove('show');
+}
+
+function abrirEditarProfissional(id) {
+  const p = acharProfissional(id);
+  if (!p) return;
+  document.getElementById('profId').value = p.id;
+  document.getElementById('profNome').value = p.nome || '';
+  document.getElementById('profCargo').value = p.cargo || '';
+  document.getElementById('profTelefone').value = p.telefone || '';
+  document.getElementById('profEmail').value = p.email || '';
+  document.getElementById('tituloModalProf').textContent = 'Editar ' + (p.nome || 'profissional');
+  document.getElementById('avisoProf').textContent = '';
+  document.getElementById('modalProf').classList.add('show');
+}
+
+// Toda acao passa por aqui: trava o botao, chama o banco, recarrega a lista.
+async function acaoProfissional(botao, textoOcupado, args, aoTerminar) {
+  const original = botao ? botao.textContent : '';
+  if (botao) { botao.disabled = true; botao.textContent = textoOcupado; }
+  try {
+    const { data, error } = await sb.rpc('gerenciar_profissional_saude',
+      Object.assign({ p_senha: state.senha }, args));
+    if (error) throw error;
+    if (!data?.success) { aoTerminar(false, data?.message || 'Não deu certo.'); return; }
+    await carregarListaProfissionaisAdmin();
+    aoTerminar(true, data.message || 'Salvo.');
+  } catch (e) {
+    aoTerminar(false, 'Erro de conexão. Tente de novo.');
+  } finally {
+    if (botao) { botao.disabled = false; botao.textContent = original; }
+  }
+}
+
+async function salvarProfissional() {
+  const aviso = document.getElementById('avisoProf');
+  aviso.style.color = '#b3261e';
+  aviso.textContent = '';
+  await acaoProfissional(
+    document.getElementById('btnSalvarProf'),
+    'Salvando…',
+    {
+      p_acao: 'atualizar',
+      p_id: Number(document.getElementById('profId').value),
+      p_nome: document.getElementById('profNome').value,
+      p_cargo: document.getElementById('profCargo').value,
+      p_telefone: document.getElementById('profTelefone').value,
+      p_email: document.getElementById('profEmail').value
+    },
+    (ok, msg) => {
+      if (ok) { fecharModalProf(); return; }
+      aviso.textContent = msg;
+    }
+  );
+}
+
+function abrirSenhaProfissional(id) {
+  const p = acharProfissional(id);
+  if (!p) return;
+  document.getElementById('senhaProfId').value = p.id;
+  document.getElementById('senhaProfValor').value = '';
+  document.getElementById('avisoSenhaProf').textContent = '';
+  document.getElementById('senhaProfQuem').textContent = 'Senha de ' + (p.nome || '');
+  document.getElementById('modalSenhaProf').classList.add('show');
+}
+
+async function salvarSenhaProfissional() {
+  const aviso = document.getElementById('avisoSenhaProf');
+  aviso.style.color = '#b3261e';
+  aviso.textContent = '';
+  await acaoProfissional(
+    document.getElementById('btnSalvarSenhaProf'),
+    'Salvando…',
+    {
+      p_acao: 'definir_senha',
+      p_id: Number(document.getElementById('senhaProfId').value),
+      p_senha_nova: document.getElementById('senhaProfValor').value
+    },
+    (ok, msg) => {
+      if (ok) {
+        document.getElementById('modalSenhaProf').classList.remove('show');
+        alertaSuave(msg);
+        return;
+      }
+      aviso.textContent = msg;
+    }
+  );
+}
+
+async function alternarAtivaProfissional(id, ativar, botao) {
+  const p = acharProfissional(id);
+  if (!p) return;
+  if (!ativar && !confirm('Desativar ' + (p.nome || '') + '?\n\nEla deixa de conseguir entrar. Dá para reativar depois.')) return;
+  await acaoProfissional(
+    botao || null,
+    ativar ? 'Reativando…' : 'Desativando…',
+    { p_acao: ativar ? 'ativar' : 'desativar', p_id: Number(id) },
+    (ok, msg) => alertaSuave(msg)
+  );
+}
+
+// Aviso curto no topo da lista, sem janela do navegador travando a tela.
+function alertaSuave(msg) {
+  const el = document.getElementById('resumoProfissionais');
+  if (!el) return;
+  const antes = el.innerHTML;
+  el.innerHTML = '<span style="color:var(--primary)"><strong>' + esc(msg) + '</strong></span>';
+  setTimeout(() => { if (el.innerHTML.includes(esc(msg))) el.innerHTML = antes; }, 4000);
 }
 
 if (restaurarSessao()) {
