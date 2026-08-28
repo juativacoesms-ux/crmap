@@ -143,10 +143,10 @@
                 <h3>Controle Saúde</h3>
                 <p>Agendas de todas as profissionais, PIX e repasses.</p>
             </div>
-            <div class="hub-card" style="opacity: 0.5; border-top-color: #ccc;">
+            <div class="hub-card" onclick="showSection('config')">
                 <span>⚙️</span>
                 <h3>Configurações</h3>
-                <p>Em breve...</p>
+                <p>Trocar a senha de acesso do painel.</p>
             </div>
         </div>
     </div>
@@ -173,6 +173,41 @@
                 <h3>Produtos Ativos</h3>
                 <div id="listaProdutos"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO CONFIGURAÇÕES -->
+    <div id="section-config" class="view-section">
+        <div class="header-section">
+            <button class="btn-back" onclick="showSection('hub')">← Voltar ao Menu</button>
+            <h2>Configurações</h2>
+        </div>
+        <div class="panel-box" style="border-top-width: 0;">
+            <h3 style="margin-top:0">Trocar a senha de acesso</h3>
+            <p style="font-size:.92rem; color:#5a665a; line-height:1.5">
+                Esta é a senha que abre <strong>este painel</strong> e também o
+                <strong>Controle da Saúde</strong>. Trocar aqui troca as duas.
+                <br>
+                <strong>Anote a senha nova em lugar seguro.</strong> Depois de salva,
+                ninguém consegue vê-la de novo — nem quem cuida do site.
+            </p>
+
+            <label for="senhaAtual">Senha de agora</label>
+            <input type="password" id="senhaAtual" autocomplete="current-password"
+                   placeholder="A senha que você usou para entrar">
+
+            <label for="senhaNova">Senha nova</label>
+            <input type="password" id="senhaNova" autocomplete="new-password"
+                   placeholder="Pelo menos 10 letras ou números">
+
+            <label for="senhaNova2">Repita a senha nova</label>
+            <input type="password" id="senhaNova2" autocomplete="new-password"
+                   placeholder="Digite de novo, para conferir">
+
+            <p id="avisoSenhaPainel" style="margin:.75rem 0 0; font-size:.92rem"></p>
+
+            <button class="btn" id="btnTrocarSenha" style="margin-top:.75rem"
+                    onclick="trocarSenhaPainel()">Salvar senha nova</button>
         </div>
     </div>
 
@@ -406,6 +441,48 @@
     function limparBusca() {
         document.getElementById('buscaPagamento').value = '';
         filtrarPagamentos();
+    }
+
+    // Trocar a senha do painel. Vale lembrar de duas coisas:
+    // 1) é a MESMA senha do Controle da Saúde — a tela avisa isso;
+    // 2) a senha nova fica só na cabeça de quem digitou. Ninguém a recupera.
+    async function trocarSenhaPainel() {
+        const aviso = document.getElementById('avisoSenhaPainel');
+        const atual = document.getElementById('senhaAtual').value;
+        const nova  = document.getElementById('senhaNova').value;
+        const nova2 = document.getElementById('senhaNova2').value;
+
+        const dizer = (texto, ok) => {
+            aviso.textContent = texto;
+            aviso.style.color = ok ? '#1b6b3a' : '#b3261e';
+        };
+
+        // Confere aqui o que dá para conferir sem incomodar o banco.
+        if (!atual || !nova) { dizer('Preencha a senha de agora e a senha nova.', false); return; }
+        if (nova !== nova2)  { dizer('As duas senhas novas não são iguais. Digite de novo.', false); return; }
+
+        const liberar = ocupar(document.getElementById('btnTrocarSenha'), 'Salvando...');
+        if (!liberar) return;               // já estava salvando: ignora o toque repetido
+        try {
+            const { data, error } = await supabaseClient.rpc('trocar_senha_painel', {
+                p_senha_atual: atual,
+                p_senha_nova: nova
+            });
+            if (error) throw error;
+            if (!data?.success) { dizer(data?.message || 'Não deu certo.', false); return; }
+
+            dizer(data.message, true);
+            // A senha guardada nesta aba passa a ser a nova, senão as outras
+            // telas do painel parariam de funcionar até recarregar a página.
+            senhaGeral = nova;
+            document.getElementById('senhaAtual').value = '';
+            document.getElementById('senhaNova').value = '';
+            document.getElementById('senhaNova2').value = '';
+        } catch (e) {
+            dizer('Não consegui falar com o sistema. Tente de novo.', false);
+        } finally {
+            liberar();
+        }
     }
 
     function filtrarPagamentos() {
