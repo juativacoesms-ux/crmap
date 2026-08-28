@@ -84,6 +84,36 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 28/08/2026 — A "Data de Registro" da planilha nunca é sobrescrita
+**Motivo:** o código novo do Apps Script procura a carteirinha pelo número e
+regrava a linha inteira — o que acabou com as linhas repetidas, mas apagava a
+coluna A de quem voltasse para baixar. A Iara escolheu manter a data original.
+**Como fica:** em `google_apps_script.gs`, a coluna A só é preenchida quando a
+linha nasce (`if (rowIdx <= 0 || !linha.atualizado)`). Conferido no ar: três
+envios seguidos no mesmo número deixaram uma linha só, com a data do primeiro.
+
+### 28/08/2026 — Publicar o Apps Script é "Nova versão", nunca "Nova implantação"
+**Motivo:** o passo a passo antigo mandava criar uma **nova implantação**, o
+que gera uma URL `/exec` diferente — o site continuaria chamando a antiga e a
+gravação pararia sem aviso. O certo é **Gerenciar implantações → a "Sem título"
+→ lápis → Versão: Nova versão → Implantar**, que mantém o mesmo código de
+implantação e a mesma URL.
+**Atenção:** existem **duas** implantações. A "Sem título" é a do site
+(Versão 3, de 28/08/2026). A **"Webhook CRMAP"** tem URL própria, é
+provavelmente do Mercado Pago, e ficou de propósito na Versão 1 de março —
+o código novo busca o token nas Propriedades do Script, que ainda estão
+vazias, então publicá-lo ali quebraria o webhook.
+
+### 28/08/2026 — Um GET que falha não prova nada sobre o POST
+**Motivo:** em 02/08/2026 eu concluí, a partir de um GET na URL `/exec` que
+respondia "Função de script não encontrada: doGet", que **as doações não
+chegavam à planilha desde 22/05**. Ficou quase um mês registrado como a
+segunda pendência mais grave do projeto. Era falso: quem grava é o `doPost`,
+que estava lá e funcionando. A planilha tinha registros contínuos de junho,
+julho e agosto — o mais novo era de 18/08/2026.
+**Como fica:** antes de declarar que uma gravação parou, **abrir o destino e
+olhar**. Um teste que falha só prova o que ele testa.
+
 ### 14/08/2026 — Texto que veio do banco nunca entra como HTML no painel
 **Motivo:** o nome de quem faz carteirinha vem de um formulário **público**, e
 o painel jogava esse nome direto no HTML da página (`${p.nome_pagador}`). Quem
