@@ -965,11 +965,16 @@
               <h4 class="animate-pulse-soft" style="font-size: 1.4rem; color: #1b7340; font-weight: 800;">Faça a diferença hoje</h4>
               <p style="font-size: 1rem; margin-bottom: 1.5rem;">Sua doação ajuda a transformar a vida de centenas de mulheres atingidas por barragens em nossa região.</p>
               
-              <div class="donation-input-group">
-                <span style="font-weight: 800; color: #1b7340; font-size: 1.1rem;">R$</span>
-                <input type="number" id="donation-amount" placeholder="Valor" min="1" style="width: 120px;">
-                <button class="btn-donation" id="btn-fazer-doacao" style="padding: 0.8rem 1.5rem; font-size: 1rem;">Fazer uma doação!</button>
+              <!-- Doação por PIX. Até 29/08/2026 este bloco mandava para o
+                   Mercado Pago; o aviso automático de lá nunca funcionou e as
+                   pessoas doavam sem receber nada. Ver CLAUDE.md. -->
+              <div class="donation-input-group" style="flex-wrap: wrap; justify-content: center;">
+                <a href="/casa-de-acolhimento#chave-pix" class="btn-donation"
+                   style="padding: 0.9rem 2rem; font-size: 1rem; text-decoration: none; display: inline-block;"
+                   data-site="home.doacao.botao">Doar pelo PIX</a>
               </div>
+              <p style="font-size: 0.92rem; color: #4a5c4f; margin-top: 0.9rem;"
+                 data-site="home.doacao.aviso">Você escolhe o valor. O QR Code e a chave estão na página da campanha.</p>
 
               <div style="margin-top: 2rem; border-top: 1px dashed #cde2d4; padding-top: 1.5rem;">
                 <p style="font-size: 0.95rem; color: #4a5c4f; margin-bottom: 1rem; font-weight: 800;">Para doar materiais, equipamentos ou outras formas, entre em contato:</p>
@@ -1218,42 +1223,8 @@
   const SUPABASE_URL = 'https://qzjvzbvoxwhggvadaroq.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0';
 
-  document.getElementById('btn-fazer-doacao')?.addEventListener('click', async function() {
-    const amount = document.getElementById('donation-amount').value;
-    if (!amount || amount <= 0) {
-        alert('Por favor, informe um valor válido para doação.');
-        return;
-    }
-
-    this.disabled = true;
-    const originalText = this.innerText;
-    this.innerText = '⌛ Processando...';
-
-    try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/create-preference`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_KEY}`
-            },
-            body: JSON.stringify({
-                valor: amount,
-                nome: 'Doador Site'
-            })
-        });
-
-        const data = await response.json();
-        if (data.init_point) {
-            window.location.href = data.init_point;
-        } else {
-            throw new Error(data.error || 'Erro ao gerar link de doação.');
-        }
-    } catch (err) {
-        alert('Erro: ' + err.message);
-        this.disabled = false;
-        this.innerText = originalText;
-    }
-  });
+  // O botão de doação virou um link direto para o PIX da campanha.
+  // Não há mais intermediário de pagamento nesta página.
 
   // ANIMATION: SCROLL REVEAL
   const revealCallback = (entries, observer) => {

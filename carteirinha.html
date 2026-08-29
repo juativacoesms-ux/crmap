@@ -13,7 +13,6 @@
 <meta property="og:url" content="https://crmapoficial.org.br/carteirinha">
 <meta property="og:image" content="https://crmapoficial.org.br/logo.png">
 <meta name="twitter:card" content="summary_large_image">
-<script src="https://sdk.mercadopago.com/js/v2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   /* Reset & Base */
@@ -238,6 +237,48 @@
       grid-template-columns: 1fr;
     }
   }
+
+  /* ---- Caixa do PIX (substituiu o Mercado Pago em 29/08/2026) ---- */
+  #caixaPix[hidden] { display: none; }
+  #caixaPix {
+    position: fixed; inset: 0; z-index: 4000;
+    background: rgba(15, 48, 29, .55);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 1.2rem; overflow-y: auto;
+  }
+  .pix-conteudo {
+    background: #fff; color: #2b332b;
+    border-radius: 16px; padding: 1.6rem 1.4rem 1.4rem;
+    max-width: 25rem; width: 100%; margin: auto;
+    box-shadow: 0 20px 50px rgba(0,0,0,.3);
+    position: relative; text-align: center;
+  }
+  .pix-fechar {
+    position: absolute; top: .5rem; right: .7rem;
+    background: none; border: none; font-size: 1.8rem; line-height: 1;
+    color: #5a665a; cursor: pointer; padding: .2rem .5rem; width: auto;
+  }
+  .pix-conteudo h3 { margin: 0 0 .3rem; color: #1b7340; font-size: 1.3rem; }
+  .pix-sub { margin: 0 0 1rem; font-size: .95rem; color: #5a665a; }
+  .pix-qr { margin: 0 auto 1rem; max-width: 200px; }
+  .pix-qr svg { width: 100%; height: auto; display: block; }
+  .pix-rotulo { margin: 0; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: #5a665a; }
+  .pix-chave { margin: .1rem 0 1rem; font-size: 1.15rem; font-weight: 700; color: #1b7340; }
+  .pix-btn {
+    width: 100%; margin-bottom: .5rem; padding: .8rem 1rem;
+    border: none; border-radius: 8px; font-weight: 700; font-size: 1rem;
+    background: #1b7340; color: #fff; cursor: pointer;
+  }
+  .pix-btn-2 { background: #e8f4ec; color: #1b7340; }
+  .pix-aviso { min-height: 1.2rem; margin: .2rem 0 .6rem; font-size: .9rem; color: #1b7340; font-weight: 600; }
+  .pix-favorecido { font-size: .82rem; color: #5a665a; line-height: 1.5; margin: 0 0 1rem; }
+  .pix-depois {
+    background: #f4f8f5; border-radius: 10px; padding: .9rem 1rem;
+    text-align: left; font-size: .9rem; line-height: 1.5;
+  }
+  .pix-depois strong { color: #1b7340; display: block; margin-bottom: .3rem; }
+  .pix-depois p { margin: 0 0 .5rem; }
+  .pix-obs { color: #5a665a; font-size: .84rem; }
 </style>
 </head>
 <body>
@@ -311,11 +352,9 @@
 <script src="carteirinha-base-data.js"></script>
 <script src="crmap-planilha-client.js"></script>
 <script>
-  // CONFIGURAÇÕES (Preencha com seus dados do Mercado Pago e Supabase)
-  const MP_PUBLIC_KEY = 'APP_USR-34c58bdf-0820-4d12-91c3-0a615de9117d'; 
+  // CONFIGURAÇÕES
   const SUPABASE_URL = 'https://qzjvzbvoxwhggvadaroq.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0'; 
-  const mp = new MercadoPago(MP_PUBLIC_KEY);
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // Referências aos elementos
@@ -374,7 +413,9 @@
     }
   }
 
-  function ehRetornoMercadoPago() {
+  // Link antigo do Mercado Pago, de antes de 29/08/2026. Quem chegar por um
+  // desses ainda precisa de uma resposta que faça sentido.
+  function ehRetornoDeLinkAntigo() {
     const p = new URLSearchParams(window.location.search);
     return !!(p.get('collection_id') || p.get('payment_id') || p.get('preference_id') || p.get('collection_status') || p.get('external_reference'));
   }
@@ -557,8 +598,8 @@
       liberarBotaoDownload();
       desenharCarteirinha();
       if (aprovadoNaUrl) efetuarDownload();
-    } else if (ehRetornoMercadoPago()) {
-      alert('Retorno da doação recebido. Se o banco ainda estiver processando, aguarde 1–2 minutos e use «Já doei, verificar liberação».');
+    } else if (ehRetornoDeLinkAntigo()) {
+      alert('Sua doação ainda não aparece como confirmada. Assim que a coordenação confirmar, use «Já doei, verificar liberação» para baixar. Dúvidas: WhatsApp (31) 99617-7729.');
     }
   };
 
@@ -622,40 +663,96 @@
     }
 
     baixarBtn.disabled = true;
-    baixarBtn.innerText = '⌛ Iniciando...';
+    baixarBtn.innerText = '⌛ Reservando...';
 
     try {
         salvarDraftFormulario();
-        // Chamada para o Supabase Edge Function
-        const url = `${SUPABASE_URL}/functions/v1/create-preference`;
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_KEY}`
-            },
-            body: JSON.stringify({
-                nome: assinaturaInput.value,
-                numero_credencial: numeroInput.value
-            })
+        // Registra o pedido como pendente e mostra o PIX. Antes daqui a pessoa
+        // era mandada para o Mercado Pago; o aviso automático de lá nunca
+        // funcionou e ninguém conseguia baixar. Ver CLAUDE.md, 29/08/2026.
+        const { data, error } = await supabaseClient.rpc('registrar_intencao_carteirinha', {
+            p_nome: assinaturaInput.value,
+            p_numero: numCred
         });
-
-        const data = await response.json();
-
-        if (data.init_point) {
-            // Redireciona para o Checkout Pro (Seguro)
-            window.location.href = data.init_point;
-        } else {
-            throw new Error(data.error || 'Não foi possível gerar o link da doação.');
+        if (error) throw error;
+        if (!data || !data.success) {
+            throw new Error((data && data.message) || 'Não foi possível registrar o pedido.');
         }
+
+        // Avisa a planilha, como o caminho antigo fazia.
+        if (window.CRMAP_PLANILHA) {
+            window.CRMAP_PLANILHA.enviar({
+                evento: 'pagamento_pendente',
+                numero: numCred,
+                nome: assinaturaInput.value,
+                data: (window.CRMAP_PLANILHA.dataHojeBr && window.CRMAP_PLANILHA.dataHojeBr()) || ''
+            });
+        }
+
+        desenharCarteirinha();
+        abrirPix(numCred);
     } catch (err) {
-        alert('Erro ao processar a doação: ' + err.message);
+        alert('Não consegui registrar seu pedido: ' + err.message);
         console.error(err);
+    } finally {
         baixarBtn.disabled = false;
         baixarBtn.innerText = '📥 Conferir e doar!';
     }
   });
+
+  // ---- Caixa do PIX -------------------------------------------------------
+  var CODIGO_PIX_CRMAP = '00020126360014BR.GOV.BCB.PIX0114651988460001235204000053039865802BR5905CRMAP6006POMPEU62070503***6304A39B';
+  var CHAVE_PIX_CRMAP = '65.198.846/0001-23';
+
+  function abrirPix(numero) {
+    document.getElementById('pixNumero').textContent = numero || '';
+    document.getElementById('pixAviso').textContent = '';
+    var caixa = document.getElementById('caixaPix');
+    caixa.hidden = false;
+    document.body.style.overflow = 'hidden';
+    caixa.querySelector('.pix-fechar').focus();
+  }
+
+  function fecharPix() {
+    document.getElementById('caixaPix').hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !document.getElementById('caixaPix').hidden) fecharPix();
+  });
+
+  // Copiar tem caminho reserva para celular antigo, e se os dois falharem
+  // a pessoa é orientada a copiar à mão — a chave está escrita na tela.
+  function copiar(texto, mensagem) {
+    var aviso = document.getElementById('pixAviso');
+    function ok() { aviso.textContent = '\u2705 ' + mensagem; setTimeout(function(){ aviso.textContent=''; }, 4000); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(texto).then(ok).catch(function(){ copiarAntigo(texto, ok, aviso); });
+    } else {
+      copiarAntigo(texto, ok, aviso);
+    }
+  }
+  function copiarAntigo(texto, ok, aviso) {
+    try {
+      var campo = document.createElement('textarea');
+      campo.value = texto;
+      campo.setAttribute('readonly', '');
+      campo.style.position = 'absolute';
+      campo.style.left = '-9999px';
+      document.body.appendChild(campo);
+      campo.select();
+      var deu = document.execCommand('copy');
+      document.body.removeChild(campo);
+      if (deu) { ok(); return; }
+      throw new Error('falhou');
+    } catch (e) {
+      aviso.textContent = 'Não consegui copiar. Anote a chave que está na tela.';
+    }
+  }
+  function copiarChavePix() { copiar(CHAVE_PIX_CRMAP, 'Chave copiada!'); }
+  function copiarCodigoPix() { copiar(CODIGO_PIX_CRMAP, 'Código copiado! Use "Pix Copia e Cola" no seu banco.'); }
 
   function dataFormatadaBr(dataIso) {
     if (!dataIso) return '';
@@ -726,5 +823,36 @@
 </script>
 
 <script src="/textos-do-site.js" defer></script>
+
+<!-- Caixa do PIX: abre quando a pessoa clica em "Conferir e doar!".
+     Substituiu o Mercado Pago em 29/08/2026 — ver o motivo no CLAUDE.md. -->
+<div id="caixaPix" role="dialog" aria-modal="true" aria-labelledby="tituloPix" hidden>
+  <div class="pix-conteudo">
+    <button type="button" class="pix-fechar" onclick="fecharPix()" aria-label="Fechar">&times;</button>
+    <h3 id="tituloPix">Doe R$ 20,00 pelo PIX</h3>
+    <p class="pix-sub">Sua carteirinha <strong id="pixNumero"></strong> já está reservada.</p>
+
+    <div class="pix-qr"><svg viewBox="0 0 41 41" role="img" aria-label="QR Code do PIX da CRMAP"><path stroke="#0f301d" d="M2 2.5h7m1 0h3m3 0h2m2 0h2m1 0h2m1 0h4m2 0h7m-37 1h1m5 0h1m2 0h1m2 0h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h4m2 0h1m5 0h1m-37 1h1m1 0h3m1 0h1m3 0h1m1 0h3m1 0h2m1 0h4m1 0h1m1 0h1m3 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m1 0h1m3 0h1m1 0h4m1 0h1m3 0h1m4 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m2 0h2m1 0h1m3 0h3m1 0h2m1 0h1m2 0h1m1 0h1m1 0h3m1 0h1m-37 1h1m5 0h1m1 0h3m1 0h5m1 0h1m5 0h2m2 0h1m1 0h1m5 0h1m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-29 1h4m4 0h3m2 0h1m1 0h1m2 0h1m1 0h1m-29 1h1m3 0h1m1 0h6m1 0h2m3 0h2m4 0h4m1 0h5m2 0h1m-36 1h1m1 0h1m3 0h2m5 0h1m1 0h1m2 0h3m1 0h1m2 0h4m1 0h3m2 0h1m-33 1h3m2 0h2m2 0h1m2 0h2m2 0h2m1 0h4m2 0h1m1 0h1m1 0h1m1 0h1m-34 1h3m2 0h1m6 0h1m2 0h1m3 0h3m2 0h1m2 0h1m1 0h1m2 0h2m-35 1h7m2 0h1m1 0h2m1 0h1m2 0h2m8 0h2m1 0h3m2 0h1m-35 1h1m1 0h1m2 0h1m2 0h2m2 0h2m1 0h2m2 0h1m1 0h2m3 0h1m1 0h4m2 0h1m-36 1h1m1 0h2m1 0h4m3 0h2m3 0h1m4 0h2m4 0h2m2 0h3m-36 1h3m1 0h2m2 0h1m1 0h5m1 0h1m3 0h4m1 0h1m4 0h1m2 0h3m-36 1h1m5 0h2m1 0h1m2 0h1m3 0h1m2 0h3m2 0h7m1 0h1m2 0h2m-36 1h1m3 0h1m1 0h3m1 0h2m1 0h1m3 0h2m4 0h1m1 0h1m1 0h1m5 0h1m1 0h1m-36 1h1m1 0h1m1 0h2m1 0h3m1 0h1m1 0h2m1 0h1m1 0h1m1 0h1m2 0h2m8 0h2m-36 1h2m1 0h1m1 0h1m1 0h1m1 0h2m2 0h1m1 0h3m1 0h2m3 0h1m1 0h1m4 0h3m1 0h1m-36 1h1m1 0h1m1 0h3m1 0h1m3 0h1m3 0h1m1 0h1m3 0h2m6 0h3m3 0h1m-37 1h1m6 0h1m3 0h2m2 0h1m2 0h1m2 0h2m1 0h4m2 0h3m2 0h1m-36 1h2m1 0h2m1 0h1m1 0h1m2 0h5m1 0h1m2 0h1m7 0h1m2 0h1m1 0h4m-36 1h1m2 0h2m1 0h2m1 0h1m2 0h2m1 0h3m4 0h1m3 0h3m1 0h2m1 0h2m-34 1h5m1 0h2m1 0h1m2 0h1m3 0h3m2 0h5m2 0h2m3 0h1m-36 1h2m1 0h1m4 0h2m2 0h1m3 0h1m2 0h2m3 0h1m1 0h1m1 0h2m2 0h1m1 0h1m1 0h1m-35 1h3m1 0h4m1 0h4m1 0h2m3 0h3m3 0h1m3 0h6m-35 1h1m1 0h2m1 0h2m2 0h2m1 0h1m2 0h1m3 0h3m2 0h1m1 0h1m2 0h1m2 0h2m-36 1h2m1 0h4m1 0h2m1 0h2m1 0h2m2 0h3m7 0h5m1 0h3m-29 1h1m1 0h3m1 0h1m2 0h2m1 0h1m3 0h3m1 0h1m3 0h1m3 0h1m-37 1h7m1 0h2m2 0h1m2 0h2m1 0h1m2 0h1m1 0h1m1 0h2m1 0h1m1 0h1m1 0h1m-33 1h1m5 0h1m2 0h2m2 0h4m5 0h3m1 0h3m3 0h4m-36 1h1m1 0h3m1 0h1m1 0h2m4 0h1m1 0h1m2 0h2m3 0h3m1 0h5m2 0h2m-37 1h1m1 0h3m1 0h1m4 0h1m2 0h1m3 0h1m4 0h11m1 0h1m-36 1h1m1 0h3m1 0h1m4 0h5m2 0h1m1 0h3m5 0h1m1 0h1m1 0h1m1 0h2m-36 1h1m5 0h1m2 0h4m2 0h4m2 0h3m3 0h4m3 0h3m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m2 0h4m3 0h3m3 0h3m3 0h1"/></svg></div>
+
+    <p class="pix-rotulo">Chave PIX (CNPJ)</p>
+    <p class="pix-chave">65.198.846/0001-23</p>
+
+    <button type="button" class="pix-btn" onclick="copiarChavePix(this)">Copiar chave PIX</button>
+    <button type="button" class="pix-btn pix-btn-2" onclick="copiarCodigoPix(this)">Copiar código Pix completo</button>
+    <p class="pix-aviso" id="pixAviso" role="status" aria-live="polite"></p>
+
+    <p class="pix-favorecido">
+      <strong>Favorecido:</strong> Centro de Referência das Mulheres Atingidas do Paraopeba.
+      Confira o nome na tela do seu banco antes de confirmar.
+    </p>
+
+    <div class="pix-depois">
+      <strong>Depois de fazer o PIX</strong>
+      <p>Avise pelo WhatsApp <a href="https://wa.me/5531996177729" target="_blank" rel="noopener">(31) 99617-7729</a>
+         e a coordenação libera sua carteirinha. Você recebe o aviso e volta aqui para baixar.</p>
+      <p class="pix-obs">Não feche esta página sem anotar o número da sua carteirinha.</p>
+    </div>
+  </div>
+</div>
 </body>
 </html>
