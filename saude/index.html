@@ -7,7 +7,7 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="canonical" href="https://crmapoficial.org.br/saude/">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="saude-common.css">
+  <link rel="stylesheet" href="saude-common.css?v=2026-08-29">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -97,8 +97,33 @@
       <table><thead><tr><th>Data</th><th>Hora</th><th>Sessão</th><th>Paciente</th><th>WhatsApp</th><th>Cobrança</th><th>Status</th><th>Ações</th></tr></thead>
         <tbody id="listaConsultas"></tbody></table>
     </div>
+
+    <div class="card" style="margin-top:1rem">
+      <h3>Minhas pacientes</h3>
+      <p class="hint" style="margin-top:0">
+        Quem você já atendeu. Se o nome ou o WhatsApp estiver errado, corrija
+        aqui — <strong>o WhatsApp é o que liga a pessoa ao histórico dela</strong>,
+        e é por ele que o sistema conta as sessões gratuitas.
+      </p>
+      <div id="listaPacientes" class="hint">Carregando…</div>
+    </div>
   </div>
 </main>
+
+<div class="modal" id="modalPaciente">
+  <div class="modal-box">
+    <h3 style="color:var(--primary);margin-top:0">Corrigir dados</h3>
+    <input type="hidden" id="pacId">
+    <label class="hint" for="pacNome">Nome da paciente</label>
+    <input id="pacNome" type="text">
+    <label class="hint" for="pacTelefone">WhatsApp (com DDD)</label>
+    <input id="pacTelefone" type="tel" placeholder="31 99999-9999">
+    <p class="hint">Corrigir o WhatsApp mantém o histórico e a contagem das sessões.</p>
+    <div id="avisoPaciente" class="hint" style="margin-top:.5rem"></div>
+    <button class="btn" style="width:100%;margin-top:.75rem" id="btnSalvarPaciente" onclick="salvarPaciente()">Salvar</button>
+    <button class="btn btn-outline" style="width:100%;margin-top:.5rem" onclick="document.getElementById('modalPaciente').classList.remove('show')">Cancelar</button>
+  </div>
+</div>
 
 <div class="modal" id="modalPago">
   <div class="modal-box">
@@ -113,7 +138,7 @@
   </div>
 </div>
 
-<script src="saude-common.js"></script>
+<script src="saude-common.js?v=2026-08-29"></script>
 <script>
 window.SAUDE_PAGE = 'prof';
 state.modo = 'profissional';

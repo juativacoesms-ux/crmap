@@ -65,3 +65,36 @@ th{color:var(--primary);font-size:.78rem;text-transform:uppercase}
 .prof-chips button.active{border-color:var(--primary);background:#e8f4ec;color:var(--primary)}
 .pix-box{background:#f8fbf9;border:1px dashed var(--primary);padding:.75rem;border-radius:8px;font-size:.85rem;word-break:break-all}
 .hint{font-size:.85rem;color:var(--muted)}
+
+/* No celular a lista de pacientes vira cartão: 5 colunas com botão não cabem
+   em 360px, e as terapeutas usam celular. Vale só para #listaPacientes — a
+   tabela de consultas não tem os rótulos e ficaria sem etiqueta. */
+@media (max-width: 700px) {
+  #listaPacientes thead { display: none; }
+  #listaPacientes table,
+  #listaPacientes tbody,
+  #listaPacientes tr,
+  #listaPacientes td { display: block; width: auto; }
+  #listaPacientes tr {
+    border: 1px solid #d8e5dc;
+    border-radius: 12px;
+    padding: .75rem .9rem;
+    margin-bottom: .75rem;
+    background: #fff;
+  }
+  #listaPacientes td { border: none; padding: .2rem 0; }
+  #listaPacientes td::before {
+    content: attr(data-rotulo);
+    display: block;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #6b7d72;
+    margin-top: .35rem;
+  }
+  #listaPacientes td:first-child { font-weight: 700; font-size: 1.02rem; }
+  #listaPacientes td:first-child::before { content: none; }
+  #listaPacientes td.acoes::before { content: none; }
+  #listaPacientes td.acoes { margin-top: .5rem; }
+  #listaPacientes td.acoes button { min-height: 44px; width: 100%; }
+}

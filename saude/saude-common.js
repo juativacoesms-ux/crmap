@@ -72,20 +72,30 @@ function isCoord() { return state.modo === 'coordenacao'; }
 function iniciarAppUI() {
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('app').classList.add('visible');
-  document.getElementById('filtroInicio').value = hoje();
-  document.getElementById('filtroFim').value = dias(30);
-  document.getElementById('dataConsulta').value = hoje();
-  document.getElementById('txtLimiteGratis').textContent = state.limiteGratis;
-  document.getElementById('txtPixInline').textContent = state.pixCrmap || '(configure no controle)';
+  // Estas duas telas compartilham este arquivo, mas não têm os mesmos campos.
+  // Antes daqui o código assumia que todos existiam: em /saude/ o
+  // 'txtPixInline' não existe, a linha quebrava e NADA depois dela rodava —
+  // nem o nome da profissional no topo, nem o carregamento da agenda. A
+  // terapeuta entrava e via "Minhas consultas" vazia para sempre.
+  const preencher = (id, prop, valor) => {
+    const el = document.getElementById(id);
+    if (el) el[prop] = valor;
+  };
+  preencher('filtroInicio', 'value', hoje());
+  preencher('filtroFim', 'value', dias(30));
+  preencher('dataConsulta', 'value', hoje());
+  preencher('txtLimiteGratis', 'textContent', state.limiteGratis);
+  preencher('txtPixInline', 'textContent', state.pixCrmap || '(configure no controle)');
   if (isCoord()) {
-    document.getElementById('heroMeta').textContent = 'Todas as profissionais · repasses · secretaria';
-    document.getElementById('inputPixCrmap').value = state.pixCrmap || '';
+    preencher('heroMeta', 'textContent', 'Todas as profissionais · repasses · secretaria');
+    preencher('inputPixCrmap', 'value', state.pixCrmap || '');
     corrigirNomesProfissionaisNoBanco().then(() =>
-      carregarProfissionaisSelects().then(() => { carregarAgenda(); carregarResumoAdmin(); })
+      carregarProfissionaisSelects().then(() => { carregarAgenda(); carregarResumoAdmin(); carregarPacientes(); })
     );
   } else {
-    document.getElementById('heroMeta').textContent = state.profissionalNome + (state.profissionalCargo ? ' · ' + state.profissionalCargo : '');
+    preencher('heroMeta', 'textContent', state.profissionalNome + (state.profissionalCargo ? ' · ' + state.profissionalCargo : ''));
     carregarAgenda();
+    carregarPacientes();
   }
 }
 
@@ -294,4 +304,89 @@ function restaurarSessao() {
     Object.assign(state, s);
     return true;
   } catch (e) { return false; }
+}
+
+
+// ---- Minhas pacientes ------------------------------------------------------
+// A paciente nasce quando a terapeuta marca a primeira consulta. Esta lista
+// existe para ela ver quem já atendeu e corrigir nome ou WhatsApp digitado
+// errado — um dígito trocado cria uma ficha nova e a contagem das sessões
+// gratuitas recomeça do zero.
+let pacientesCarregadas = [];
+
+async function carregarPacientes() {
+  const alvo = document.getElementById('listaPacientes');
+  if (!alvo) return;
+  try {
+    const { data, error } = await sb.rpc('listar_pacientes_da_profissional', {
+      p_profissional_id: isCoord() ? null : state.profissionalId,
+      p_senha: state.senha,
+      p_modo: state.modo
+    });
+    if (error) throw error;
+    if (!data?.success) { alvo.textContent = data?.message || 'Não consegui carregar.'; return; }
+
+    pacientesCarregadas = data.pacientes || [];
+    if (!pacientesCarregadas.length) {
+      alvo.textContent = 'Nenhuma paciente ainda. A ficha nasce quando você marca a primeira consulta.';
+      return;
+    }
+    alvo.innerHTML =
+      '<table><thead><tr><th>Nome</th><th>WhatsApp</th><th>Consultas</th><th>Última</th><th></th></tr></thead><tbody>' +
+      pacientesCarregadas.map(p => `<tr>
+        <td data-rotulo="Nome">${esc(p.nome)}</td>
+        <td data-rotulo="WhatsApp">${esc(p.telefone || '—')}</td>
+        <td data-rotulo="Consultas">${Number(p.consultas)}</td>
+        <td data-rotulo="Última">${p.ultima_consulta ? dataBr(p.ultima_consulta) : '—'}</td>
+        <td class="acoes"><button class="btn btn-sm btn-outline" onclick="abrirPaciente(${Number(p.id)})">Corrigir</button></td>
+      </tr>`).join('') + '</tbody></table>';
+  } catch (e) {
+    alvo.textContent = 'Não consegui falar com o sistema. Tente de novo.';
+  }
+}
+
+function dataBr(iso) {
+  if (!iso) return '—';
+  const p = String(iso).split('-');
+  return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
+}
+
+function abrirPaciente(id) {
+  const p = pacientesCarregadas.find(x => Number(x.id) === Number(id));
+  if (!p) return;
+  document.getElementById('pacId').value = p.id;
+  document.getElementById('pacNome').value = p.nome || '';
+  document.getElementById('pacTelefone').value = p.telefone || '';
+  document.getElementById('avisoPaciente').textContent = '';
+  document.getElementById('modalPaciente').classList.add('show');
+}
+
+async function salvarPaciente() {
+  const aviso = document.getElementById('avisoPaciente');
+  const botao = document.getElementById('btnSalvarPaciente');
+  aviso.style.color = '#b3261e';
+  aviso.textContent = '';
+  if (botao.disabled) return;
+  const original = botao.textContent;
+  botao.disabled = true;
+  botao.textContent = 'Salvando…';
+  try {
+    const { data, error } = await sb.rpc('corrigir_paciente_saude', {
+      p_paciente_id: Number(document.getElementById('pacId').value),
+      p_profissional_id: isCoord() ? null : state.profissionalId,
+      p_senha: state.senha,
+      p_nome: document.getElementById('pacNome').value,
+      p_telefone: document.getElementById('pacTelefone').value,
+      p_modo: state.modo
+    });
+    if (error) throw error;
+    if (!data?.success) { aviso.textContent = data?.message || 'Não deu certo.'; return; }
+    document.getElementById('modalPaciente').classList.remove('show');
+    await carregarPacientes();
+  } catch (e) {
+    aviso.textContent = 'Não consegui falar com o sistema. Tente de novo.';
+  } finally {
+    botao.disabled = false;
+    botao.textContent = original;
+  }
 }
