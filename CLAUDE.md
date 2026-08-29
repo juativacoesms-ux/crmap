@@ -84,6 +84,49 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 29/08/2026 — Sem Mercado Pago: doação e carteirinha por PIX
+**Motivo:** a Iara pediu ("hoje usamos apenas chave pix"), e a investigação
+antes de mexer mostrou algo pior do que simplificação: **o aviso automático do
+Mercado Pago nunca funcionou**. Nenhum dos 22 registros tem confirmação vinda
+de lá — o que está guardado é o número da *intenção* de pagamento. E a página
+só libera o download quando o banco diz `approved`. Ou seja: a pessoa pagava,
+voltava, via "aguarde 1–2 minutos" e **nunca conseguia baixar**. Havia 13
+pessoas reais nessa fila, a mais antiga desde 29/05/2026.
+**Como fica:** o botão registra o pedido como pendente
+(`registrar_intencao_carteirinha`), avisa a planilha e abre uma caixa com o QR
+Code e a chave PIX — o mesmo QR da campanha, testado com transferência real em
+31/07/2026. A liberação passa a ser a diretora clicando em **Aprovar manual**,
+que é como já funcionava na prática.
+**A contrapartida, assumida:** a carteirinha não sai na hora. Mas antes
+também não saía — a diferença é que agora a pessoa sabe disso desde o começo.
+**Não voltar a colocar intermediário de pagamento** sem confirmar que o aviso
+automático grava mesmo no banco. O teste é olhar se aparece `payment_id`
+numérico em `pagamentos_carteirinha`, não se a tela do checkout abre.
+
+### 29/08/2026 — O WhatsApp da paciente é o que liga o histórico dela
+**Motivo:** a paciente é criada quando a terapeuta marca a primeira consulta,
+identificada pelo telefone. Um dígito errado cria uma ficha nova, e a contagem
+das 8 sessões gratuitas recomeça do zero — é ela que decide quem paga.
+**Como fica:** a terapeuta tem "Minhas pacientes", com a lista e a correção de
+nome e WhatsApp. Cada uma só vê e corrige quem ELA atendeu; a coordenação vê
+todas. Se o telefone novo já for de outra ficha, o sistema **recusa e explica**
+em vez de decidir sozinho: juntar dois históricos é decisão de quem conhece o
+caso.
+
+### 29/08/2026 — Arquivo compartilhado entre telas não pode assumir campos
+**Motivo:** `saude-common.js` é usado por `/saude/` e por `/saude/controle/`,
+que não têm os mesmos campos. O código preenchia `txtPixInline` direto; esse
+elemento só existe na tela da coordenação, então em `/saude/` a linha
+quebrava e **nada depois dela rodava** — nem o nome da profissional no topo,
+nem o carregamento da agenda. A terapeuta entrava e via "Minhas consultas"
+vazia para sempre. Ninguém percebeu porque a tela abria normalmente.
+**Como fica:** existe um `preencher(id, prop, valor)` que só age se o elemento
+existir. Ao mexer nesse arquivo, lembrar que ele roda em duas telas diferentes.
+**Junto disso:** os arquivos comuns passaram a ser chamados com `?v=data`.
+Sem isso o navegador continua servindo a versão antiga depois de uma correção
+— aconteceu comigo no meio do teste.
+
+
 ### 28/08/2026 — Foto do site só pode vir do nosso próprio Storage
 **Motivo:** se o painel aceitasse um endereço qualquer, o site poderia acabar
 apontando para uma imagem hospedada fora — que some quando o dono apagar, ou
