@@ -140,8 +140,8 @@
 <main>
   <section id="produtos">
     <div class="container">
-      <h3 class="section-title">Cooperativa Solidária</h3>
-      <p class="texto-central" style="text-align: center;">Produtos produzidos pelas atingidas da cooperativa. As compras são realizadas diretamente via WhatsApp.</p>
+      <h3 class="section-title" data-site="produtos.titulo">Cooperativa Solidária</h3>
+      <p class="texto-central" style="text-align: center;" data-site="produtos.texto">Produtos produzidos pelas atingidas da cooperativa. As compras são realizadas diretamente via WhatsApp.</p>
       
       <div id="loader">Carregando produtos da cooperativa...</div>
       <div class="grid-cards" id="lista-produtos">
@@ -221,5 +221,6 @@
       observer.observe(el);
     });
 </script>
+<script src="/textos-do-site.js" defer></script>
 </body>
 </html>

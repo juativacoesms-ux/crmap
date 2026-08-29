@@ -1272,40 +1272,8 @@
     observer.observe(el);
   });
 
-  // ---- Frases e cards que a diretora edita pelo painel ---------------------
-  // O texto que está escrito aqui no HTML é o PADRÃO e continua sendo o que
-  // aparece se este trecho falhar (internet ruim, celular antigo, bloqueador).
-  // O banco só devolve o que foi alterado no painel, e a troca acontece depois
-  // que a página já apareceu. A página nunca fica vazia esperando o banco.
-  (async function aplicarTextosDoPainel() {
-    const alvos = document.querySelectorAll('[data-site]');
-    if (!alvos.length) return;
-    try {
-      const resposta = await fetch(SUPABASE_URL + '/rest/v1/rpc/conteudo_site_publico', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: SUPABASE_KEY,
-          Authorization: 'Bearer ' + SUPABASE_KEY
-        },
-        body: '{}'
-      });
-      if (!resposta.ok) return;
-      const textos = await resposta.json();
-      if (!textos || typeof textos !== 'object') return;
-      alvos.forEach(el => {
-        const novo = textos[el.dataset.site];
-        // textContent, nunca innerHTML: o que vem do painel entra como TEXTO.
-        // Assim nem um erro de digitação com < > quebra a página.
-        if (typeof novo === 'string' && novo.trim() && novo !== el.textContent) {
-          el.textContent = novo;
-        }
-      });
-    } catch (e) {
-      // De propósito sem alarde: a página já está correta com o texto original.
-    }
-  })();
 </script>
 
+<script src="/textos-do-site.js" defer></script>
 </body>
 </html>
