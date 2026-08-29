@@ -84,6 +84,37 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 28/08/2026 — Só vira editável o que é TEXTO PURO
+**Motivo:** ao abrir a edição para as outras páginas, vários parágrafos têm
+`<a>` ou `<strong>` dentro. A troca usa `textContent`, então marcá-los
+**apagaria o link**. Na página da campanha isso derrubaria o link do terreno e
+o WhatsApp da coordenação — bem no lugar onde a instituição arrecada.
+**Como fica:** só recebe `data-site` o elemento cujo conteúdo é texto puro.
+Parágrafo com link ou negrito continua fixo no código; se precisar mudar, é
+pedido para quem mexe no código mesmo.
+**Caso especial resolvido:** o `<h1>` da campanha quebra em duas linhas com
+`<br>`. Virou dois `<span data-site>` separados, um por linha, para a quebra
+não se perder.
+**Onde o código mora:** `textos-do-site.js` na raiz, carregado com `defer`
+pelas cinco páginas. Antes o trecho estava embutido no `index.html`; virou
+arquivo único para não existirem cinco cópias divergentes.
+**Ao mexer:** conferir que banco e HTML batem — cada `data-site` precisa de uma
+linha em `conteudo_site` e vice-versa. Um comando que compara os dois lados
+está no diário da sessão de 28/08/2026.
+
+### 28/08/2026 — Carteirinha que já foi baixada precisa ser "liberada de novo"
+**Motivo:** `carteirinha.html` só libera o download quando existe uma linha
+com aquele número e status `approved`. Quando a pessoa baixa, o status vira
+`downloaded` — e ela **não consegue baixar de novo**. Quem perdia o arquivo
+dependia da Iara mexer no banco.
+**Como fica:** `gerenciar_carteirinha` com as ações `corrigir_nome`,
+`liberar_download` (devolve para `approved`), `cancelar` (status `cancelado`)
+e `reabrir`. Na tela, os botões mudam conforme a situação da linha.
+**Cuidado que ficou no código:** liberar o download de uma carteirinha
+cancelada é recusado — tem que reabrir antes. Sem isso, "cancelada" viraria
+um rótulo sem efeito.
+
+
 ### 28/08/2026 — Texto editável mora no HTML; o banco só guarda o que mudou
 **Motivo:** a diretora precisa trocar frases e cards da home sem pedir para
 ninguém. A saída óbvia — a página buscar todo o texto do banco — quebraria a
