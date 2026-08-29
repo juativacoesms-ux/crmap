@@ -84,6 +84,34 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 28/08/2026 — Foto do site só pode vir do nosso próprio Storage
+**Motivo:** se o painel aceitasse um endereço qualquer, o site poderia acabar
+apontando para uma imagem hospedada fora — que some quando o dono apagar, ou
+troca de conteúdo sem ninguém saber.
+**Como fica:** as fotos vão para o bucket **`fotos-site`**, que nasceu com
+limite de 5 MB e só aceita imagem. `salvar_conteudo_site` recusa qualquer
+endereço que não comece com o Storage deste projeto, e `textos-do-site.js`
+confere de novo antes de trocar.
+**Nome novo a cada envio** (`chave-timestamp.ext`): reaproveitar o nome faria
+o navegador continuar mostrando a foto antiga guardada no cache.
+**Capa da home:** é `background-image` com gradiente por cima. O código troca
+só a parte `url(...)` e preserva o gradiente — não sobrescreve a propriedade
+inteira.
+**⚠️ Risco que continua aberto:** a política do Storage permite que qualquer
+pessoa com a chave pública envie arquivo (`INSERT` com `with_check: true`, sem
+restrição de bucket, tamanho ou tipo). O bucket novo tem limites próprios, mas
+o `fotos-produtos` não tem nenhum. Vale apertar isso.
+
+### 28/08/2026 — O menu não é editável pelo painel
+**Motivo:** os nomes do menu orientam quem visita o site e aparecem em todas
+as páginas. Um nome trocado sem querer atrapalha a navegação inteira, e o
+ganho é pequeno — nome de menu quase nunca muda.
+**Como fica:** menu continua no código. Texto de conteúdo (título, parágrafo,
+card, rodapé) é editável; estrutura de navegação, não.
+**Mesma lógica vale para link e telefone:** o telefone do rodapé da campanha é
+um `<a>` e ficou de fora; só o endereço ao lado dele virou editável.
+
+
 ### 28/08/2026 — Só vira editável o que é TEXTO PURO
 **Motivo:** ao abrir a edição para as outras páginas, vários parágrafos têm
 `<a>` ou `<strong>` dentro. A troca usa `textContent`, então marcá-los
