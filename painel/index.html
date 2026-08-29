@@ -539,7 +539,9 @@
             alvo.innerHTML = grupos.map(g => `
                 <fieldset style="border:1px solid #e6ece7; border-radius:12px; padding:1rem 1.2rem; margin:0 0 1.2rem;">
                   <legend style="color:var(--primary); font-weight:700; padding:0 .4rem">${esc(g.nome)}</legend>
-                  ${g.itens.map(it => `
+                  ${g.itens.map(it => it.tipo === 'imagem'
+                    ? campoDeFoto(it)
+                    : `
                     <label for="txt_${esc(it.chave)}" style="display:block; font-size:.85rem; color:#5a665a; margin-bottom:.25rem">${esc(it.rotulo)}</label>
                     ${Number(it.linhas) > 1
                         ? `<textarea id="txt_${esc(it.chave)}" rows="${Number(it.linhas)}">${esc(it.valor)}</textarea>`
@@ -551,6 +553,69 @@
                 </fieldset>`).join('');
         } catch (e) {
             alvo.textContent = 'Não consegui falar com o sistema. Tente de novo.';
+        }
+    }
+
+    // Foto tem campo diferente do texto: mostra como está hoje e pede um
+    // arquivo do computador ou do celular.
+    function campoDeFoto(it) {
+        const chave = esc(it.chave);
+        return `
+            <label style="display:block; font-size:.85rem; color:#5a665a; margin-bottom:.4rem">${esc(it.rotulo)}</label>
+            <div style="display:flex; gap:1rem; align-items:flex-start; flex-wrap:wrap; margin-bottom:1.2rem">
+              <img id="previa_${chave}" src="${esc(it.valor)}" alt=""
+                   style="width:130px; height:90px; object-fit:cover; border-radius:8px; border:1px solid #e6ece7; background:#f4f8f5">
+              <div style="flex:1; min-width:220px">
+                <input type="file" id="arq_${chave}" accept="image/*" style="margin-bottom:.5rem">
+                <button type="button" id="btn_${chave}"
+                        style="width:auto; padding:.5rem 1.1rem; font-size:.9rem"
+                        onclick="enviarFotoSite('${chave}', this)">Enviar foto</button>
+                <p style="font-size:.8rem; color:#5a665a; margin:.5rem 0 0">
+                  Até 5 MB. Serve foto do celular.
+                </p>
+              </div>
+            </div>`;
+    }
+
+    async function enviarFotoSite(chave, botao) {
+        const campo = document.getElementById('arq_' + chave);
+        const arquivo = campo?.files?.[0];
+        if (!arquivo) { avisarAoLadoDoBotao(botao, 'Escolha uma foto primeiro.', false); return; }
+        if (arquivo.size > 5 * 1024 * 1024) {
+            avisarAoLadoDoBotao(botao, 'Foto muito grande (limite de 5 MB).', false);
+            return;
+        }
+
+        const liberar = ocupar(botao, 'Enviando...');
+        if (!liberar) return;
+        mostrarEspera('Enviando a foto...');
+        try {
+            // Nome novo a cada envio: evita que o navegador continue mostrando
+            // a foto antiga guardada no cache.
+            const extensao = (arquivo.name.split('.').pop() || 'jpg').toLowerCase();
+            const nome = chave.replace(/[^a-z0-9]/gi, '-') + '-' + Date.now() + '.' + extensao;
+
+            const { error: erroEnvio } = await supabaseClient.storage
+                .from('fotos-site').upload(nome, arquivo);
+            if (erroEnvio) throw erroEnvio;
+
+            const { data: { publicUrl } } = supabaseClient.storage
+                .from('fotos-site').getPublicUrl(nome);
+
+            const { data, error } = await supabaseClient.rpc('salvar_conteudo_site', {
+                p_senha: senhaGeral, p_chave: chave, p_valor: publicUrl
+            });
+            if (error) throw error;
+            if (!data?.success) { avisarAoLadoDoBotao(botao, data.message, false); return; }
+
+            document.getElementById('previa_' + chave).src = publicUrl;
+            campo.value = '';
+            avisarAoLadoDoBotao(botao, data.message, true);
+        } catch (e) {
+            avisarAoLadoDoBotao(botao, 'Não consegui enviar a foto. Tente de novo.', false);
+        } finally {
+            esconderEspera();
+            liberar();
         }
     }
 

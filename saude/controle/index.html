@@ -137,6 +137,28 @@
     </div>
   </div>
   <div class="card admin" style="margin-top:1rem">
+    <h3>Cadastrar profissional nova</h3>
+    <p class="hint" style="margin-top:0">
+      Use quando alguém entrar na equipe. Ela também pode se cadastrar sozinha
+      em <a href="../" target="_blank" rel="noopener">Área profissionais</a> —
+      aqui é para quando você precisa fazer por ela.
+    </p>
+    <label class="hint" for="novaNome">Nome completo</label>
+    <input id="novaNome" type="text" placeholder="Nome da profissional">
+    <label class="hint" for="novaCargo">Função / cargo</label>
+    <input id="novaCargo" type="text" placeholder="Ex: Psicóloga">
+    <label class="hint" for="novaTelefone">WhatsApp (com DDD)</label>
+    <input id="novaTelefone" type="tel" placeholder="67 99999-9999">
+    <label class="hint" for="novaEmail">E-mail (opcional)</label>
+    <input id="novaEmail" type="email" placeholder="nome@exemplo.com">
+    <label class="hint" for="novaSenha">Senha para ela entrar</label>
+    <input id="novaSenha" type="text" placeholder="Mínimo 6 letras ou números">
+    <p class="hint">Anote a senha e avise ela. Depois dá para trocar pelo botão "Senha".</p>
+    <div id="avisoNova" class="hint" style="margin:.5rem 0"></div>
+    <button class="btn" id="btnCadastrarNova" style="width:100%" onclick="cadastrarProfissionalNova()">Cadastrar</button>
+  </div>
+
+  <div class="card admin" style="margin-top:1rem">
     <h3>Profissionais cadastradas</h3>
     <div id="resumoProfissionais" class="hint" style="margin-bottom:.75rem"></div>
     <div id="listaProfissionais" class="hint">Carregando…</div>
@@ -260,6 +282,49 @@ async function carregarListaProfissionaisAdmin() {
 
 function acharProfissional(id) {
   return profissionaisCarregadas.find(p => Number(p.id) === Number(id));
+}
+
+// Cadastro feito pela diretora. Usa a mesma função do autocadastro da
+// profissional, então as regras são idênticas: WhatsApp válido e não
+// repetido, nome e cargo obrigatórios, senha de 6 ou mais.
+async function cadastrarProfissionalNova() {
+  const aviso = document.getElementById('avisoNova');
+  const botao = document.getElementById('btnCadastrarNova');
+  const dizer = (t, ok) => { aviso.textContent = t; aviso.style.color = ok ? '#1b6b3a' : '#b3261e'; };
+
+  const nome = document.getElementById('novaNome').value.trim();
+  const cargo = document.getElementById('novaCargo').value.trim();
+  const telefone = document.getElementById('novaTelefone').value.trim();
+  const email = document.getElementById('novaEmail').value.trim();
+  const senha = document.getElementById('novaSenha').value;
+
+  dizer('', false);
+  if (!nome || !cargo) { dizer('Preencha o nome e a função.', false); return; }
+  if (!telefone) { dizer('O WhatsApp é obrigatório: é por ele que ela entra.', false); return; }
+  if (senha.trim().length < 6) { dizer('A senha precisa ter pelo menos 6 caracteres.', false); return; }
+
+  if (botao.disabled) return;                 // ignora toque repetido
+  const textoOriginal = botao.textContent;
+  botao.disabled = true;
+  botao.textContent = 'Cadastrando…';
+  try {
+    const { data, error } = await sb.rpc('cadastrar_profissional_saude', {
+      p_nome: nome, p_cargo: cargo, p_telefone: telefone,
+      p_senha: senha, p_email: email || null
+    });
+    if (error) throw error;
+    if (!data?.success) { dizer(data?.message || 'Não deu certo.', false); return; }
+
+    dizer(nome + ' foi cadastrada. Avise a ela a senha que você definiu.', true);
+    ['novaNome','novaCargo','novaTelefone','novaEmail','novaSenha']
+      .forEach(i => document.getElementById(i).value = '');
+    await carregarListaProfissionaisAdmin();
+  } catch (e) {
+    dizer('Não consegui falar com o sistema. Tente de novo.', false);
+  } finally {
+    botao.disabled = false;
+    botao.textContent = textoOriginal;
+  }
 }
 
 function fecharModalProf() {

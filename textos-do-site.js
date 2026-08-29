@@ -24,7 +24,9 @@
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6anZ6YnZveHdoZ2d2YWRhcm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTA4NDEsImV4cCI6MjA4OTk2Njg0MX0.bTss42oILYSmAGP3vAP-9OQ1-qnKnZXbVxz2SDxWmW0';
 
   var alvos = document.querySelectorAll('[data-site]');
-  if (!alvos.length) return;
+  var fotos = document.querySelectorAll('[data-site-img]');
+  var fundos = document.querySelectorAll('[data-site-fundo]');
+  if (!alvos.length && !fotos.length && !fundos.length) return;
 
   fetch(SUPABASE_URL + '/rest/v1/rpc/conteudo_site_publico', {
     method: 'POST',
@@ -44,6 +46,33 @@
         // Assim nem um erro de digitação com < > quebra a página.
         if (typeof novo === 'string' && novo.trim() && novo !== el.textContent) {
           el.textContent = novo;
+        }
+      });
+
+      // Só troca a foto por endereço do nosso próprio Storage. O banco já
+      // recusa outros, e aqui vale a mesma regra: nunca apontar a página do
+      // site para uma imagem de qualquer lugar da internet.
+      function enderecoDeFotoNossa(v) {
+        return typeof v === 'string' &&
+               v.indexOf(SUPABASE_URL + '/storage/v1/object/public/') === 0;
+      }
+
+      Array.prototype.forEach.call(fotos, function (el) {
+        var nova = textos[el.getAttribute('data-site-img')];
+        if (enderecoDeFotoNossa(nova)) el.setAttribute('src', nova);
+      });
+
+      // A capa da home é background-image com um gradiente por cima.
+      // Trocamos só a parte da foto e preservamos o gradiente.
+      Array.prototype.forEach.call(fundos, function (el) {
+        var nova = textos[el.getAttribute('data-site-fundo')];
+        if (!enderecoDeFotoNossa(nova)) return;
+        var atual = window.getComputedStyle(el).backgroundImage;
+        if (atual && atual.indexOf('url(') !== -1) {
+          el.style.backgroundImage = atual.replace(/url\((['"]?)[^)]*\1\)/,
+                                                   'url("' + nova + '")');
+        } else {
+          el.style.backgroundImage = 'url("' + nova + '")';
         }
       });
     })
