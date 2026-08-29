@@ -243,6 +243,13 @@
         <div class="panel-box" style="border-top-width: 0;">
             <div class="resumo" id="resumoPagamentos"></div>
 
+            <!-- Aviso das pendentes antigas. Ate 29/08/2026 o Mercado Pago
+                 nunca confirmava nada e essas pessoas ficavam esperando sem
+                 saber. Agora a diretora ve quantas sao e resolve. -->
+            <div id="avisoPendentes" style="display:none; background:#fef9c3; border-left:4px solid #ca8a04;
+                 border-radius:0 10px 10px 0; padding:0.9rem 1.1rem; margin-bottom:1rem; font-size:0.95rem; line-height:1.5;">
+            </div>
+
             <div class="busca-linha">
                 <input type="search" id="buscaPagamento" placeholder="Procurar por nome ou número..."
                        oninput="filtrarPagamentos()" aria-label="Procurar por nome ou número da carteirinha">
@@ -669,6 +676,8 @@
             ? `${visiveis.length} de ${todasCarteirinhas.length} carteirinhas`
             : `Mostrando todas as ${todasCarteirinhas.length} carteirinhas, da mais recente para a mais antiga.`;
 
+        mostrarAvisoDePendentes();
+
         const lista = document.getElementById('listaPagamentos');
         if (visiveis.length === 0) {
             lista.innerHTML = '<tr><td colspan="6" style="text-align:center">Nenhuma carteirinha com esse nome ou número.</td></tr>';
@@ -685,6 +694,30 @@
                 <td data-rotulo="Ação">${botoesDaCarteirinha(p)}</td>
             </tr>
         `).join('');
+    }
+
+    // Mostra, acima da lista, quantas pessoas estão esperando há tempo demais.
+    // Antes de 29/08/2026 o Mercado Pago nunca confirmava a doação, então elas
+    // ficavam pendentes para sempre sem ninguém perceber.
+    function mostrarAvisoDePendentes() {
+        const caixa = document.getElementById('avisoPendentes');
+        if (!caixa) return;
+        const limite = new Date();
+        limite.setDate(limite.getDate() - 7);
+        const antigas = todasCarteirinhas.filter(c =>
+            c.status === 'pending' && c.created_at && new Date(c.created_at) < limite);
+
+        if (!antigas.length) { caixa.style.display = 'none'; return; }
+
+        const maisAntiga = antigas.reduce((a, b) =>
+            new Date(a.created_at) < new Date(b.created_at) ? a : b);
+
+        caixa.style.display = 'block';
+        caixa.innerHTML =
+            `<strong>${antigas.length} ${antigas.length === 1 ? 'pessoa está esperando' : 'pessoas estão esperando'} há mais de uma semana.</strong><br>` +
+            `A mais antiga é de ${dataBrasilia(maisAntiga.created_at).split(',')[0]}. ` +
+            `Confira no extrato quem realmente doou e use <b>Aprovar manual</b> na linha de cada uma — ` +
+            `elas passam a conseguir baixar a carteirinha na hora.`;
     }
 
     // Cada situação pede botões diferentes. Quem já baixou precisa de
