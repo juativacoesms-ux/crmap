@@ -84,6 +84,33 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 02/09/2026 — Datas da Saúde sempre por `dataBrasilia()`, nunca `toISOString()`
+**Motivo:** `hoje()` era `new Date().toISOString().slice(0,10)` — que é **UTC**.
+Das 21h à meia-noite de Brasília o sistema achava que já era o dia seguinte.
+Para quem atende à noite isso significava o campo Data nascendo com **amanhã**
+e o filtro "De" começando amanhã, fazendo as **consultas de hoje sumirem da
+lista**. Viola a regra de horário deste arquivo, e passou despercebido porque
+só aparece depois das 21h.
+**Como fica:** `dataBrasilia(somarDias)` no `saude-common.js`, fixo em UTC−3
+(o Brasil não tem horário de verão desde 2019). **Nunca voltar a usar
+`toISOString()` cru para data neste projeto.**
+
+### 02/09/2026 — `min-width:0` nos filhos do `.grid-2` (não remover)
+**Motivo:** a página da agenda **rolava para o lado inteira no celular** —
+medido, 725px de conteúdo numa tela de 390px, com cabeçalho e rodapé
+espremidos em meia tela. A causa não era a tabela: num CSS Grid os itens
+nascem com `min-width:auto` e **não deixam o conteúdo encolher**, então a
+tabela de 8 colunas empurrava a coluna, o grid e a página.
+**Como fica:** `.grid-2 > * { min-width: 0 }` e `.card { min-width: 0 }`.
+Tirar essas duas linhas traz o defeito de volta.
+
+### 02/09/2026 — O guia `/saude/como-usar/` acompanha a tela
+**Motivo:** é o passo a passo que a coordenação manda para as profissionais
+pelo WhatsApp, e ele cita **os nomes dos botões como estão hoje**
+("Aconteceu", "Não veio", "Reabrir", "Atualizar").
+**Como fica:** mudou nome de botão ou fluxo em `/saude/`? Atualizar o guia na
+mesma tarefa, senão ele passa a ensinar o que não existe mais.
+
 ### 02/09/2026 — "Esqueci minha senha" por e-mail, e num SUBDOMÍNIO
 **Motivo:** a Iara perguntou por que a Jórsia não conseguia redefinir a senha.
 A resposta foi que **redefinir senha não existia** — nem botão na tela `/saude/`,
