@@ -84,6 +84,20 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 02/09/2026 — O e-mail da PACIENTE é discreto; o da profissional não
+**Motivo:** ao marcar consulta sai aviso por e-mail para as duas. A CRMAP
+atende mulheres em acompanhamento psicológico — **dado sensível de saúde**
+(LGPD art. 5º, II) — e caixa de e-mail costuma ser compartilhada com
+companheiro ou familiar.
+**Como fica:** o e-mail da **paciente** não diz o tipo de atendimento, nem o
+número da sessão, nem valor, nem a palavra terapia: só que ela tem um
+atendimento na CRMAP, o dia, a hora e um WhatsApp de contato. O da
+**profissional** é completo — é a ficha de trabalho dela.
+**Não uniformizar os dois textos** sem falar com a Iara. Foi decisão dela em
+02/09/2026, depois de o risco ser levantado.
+O e-mail da paciente é campo **opcional**, e a tela avisa que só deve ser
+preenchido com o consentimento dela.
+
 ### 02/09/2026 — Datas da Saúde sempre por `dataBrasilia()`, nunca `toISOString()`
 **Motivo:** `hoje()` era `new Date().toISOString().slice(0,10)` — que é **UTC**.
 Das 21h à meia-noite de Brasília o sistema achava que já era o dia seguinte.
