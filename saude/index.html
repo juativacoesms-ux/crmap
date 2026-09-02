@@ -33,6 +33,10 @@
       <div class="form-group"><label class="req">Senha</label>
         <input type="password" id="loginSenha"></div>
       <button class="btn" style="width:100%" onclick="entrarProfissional()">Entrar na minha agenda</button>
+      <p style="text-align:center;margin:.85rem 0 0">
+        <a href="#" onclick="abrirEsqueciSenha(event)"
+           style="color:#1b6b3a;font-size:.95rem;display:inline-block;padding:.5rem 0;min-height:44px">Esqueci minha senha</a>
+      </p>
     </div>
     <div class="login-body" id="painelCadastro" style="display:none">
       <h2>Cadastrar-se</h2>
@@ -138,6 +142,59 @@
   </div>
 </div>
 
+<!-- Esqueci minha senha. Duas etapas na mesma caixa: pedir o código e usar o
+     código. O z-index de .modal (2500) é maior que o da tela de login (2000),
+     por isso esta caixa aparece por cima dela. -->
+<div class="modal" id="modalEsqueci">
+  <!-- Estilo preso a esta caixa (#modalEsqueci) de propósito: o CSS comum não
+       define largura para input dentro de modal, e mexer nele afetaria as
+       outras telas. Aqui os campos ficam largos e o rótulo em cima, que é o
+       que se lê bem no celular. -->
+  <style>
+    #modalEsqueci label{display:block;margin:.7rem 0 .25rem}
+    #modalEsqueci input{width:100%;box-sizing:border-box;padding:.7rem;
+      border:1px solid #cfd8d2;border-radius:8px;font-size:1rem}
+    #modalEsqueci #esqueciCodigo{letter-spacing:.4em;text-align:center;font-size:1.25rem}
+  </style>
+  <div class="modal-box">
+    <h3 style="color:var(--primary);margin-top:0">Esqueci minha senha</h3>
+
+    <div id="esqueciEtapa1">
+      <p class="hint" style="margin-top:0">
+        Digite o e-mail que você cadastrou. Vamos mandar um código de 6 números para ele.
+      </p>
+      <label class="hint" for="esqueciEmail">Seu e-mail</label>
+      <input id="esqueciEmail" type="email" autocomplete="email" placeholder="nome@exemplo.com">
+      <button class="btn" style="width:100%;margin-top:.75rem" id="btnPedirCodigo"
+              onclick="pedirCodigoSenha()">Enviar código</button>
+      <p class="hint" style="margin-top:.75rem">
+        Não cadastrou e-mail, ou não lembra qual é? Fale com a coordenação — ela
+        consegue definir sua senha direto.
+      </p>
+    </div>
+
+    <div id="esqueciEtapa2" style="display:none">
+      <p class="hint" style="margin-top:0" id="esqueciAvisoEnviado"></p>
+      <label class="hint" for="esqueciCodigo">Código de 6 números</label>
+      <input id="esqueciCodigo" type="text" inputmode="numeric" autocomplete="one-time-code"
+             maxlength="6" placeholder="000000">
+      <label class="hint" for="esqueciSenha1">Senha nova (mínimo 6)</label>
+      <input id="esqueciSenha1" type="password" autocomplete="new-password">
+      <label class="hint" for="esqueciSenha2">Repita a senha nova</label>
+      <input id="esqueciSenha2" type="password" autocomplete="new-password">
+      <button class="btn" style="width:100%;margin-top:.75rem" id="btnTrocarSenha"
+              onclick="confirmarNovaSenha()">Salvar senha nova</button>
+      <p class="hint" style="margin-top:.75rem">
+        O código vale por 30 minutos. Não chegou? Confira a caixa de spam.
+      </p>
+    </div>
+
+    <div id="esqueciAviso" class="hint" style="margin-top:.6rem"></div>
+    <button class="btn btn-outline" style="width:100%;margin-top:.5rem"
+            onclick="fecharEsqueciSenha()">Fechar</button>
+  </div>
+</div>
+
 <script src="saude-common.js?v=2026-08-29"></script>
 <script>
 window.SAUDE_PAGE = 'prof';
@@ -189,8 +246,100 @@ async function cadastrarProfissional() {
   setAuthTab('entrar');
 }
 
+// ----------------------------------------------------- Esqueci minha senha
+// Tudo passa pela Edge Function `reset-senha`. As funções do banco que geram
+// e conferem o código NÃO têm permissão para o navegador de propósito: se
+// tivessem, daria para pedir o código de qualquer pessoa e ler na resposta.
+const URL_RESET = SUPABASE_URL + '/functions/v1/reset-senha';
+
+function avisoEsqueci(texto, ok) {
+  const el = document.getElementById('esqueciAviso');
+  el.textContent = texto || '';
+  el.style.color = ok ? '#1b6b3a' : '#b3261e';
+}
+
+function abrirEsqueciSenha(ev) {
+  if (ev) ev.preventDefault();
+  document.getElementById('esqueciEtapa1').style.display = 'block';
+  document.getElementById('esqueciEtapa2').style.display = 'none';
+  ['esqueciEmail','esqueciCodigo','esqueciSenha1','esqueciSenha2']
+    .forEach(id => document.getElementById(id).value = '');
+  avisoEsqueci('');
+  document.getElementById('modalEsqueci').classList.add('show');
+  document.getElementById('esqueciEmail').focus();
+}
+
+function fecharEsqueciSenha() {
+  document.getElementById('modalEsqueci').classList.remove('show');
+}
+
+async function chamarReset(corpo, botao, textoOcupado) {
+  const original = botao ? botao.textContent : '';
+  if (botao) { botao.disabled = true; botao.textContent = textoOcupado; }
+  try {
+    const res = await fetch(URL_RESET, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify(corpo)
+    });
+    return await res.json();
+  } catch (e) {
+    return { success: false, message: 'Erro de conexão. Tente de novo.' };
+  } finally {
+    if (botao) { botao.disabled = false; botao.textContent = original; }
+  }
+}
+
+async function pedirCodigoSenha() {
+  const email = document.getElementById('esqueciEmail').value.trim();
+  if (!email || email.indexOf('@') < 1) {
+    avisoEsqueci('Digite um e-mail válido.', false); return;
+  }
+  avisoEsqueci('');
+  const data = await chamarReset(
+    { acao: 'solicitar', email },
+    document.getElementById('btnPedirCodigo'), 'Enviando…');
+
+  if (!data?.success) { avisoEsqueci(data?.message || 'Não deu certo.', false); return; }
+
+  // Passa para a etapa 2 mesmo sem saber se o e-mail existe — quem não estiver
+  // cadastrada simplesmente não recebe código. Contar aqui quem existe e quem
+  // não existe entregaria a lista de profissionais para qualquer um.
+  document.getElementById('esqueciEtapa1').style.display = 'none';
+  document.getElementById('esqueciEtapa2').style.display = 'block';
+  document.getElementById('esqueciAvisoEnviado').textContent = data.message || '';
+  avisoEsqueci('');
+  document.getElementById('esqueciCodigo').focus();
+}
+
+async function confirmarNovaSenha() {
+  const codigo = document.getElementById('esqueciCodigo').value.trim();
+  const s1 = document.getElementById('esqueciSenha1').value;
+  const s2 = document.getElementById('esqueciSenha2').value;
+
+  if (codigo.length !== 6) { avisoEsqueci('O código tem 6 números.', false); return; }
+  if (s1 !== s2) { avisoEsqueci('As duas senhas não são iguais.', false); return; }
+  if (s1.length < 6) { avisoEsqueci('A senha precisa ter pelo menos 6 caracteres.', false); return; }
+  avisoEsqueci('');
+
+  const data = await chamarReset(
+    { acao: 'confirmar', email: document.getElementById('esqueciEmail').value.trim(),
+      codigo, senha_nova: s1 },
+    document.getElementById('btnTrocarSenha'), 'Salvando…');
+
+  if (!data?.success) { avisoEsqueci(data?.message || 'Não deu certo.', false); return; }
+
+  // Já deixa o campo de senha preenchido para ela só clicar em Entrar.
+  fecharEsqueciSenha();
+  document.getElementById('loginSenha').value = s1;
+  setAuthTab('entrar');
+  alert(data.message || 'Senha trocada.');
+}
+
 if (restaurarSessao()) iniciarAppUI();
 document.getElementById('loginSenha').addEventListener('keydown', e => { if (e.key === 'Enter') entrarProfissional(); });
+document.getElementById('esqueciEmail').addEventListener('keydown', e => { if (e.key === 'Enter') pedirCodigoSenha(); });
+document.getElementById('esqueciSenha2').addEventListener('keydown', e => { if (e.key === 'Enter') confirmarNovaSenha(); });
 </script>
 <footer style="background:#0f301d;color:#d0e6d8;text-align:center;padding:1.25rem;font-size:.82rem">
   Área exclusiva das profissionais — <a href="controle/" style="color:#a8e6c0;font-size:0.95rem;display:inline-block;padding:0.5rem 0;min-height:44px">Coordenação/secretaria: outro link</a>
