@@ -66,24 +66,74 @@ th{color:var(--primary);font-size:.78rem;text-transform:uppercase}
 .pix-box{background:#f8fbf9;border:1px dashed var(--primary);padding:.75rem;border-radius:8px;font-size:.85rem;word-break:break-all}
 .hint{font-size:.85rem;color:var(--muted)}
 
-/* No celular a lista de pacientes vira cartão: 5 colunas com botão não cabem
-   em 360px, e as terapeutas usam celular. Vale só para #listaPacientes — a
-   tabela de consultas não tem os rótulos e ficaria sem etiqueta. */
-@media (max-width: 700px) {
-  #listaPacientes thead { display: none; }
-  #listaPacientes table,
-  #listaPacientes tbody,
-  #listaPacientes tr,
-  #listaPacientes td { display: block; width: auto; }
-  #listaPacientes tr {
+/* CAUSA RAIZ do "a página inteira rola para o lado" no celular: num CSS Grid
+   os itens nascem com min-width:auto, então a tabela de consultas (8 colunas)
+   não encolhia — empurrava a coluna, o grid e a página toda. Medido: 725px de
+   conteúdo numa tela de 390px, com o cabeçalho e o rodapé espremidos à
+   esquerda. min-width:0 deixa o item encolher e a página parar de rolar. */
+.grid-2 > * { min-width: 0; }
+.card { min-width: 0; }
+
+/* Situação da consulta: palavra do dia a dia, com cor, em vez do texto cru do
+   banco ("agendada", "falta") em minúsculas e sem destaque. */
+.sit-marcada   { background:#e0e7ff; color:#3730a3 }
+.sit-aconteceu { background:#dcfce7; color:#166534 }
+.sit-naoveio   { background:#fef3c7; color:#92400e }
+.sit-cancelada { background:#fee2e2; color:#991b1b }
+
+/* .68rem dava 10.9px — miúdo demais para ler no celular. */
+.tag { font-size: .78rem }
+
+/* O telefone era um link de 17px de altura: alvo pequeno demais para o dedo,
+   e é ele que abre a conversa no WhatsApp. */
+.link-whats {
+  display: inline-flex; align-items: center; min-height: 44px;
+  color: var(--primary); font-weight: 600; text-decoration: underline;
+  white-space: nowrap;   /* "(31) 98888-7777" quebrava em 3 linhas na tabela */
+}
+
+/* Os três botões lado a lado somam ~250px e a coluna tem ~150px: forçá-los
+   numa linha só cortava o "Cancelar" para fora da tabela. Então eles quebram
+   (é o padrão) e o texto de cada um nunca parte no meio. No celular o cartão
+   os põe lado a lado, que é onde isso importa. */
+td.actions { flex-wrap: wrap; gap: .35rem }
+td.actions .btn-sm { padding: .35rem .55rem; white-space: nowrap }
+th { white-space: nowrap }
+
+/* Rede de segurança: se algum dia uma tabela ficar maior que a caixa, ela rola
+   dentro do próprio cartão. A página nunca mais rola para o lado inteira —
+   foi assim que o celular ficou com o cabeçalho espremido em meia tela. */
+.card { overflow-x: auto }
+
+.vazio { color: var(--muted); line-height: 1.6; padding: 1rem .45rem }
+
+/* Formulários que NÃO usam .form-group (o cadastro de profissional e todas as
+   caixas de modal) não tinham estilo nenhum: o rótulo ficava colado no campo,
+   na mesma linha, e o campo nascia com a largura padrão do navegador. Ficava
+   "Nome completo [campo] Função/cargo [campo]" embolado numa linha só. */
+.card > label, .modal-box label { display: block; margin: .75rem 0 .25rem; font-weight: 600; font-size: .9rem; color: var(--text) }
+.card > label.hint, .modal-box label.hint { color: var(--text) }
+.card > input, .card > select, .card > textarea,
+.modal-box input:not([type=checkbox]), .modal-box select, .modal-box textarea {
+  width: 100%; padding: .7rem; border: 1px solid var(--border);
+  border-radius: 8px; font: inherit; min-height: 44px;
+}
+
+/* No celular e no tablet em pé as duas listas viram CARTÃO. Uma tabela de 8 ou
+   9 colunas não cabe em 360px de jeito nenhum, e as terapeutas usam celular.
+   Cada célula precisa de data-rotulo no HTML — é ele que vira a etiqueta. */
+@media (max-width: 860px) {
+  .card table thead { display: none; }
+  .card table, .card tbody, .card tr, .card td { display: block; width: auto; }
+  .card tr {
     border: 1px solid #d8e5dc;
     border-radius: 12px;
     padding: .75rem .9rem;
     margin-bottom: .75rem;
     background: #fff;
   }
-  #listaPacientes td { border: none; padding: .2rem 0; }
-  #listaPacientes td::before {
+  .card td { border: none; padding: .2rem 0; }
+  .card td::before {
     content: attr(data-rotulo);
     display: block;
     font-size: .72rem;
@@ -92,9 +142,57 @@ th{color:var(--primary);font-size:.78rem;text-transform:uppercase}
     color: #6b7d72;
     margin-top: .35rem;
   }
-  #listaPacientes td:first-child { font-weight: 700; font-size: 1.02rem; }
-  #listaPacientes td:first-child::before { content: none; }
-  #listaPacientes td.acoes::before { content: none; }
-  #listaPacientes td.acoes { margin-top: .5rem; }
-  #listaPacientes td.acoes button { min-height: 44px; width: 100%; }
+  .card td:first-child { font-weight: 700; font-size: 1.02rem; }
+  .card td:first-child::before { content: none; }
+  .card td.acoes::before, .card td.actions::before { content: none; }
+  .card td.acoes, .card td.actions { margin-top: .5rem; }
+  .card td.acoes button { min-height: 44px; width: 100% }
+
+  /* Os três botões da consulta lado a lado, ocupando a largura toda: é o que
+     o dedo acerta. Empilhados viravam uma coluna alta demais. */
+  .card td.actions { display: flex; gap: .4rem }
+  .card td.actions button { flex: 1; min-height: 46px; font-size: .82rem }
+
+  /* ---- o cartão da CONSULTA, reordenado ----------------------------------
+     Empilhado na ordem da tabela, o cartão começava pela DATA em letra grande
+     e o nome da paciente vinha só no meio — quem bate o olho procura o nome.
+     `order` reordena sem mexer no HTML, e a tabela no computador continua
+     igual. Data e hora ficam lado a lado; a coluna "Sessão" some porque a
+     Cobrança já diz a mesma coisa ("Grátis · 3ª sessão"). */
+  #listaConsultas tr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 .9rem }
+  #listaConsultas td { flex: 0 0 auto }
+  #listaConsultas td[data-rotulo="Paciente"] {
+    order: 1; flex: 1 0 100%; font-weight: 700; font-size: 1.05rem; margin-bottom: .15rem;
+  }
+  #listaConsultas td[data-rotulo="Paciente"]::before { content: none }
+  #listaConsultas td[data-rotulo="Data"]         { order: 2 }
+  #listaConsultas td[data-rotulo="Hora"]         { order: 3 }
+  #listaConsultas td[data-rotulo="Profissional"] { order: 4 }
+  #listaConsultas td[data-rotulo="Sessão"]       { display: none }
+  /* Cobrança e situação são duas etiquetas curtas: cabem lado a lado e
+     encurtam o cartão em duas linhas. */
+  #listaConsultas td[data-rotulo="Cobrança"]     { order: 5 }
+  #listaConsultas td[data-rotulo="Situação"]     { order: 6 }
+  #listaConsultas td[data-rotulo="Situação"]::before { content: none }
+  #listaConsultas td[data-rotulo="WhatsApp"]     { order: 7; flex: 1 0 100% }
+  #listaConsultas td.actions                     { order: 8; flex: 1 0 100% }
+  /* Etiqueta só onde ela acrescenta alguma coisa. "COBRANÇA" em cima de
+     "Grátis · 3ª sessão" é repetição, e "DATA / HORA" em cima de uma data e de
+     um horário também. Menos ruído, cartão mais baixo, mesma informação. */
+  #listaConsultas td[data-rotulo="Data"]::before,
+  #listaConsultas td[data-rotulo="Hora"]::before,
+  #listaConsultas td[data-rotulo="Cobrança"]::before { content: none }
+  #listaConsultas td[data-rotulo="Data"] { font-weight: 600 }
+  /* "03/09/2026 às 09:00" — lê-se como uma frase, não como duas colunas. */
+  #listaConsultas td[data-rotulo="Data"]::after {
+    content: ' às'; font-weight: 400; color: var(--muted);
+  }
+  #listaConsultas td[data-rotulo="Hora"] { font-weight: 600; margin-left: -.6rem }
+  #listaConsultas td[data-rotulo="Hora"]::before { content: none }
+  #listaConsultas td[data-rotulo="Cobrança"],
+  #listaConsultas td[data-rotulo="Situação"] { margin: .4rem 0 .2rem }
+
+  /* Uma linha vazia ("Nenhuma consulta...") não deve virar cartão. */
+  .card td.vazio { padding: .75rem 0 }
+  .card td.vazio::before { content: none }
 }

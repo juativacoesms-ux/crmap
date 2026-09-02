@@ -16,8 +16,28 @@ const state = {
 };
 
 function loader(on) { document.getElementById('loader').classList.toggle('show', on); }
-function hoje() { return new Date().toISOString().slice(0, 10); }
-function dias(n) { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+
+/* Datas SEMPRE no horário de Brasília (UTC−3), nunca em UTC nem no relógio do
+   aparelho. Antes daqui era `new Date().toISOString()`, que é UTC: das 21h à
+   meia-noite de Brasília o sistema já achava que era o dia seguinte. Efeito
+   real para quem atende à noite: o campo Data nascia com AMANHÃ, e o filtro
+   "De" começava amanhã — as consultas de hoje sumiam da lista.
+   O Brasil não tem mais horário de verão desde 2019, então −3 vale o ano todo. */
+function dataBrasilia(somarDias) {
+  const d = new Date(Date.now() - 3 * 60 * 60 * 1000);
+  d.setUTCDate(d.getUTCDate() + (somarDias || 0));
+  return d.toISOString().slice(0, 10);
+}
+function hoje() { return dataBrasilia(0); }
+function dias(n) { return dataBrasilia(n); }
+
+/* Hora atual de Brasília, arredondada para a próxima meia hora. Serve de
+   sugestão no campo Horário, que antes nascia vazio. */
+function proximaMeiaHora() {
+  const d = new Date(Date.now() - 3 * 60 * 60 * 1000);
+  d.setUTCMinutes(d.getUTCMinutes() > 30 ? 60 : 30, 0, 0);
+  return d.toISOString().slice(11, 16);
+}
 function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
 
 /** Nomes corrompidos no seed (F?tima) — exibição até o banco ser corrigido */
@@ -67,6 +87,30 @@ function fmtData(iso) { if (!iso) return '—'; const [y, m, d] = iso.split('-')
 function fmtHora(t) { return String(t || '').slice(0, 5); }
 function fmtMoeda(v) { return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
 
+/* O banco guarda o telefone como um monte de números colados
+   ("31988887777"). Na tela isso é difícil de conferir de bater o olho, e
+   conferir o WhatsApp é justamente o que evita ficha duplicada. */
+function fmtTelefone(t) {
+  const n = String(t || '').replace(/\D/g, '');
+  if (n.length === 11) return `(${n.slice(0, 2)}) ${n.slice(2, 7)}-${n.slice(7)}`;
+  if (n.length === 10) return `(${n.slice(0, 2)}) ${n.slice(2, 6)}-${n.slice(6)}`;
+  return t || '—';
+}
+
+/* A situação aparecia como o texto cru do banco, em minúsculas e sem cor:
+   "agendada", "falta". Quem lê rápido não distingue. Aqui vira palavra do
+   dia a dia, com cor. */
+const SITUACOES = {
+  agendada:  { texto: 'Marcada',   classe: 'sit-marcada'   },
+  realizada: { texto: 'Aconteceu', classe: 'sit-aconteceu' },
+  falta:     { texto: 'Não veio',  classe: 'sit-naoveio'   },
+  cancelada: { texto: 'Cancelada', classe: 'sit-cancelada' }
+};
+function tagStatus(s) {
+  const v = SITUACOES[String(s || '').toLowerCase()];
+  return v ? `<span class="tag ${v.classe}">${v.texto}</span>` : esc(s);
+}
+
 function isCoord() { return state.modo === 'coordenacao'; }
 
 function iniciarAppUI() {
@@ -81,9 +125,14 @@ function iniciarAppUI() {
     const el = document.getElementById(id);
     if (el) el[prop] = valor;
   };
-  preencher('filtroInicio', 'value', hoje());
+  // O período começa 7 dias ATRÁS, não em hoje. Com o início em hoje, a
+  // consulta de ontem sumia da lista — e era exatamente ela que faltava marcar
+  // como "Aconteceu". Quem esquecesse de anotar no mesmo dia não tinha mais
+  // como achar a consulta.
+  preencher('filtroInicio', 'value', dias(-7));
   preencher('filtroFim', 'value', dias(30));
   preencher('dataConsulta', 'value', hoje());
+  preencher('horaConsulta', 'value', proximaMeiaHora());
   preencher('txtLimiteGratis', 'textContent', state.limiteGratis);
   preencher('txtPixInline', 'textContent', state.pixCrmap || '(configure no controle)');
   if (isCoord()) {
@@ -163,11 +212,19 @@ async function buscarPaciente() {
   document.getElementById('wrapComunicou').style.display = data.exige_pagamento ? 'flex' : 'none';
 }
 
+// Guardadas para as confirmações poderem dizer o nome da paciente e o horário,
+// em vez de perguntar só "Confirmar?".
+let consultasCarregadas = [];
+
 async function carregarAgenda() {
   loader(true);
   const tbody = document.getElementById('listaConsultas');
   const profFiltro = isCoord() ? (document.getElementById('filtroProf').value || null) : state.profissionalId;
-  const cols = isCoord() ? 9 : 8;
+  // Colunas da tabela, para o colspan da linha "nenhuma consulta". A coluna
+  // "Sessão" saiu: mostrava "3ª" ao lado de uma Cobrança que já dizia
+  // "Grátis · 3ª sessão". Era a mesma informação duas vezes, ocupando a
+  // largura que faltava para o nome e para os botões.
+  const cols = isCoord() ? 8 : 7;
   try {
     const { data, error } = await sb.rpc('listar_consultas_saude_v2', {
       p_modo: state.modo,
@@ -178,28 +235,43 @@ async function carregarAgenda() {
       p_filtro_prof_id: profFiltro ? Number(profFiltro) : null
     });
     if (error) throw error;
+    consultasCarregadas = data || [];
     if (!data?.length) {
-      tbody.innerHTML = `<tr><td colspan="${cols}">Nenhuma consulta no período.</td></tr>`;
+      // Dizer o período por extenso evita a dúvida mais comum: "eu agendei e
+      // sumiu". Quase sempre a consulta existe, mas está fora das datas De/Até.
+      const de = fmtData(document.getElementById('filtroInicio').value);
+      const ate = fmtData(document.getElementById('filtroFim').value);
+      tbody.innerHTML = `<tr><td colspan="${cols}" class="vazio">
+        Nenhuma consulta entre <strong>${de}</strong> e <strong>${ate}</strong>.<br>
+        Marcou para outra data? Mude o <strong>De</strong> e o <strong>Até</strong> ali em cima e toque em Atualizar.
+      </td></tr>`;
       return;
     }
+    // data-rotulo alimenta a etiqueta de cada linha quando isto vira cartão no
+    // celular (ver o @media do saude-common.css). Sem ele o cartão mostraria os
+    // valores soltos, sem dizer o que cada um é.
     tbody.innerHTML = data.map(c => {
       const cob = c.tipo_cobranca === 'paga'
-        ? `<span class="tag tag-paga">Paga · ${c.numero_sessao}ª</span>`
-        : `<span class="tag tag-gratuita">Grátis · ${c.numero_sessao}ª</span>`;
+        ? `<span class="tag tag-paga">Paga · ${c.numero_sessao}ª sessão</span>`
+        : `<span class="tag tag-gratuita">Grátis · ${c.numero_sessao}ª sessão</span>`;
       const profCell = isCoord()
-        ? `<td><small>${esc(nomeProfissionalExibicao(c.profissional_nome, c.profissional_id).split(' ')[0])}</small></td>`
+        ? `<td data-rotulo="Profissional">${esc(nomeProfissionalExibicao(c.profissional_nome, c.profissional_id).split(' ')[0])}</td>`
         : '';
       const acoes = c.status === 'agendada'
-        ? `<button class="btn btn-sm" onclick="mudarStatus(${c.id},'realizada',${c.numero_sessao || 0},'${c.tipo_cobranca || 'gratuita'}')">Realizada</button>
-           <button class="btn btn-sm btn-outline" onclick="mudarStatus(${c.id},'falta')">Falta</button>
+        ? `<button class="btn btn-sm" onclick="mudarStatus(${c.id},'realizada',${c.numero_sessao || 0},'${c.tipo_cobranca || 'gratuita'}')">Aconteceu</button>
+           <button class="btn btn-sm btn-outline" onclick="mudarStatus(${c.id},'falta')">Não veio</button>
            <button class="btn btn-sm btn-danger" onclick="mudarStatus(${c.id},'cancelada')">Cancelar</button>`
         : `<button class="btn btn-sm btn-outline" onclick="mudarStatus(${c.id},'agendada')">Reabrir</button>`;
+      const tel = String(c.telefone || '').replace(/\D/g, '');
       return `<tr>
-        <td>${fmtData(c.data_consulta)}</td><td>${fmtHora(c.hora_inicio)}</td>
-        <td><span class="tag tag-sessao">${c.numero_sessao}ª</span></td>
-        <td><strong>${esc(c.nome_paciente)}</strong></td>
-        <td><a href="https://wa.me/55${String(c.telefone || '').replace(/\D/g, '')}" target="_blank">${esc(c.telefone)}</a></td>
-        ${profCell}<td>${cob}</td><td>${esc(c.status)}</td><td class="actions">${acoes}</td></tr>`;
+        <td data-rotulo="Data">${fmtData(c.data_consulta)}</td>
+        <td data-rotulo="Hora">${fmtHora(c.hora_inicio)}</td>
+        <td data-rotulo="Paciente"><strong>${esc(c.nome_paciente)}</strong></td>
+        <td data-rotulo="WhatsApp"><a class="link-whats" href="https://wa.me/55${tel}" target="_blank" rel="noopener">${fmtTelefone(c.telefone)}</a></td>
+        ${profCell}
+        <td data-rotulo="Cobrança">${cob}</td>
+        <td data-rotulo="Situação">${tagStatus(c.status)}</td>
+        <td class="actions" data-rotulo="O que fazer">${acoes}</td></tr>`;
     }).join('');
   } catch (e) {
     tbody.innerHTML = `<tr><td colspan="${cols}">Erro ao carregar.</td></tr>`;
@@ -228,16 +300,50 @@ async function agendarConsulta(e) {
     });
     if (error) throw error;
     if (!data?.success) { alert(data?.message || 'Erro'); return; }
-    alert(data.exige_pagamento
-      ? `Agendado — sessão ${data.numero_sessao} PAGA. Repasse 10% PIX: ${data.pix_crmap}`
-      : `Agendado — sessão ${data.numero_sessao} gratuita.`);
+
+    // Se a consulta foi marcada para fora do período que está na tela, ela não
+    // apareceria na lista e pareceria que não salvou. Aqui o período se abre
+    // sozinho para incluir o dia marcado — a queixa "agendei e sumiu".
+    const dia = document.getElementById('dataConsulta').value;
+    const ini = document.getElementById('filtroInicio');
+    const fim = document.getElementById('filtroFim');
+    let ampliou = false;
+    if (dia && ini.value && dia < ini.value) { ini.value = dia; ampliou = true; }
+    if (dia && fim.value && dia > fim.value) { fim.value = dia; ampliou = true; }
+
+    const nome = document.getElementById('nomePaciente').value.trim();
+    alert(
+      `Pronto! Consulta marcada para ${fmtData(dia)} às ${fmtHora(document.getElementById('horaConsulta').value)}` +
+      (nome ? ` com ${nome}` : '') + '.\n\n' +
+      (data.exige_pagamento
+        ? `Esta é a ${data.numero_sessao}ª sessão e é PAGA.\nRepasse de 10% no PIX da CRMAP: ${data.pix_crmap}`
+        : `Esta é a ${data.numero_sessao}ª sessão e é gratuita.`) +
+      (ampliou ? '\n\nAjustei as datas da lista para você ver a consulta nova.' : '')
+    );
+
     document.getElementById('nomePaciente').value = '';
     document.getElementById('telefonePaciente').value = '';
     document.getElementById('obsConsulta').value = '';
     document.getElementById('pacientePreview').classList.remove('show');
+    document.getElementById('wrapComunicou').style.display = 'none';
+    document.getElementById('comunicouPagamento').checked = false;
     await carregarAgenda();
     if (isCoord()) await carregarResumoAdmin();
   } catch (err) { alert(err.message); } finally { loader(false); }
+}
+
+/* Antes daqui a pergunta era só "Confirmar?" — sem dizer o que ia acontecer,
+   nem com quem. Marcar "Não veio" na paciente errada era fácil e silencioso.
+   Agora a pergunta diz a ação, o nome da paciente, o dia e a hora. */
+function textoConfirmacao(id, status) {
+  const c = consultasCarregadas.find(x => Number(x.id) === Number(id));
+  const quem = c ? `${c.nome_paciente} — ${fmtData(c.data_consulta)} às ${fmtHora(c.hora_inicio)}` : 'esta consulta';
+  return {
+    falta:     `Marcar que ${quem} NÃO VEIO?\n\nDá para desfazer depois pelo botão Reabrir.`,
+    cancelada: `CANCELAR a consulta de ${quem}?\n\nDá para desfazer depois pelo botão Reabrir.`,
+    realizada: `Marcar que a consulta de ${quem} ACONTECEU?`,
+    agendada:  `Voltar a consulta de ${quem} para MARCADA?`
+  }[status] || 'Confirmar?';
 }
 
 function mudarStatus(id, status, numeroSessao, tipoCobranca) {
@@ -253,7 +359,7 @@ function mudarStatus(id, status, numeroSessao, tipoCobranca) {
     document.getElementById('modalPago').classList.add('show');
     return;
   }
-  if (!confirm('Confirmar?')) return;
+  if (!confirm(textoConfirmacao(id, status))) return;
   executarStatus(id, status);
 }
 
@@ -335,7 +441,7 @@ async function carregarPacientes() {
       '<table><thead><tr><th>Nome</th><th>WhatsApp</th><th>Consultas</th><th>Última</th><th></th></tr></thead><tbody>' +
       pacientesCarregadas.map(p => `<tr>
         <td data-rotulo="Nome">${esc(p.nome)}</td>
-        <td data-rotulo="WhatsApp">${esc(p.telefone || '—')}</td>
+        <td data-rotulo="WhatsApp">${esc(fmtTelefone(p.telefone))}</td>
         <td data-rotulo="Consultas">${Number(p.consultas)}</td>
         <td data-rotulo="Última">${p.ultima_consulta ? dataBr(p.ultima_consulta) : '—'}</td>
         <td class="acoes"><button class="btn btn-sm btn-outline" onclick="abrirPaciente(${Number(p.id)})">Corrigir</button></td>

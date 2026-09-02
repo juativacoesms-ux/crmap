@@ -7,7 +7,7 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="canonical" href="https://crmapoficial.org.br/saude/controle/">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../saude-common.css?v=2026-08-29">
+  <link rel="stylesheet" href="../saude-common.css?v=2026-09-02b">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     /* No celular a tabela de profissionais vira cartão. Cinco colunas com três
@@ -116,9 +116,9 @@
       <h3>Agendar (qualquer profissional)</h3>
       <form onsubmit="agendarConsulta(event)">
         <div class="form-group"><label class="req">Profissional</label><select id="profissionalId" required></select></div>
-        <div class="form-group"><label class="req">WhatsApp paciente</label><input type="tel" id="telefonePaciente" required onblur="buscarPaciente()"></div>
+        <div class="form-group"><label class="req">WhatsApp paciente</label><input type="tel" id="telefonePaciente" required inputmode="numeric" placeholder="31 99999-9999" onblur="buscarPaciente()"></div>
         <div id="pacientePreview" class="paciente-preview"></div>
-        <div class="form-group"><label class="req">Nome</label><input type="text" id="nomePaciente" required></div>
+        <div class="form-group"><label class="req">Nome</label><input type="text" id="nomePaciente" required placeholder="Nome completo"></div>
         <div class="form-group"><label class="req">Data</label><input type="date" id="dataConsulta" required></div>
         <div class="form-group"><label class="req">Hora</label><input type="time" id="horaConsulta" required></div>
         <div class="form-group"><label>Duração</label><select id="duracaoConsulta"><option value="50">50 min</option></select></div>
@@ -136,7 +136,7 @@
     </div>
     <div class="card admin">
       <h3>Agenda geral</h3>
-      <table><thead><tr><th>Data</th><th>Hora</th><th>Sessão</th><th>Paciente</th><th>WhatsApp</th><th>Prof.</th><th>Cobrança</th><th>Status</th><th>Ações</th></tr></thead>
+      <table><thead><tr><th>Data</th><th>Hora</th><th>Paciente</th><th>WhatsApp</th><th>Profissional</th><th>Cobrança</th><th>Situação</th><th>O que fazer</th></tr></thead>
         <tbody id="listaConsultas"></tbody></table>
     </div>
   </div>
@@ -215,7 +215,7 @@
   </div>
 </div>
 
-<script src="../saude-common.js?v=2026-08-29"></script>
+<script src="../saude-common.js?v=2026-09-02b"></script>
 <script>
 window.SAUDE_PAGE = 'controle';
 state.modo = 'coordenacao';
