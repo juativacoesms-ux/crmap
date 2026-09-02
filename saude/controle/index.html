@@ -7,7 +7,7 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="canonical" href="https://crmapoficial.org.br/saude/controle/">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../saude-common.css?v=2026-09-02b">
+  <link rel="stylesheet" href="../saude-common.css?v=2026-09-02c">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     /* No celular a tabela de profissionais vira cartão. Cinco colunas com três
@@ -119,6 +119,9 @@
         <div class="form-group"><label class="req">WhatsApp paciente</label><input type="tel" id="telefonePaciente" required inputmode="numeric" placeholder="31 99999-9999" onblur="buscarPaciente()"></div>
         <div id="pacientePreview" class="paciente-preview"></div>
         <div class="form-group"><label class="req">Nome</label><input type="text" id="nomePaciente" required placeholder="Nome completo"></div>
+        <div class="form-group"><label>E-mail da paciente (opcional)</label>
+          <input type="email" id="emailPaciente" placeholder="nome@exemplo.com" autocomplete="off">
+          <span class="hint">Só com o consentimento dela. O aviso não revela o tipo de atendimento.</span></div>
         <div class="form-group"><label class="req">Data</label><input type="date" id="dataConsulta" required></div>
         <div class="form-group"><label class="req">Hora</label><input type="time" id="horaConsulta" required></div>
         <div class="form-group"><label>Duração</label><select id="duracaoConsulta"><option value="50">50 min</option></select></div>
@@ -215,7 +218,7 @@
   </div>
 </div>
 
-<script src="../saude-common.js?v=2026-09-02b"></script>
+<script src="../saude-common.js?v=2026-09-02c"></script>
 <script>
 window.SAUDE_PAGE = 'controle';
 state.modo = 'coordenacao';

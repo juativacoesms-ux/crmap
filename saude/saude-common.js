@@ -312,17 +312,22 @@ async function agendarConsulta(e) {
     if (dia && fim.value && dia > fim.value) { fim.value = dia; ampliou = true; }
 
     const nome = document.getElementById('nomePaciente').value.trim();
+    const aviso = await avisarPorEmail(data.id);
+
     alert(
       `Pronto! Consulta marcada para ${fmtData(dia)} às ${fmtHora(document.getElementById('horaConsulta').value)}` +
       (nome ? ` com ${nome}` : '') + '.\n\n' +
       (data.exige_pagamento
         ? `Esta é a ${data.numero_sessao}ª sessão e é PAGA.\nRepasse de 10% no PIX da CRMAP: ${data.pix_crmap}`
         : `Esta é a ${data.numero_sessao}ª sessão e é gratuita.`) +
+      (aviso ? '\n\n' + aviso : '') +
       (ampliou ? '\n\nAjustei as datas da lista para você ver a consulta nova.' : '')
     );
 
     document.getElementById('nomePaciente').value = '';
     document.getElementById('telefonePaciente').value = '';
+    const campoEmail = document.getElementById('emailPaciente');
+    if (campoEmail) campoEmail.value = '';
     document.getElementById('obsConsulta').value = '';
     document.getElementById('pacientePreview').classList.remove('show');
     document.getElementById('wrapComunicou').style.display = 'none';
@@ -330,6 +335,52 @@ async function agendarConsulta(e) {
     await carregarAgenda();
     if (isCoord()) await carregarResumoAdmin();
   } catch (err) { alert(err.message); } finally { loader(false); }
+}
+
+/* Manda o aviso da consulta por e-mail e devolve a frase para o aviso na tela.
+   A consulta JÁ ESTÁ SALVA quando isto roda: se o e-mail falhar, o
+   agendamento continua valendo e a frase apenas diz que o aviso não saiu.
+   Nunca lançar erro daqui — seria perder a consulta por causa do e-mail.
+
+   Quem monta e envia é a Edge Function, com os dados vindos do banco. O
+   navegador só manda o número da consulta. Se ele mandasse os dados, daria
+   para disparar e-mail em nome da CRMAP com qualquer conteúdo. */
+async function avisarPorEmail(consultaId) {
+  if (!consultaId) return '';
+  const campo = document.getElementById('emailPaciente');
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/avisar-consulta', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({
+        modo: state.modo,
+        senha: state.senha,
+        profissional_id: state.profissionalId,
+        consulta_id: consultaId,
+        email_paciente: campo ? campo.value.trim() : ''
+      })
+    });
+    const d = await res.json();
+    if (!d?.success) return 'Não consegui mandar o aviso por e-mail — mas a consulta está marcada.';
+
+    const quantos = (d.enviados || []).length;
+    if (!quantos) {
+      // Sem e-mail de ninguém: não é erro, só não havia para onde mandar.
+      return d.sem_email?.profissional
+        ? 'Aviso por e-mail não enviado: você não tem e-mail cadastrado.'
+        : '';
+    }
+    const partes = [];
+    if (!d.sem_email?.profissional) partes.push('para você');
+    if (!d.sem_email?.paciente) partes.push('para a paciente');
+    let txt = 'Aviso enviado por e-mail ' + partes.join(' e ') +
+              ', com o anexo para adicionar na agenda.';
+    if (d.sem_email?.paciente) txt += '\nA paciente não recebeu: sem e-mail cadastrado.';
+    if ((d.falhas || []).length) txt += '\nUm dos e-mails não saiu; tente de novo mais tarde.';
+    return txt;
+  } catch (e) {
+    return 'Não consegui mandar o aviso por e-mail — mas a consulta está marcada.';
+  }
 }
 
 /* Antes daqui a pergunta era só "Confirmar?" — sem dizer o que ia acontecer,
