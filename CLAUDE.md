@@ -84,6 +84,36 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 02/09/2026 — "Esqueci minha senha" por e-mail, e num SUBDOMÍNIO
+**Motivo:** a Iara perguntou por que a Jórsia não conseguia redefinir a senha.
+A resposta foi que **redefinir senha não existia** — nem botão na tela `/saude/`,
+nem função no banco. Quem esquecia ficava presa até alguém com a senha
+institucional destravar em `/saude/controle/`. O custo estava no banco: em
+31/08/2026 às 22:31 a Jórsia **se cadastrou de novo** (id 39) por não conseguir
+entrar, e digitou o WhatsApp com um dígito a menos — então o cadastro novo
+também não abria.
+
+**Como fica:** código de 6 dígitos por e-mail, válido 30 minutos, 5 tentativas,
+3 pedidos por hora. `painel/reset-senha-email-2026-09-02.sql` +
+`supabase/functions/reset-senha/` + a caixa em `saude/index.html`.
+
+**O que NÃO pode ser desfeito por engano:** as funções `_reset_gerar_codigo` e
+`_reset_confirmar` **não têm grant para `anon`**, e a tabela `senha_reset_codigos`
+tem RLS ligada **sem policy nenhuma**. Só a Edge Function as alcança, com a
+chave de serviço. Um `grant ... to anon` ali transformaria a recuperação em
+porta aberta: daria para pedir o código de qualquer pessoa e lê-lo na própria
+resposta.
+
+**Por que o remetente é `envio.crmapoficial.org.br` e não o domínio raiz:** o
+`crmapoficial.org.br` já usa o **Email Routing da Cloudflare** (MX
+`route1/2/3.mx.cloudflare.net`, SPF `include:_spf.mx.cloudflare.net`) e tem
+**DMARC `p=reject`**. Pôr o Resend no raiz exigiria trocar o SPF e o MX de lá,
+**quebrando o e-mail que a CRMAP já usa**. No subdomínio os dois convivem.
+
+**A contrapartida, assumida:** 2 profissionais ativas sem e-mail (Fátima id 1 e
+Rosilaine id 3) continuam dependendo da coordenação. As duas também estão sem
+WhatsApp, então já não entravam.
+
 ### 29/08/2026 — Sem Mercado Pago: doação e carteirinha por PIX
 **Motivo:** a Iara pediu ("hoje usamos apenas chave pix"), e a investigação
 antes de mexer mostrou algo pior do que simplificação: **o aviso automático do
