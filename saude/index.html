@@ -62,7 +62,11 @@
 <main class="app" id="app">
   <section class="hero">
     <div><h1 id="heroTitle">Minha agenda</h1><p class="meta" id="heroMeta"></p></div>
-    <button class="btn btn-outline" style="border-color:#fff;color:#fff" onclick="sairAgenda()">Sair</button>
+    <!-- background:transparent e obrigatorio aqui: .btn-outline define
+         fundo BRANCO, e a letra deste botao e branca para contrastar com
+         o verde do hero. Sem isso o texto "Sair" fica branco no branco e
+         some — o botao funcionava, mas ninguem o enxergava. -->
+    <button class="btn btn-outline" style="border-color:#fff;color:#fff;background:transparent" onclick="sairAgenda()">Sair</button>
   </section>
   <div class="alert-box">
     <strong>CRMAP:</strong> <span id="txtLimiteGratis">8</span> sessões gratuitas por paciente (WhatsApp único).
