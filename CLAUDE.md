@@ -84,6 +84,44 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 03/09/2026 — O sistema APONTA o telefone incompleto, nunca completa sozinho
+**Motivo:** a Iara mandou atualizar os contatos das pacientes com a lista que
+ela montou (`~/Downloads/contatos crmap0309`). Medido antes de mexer: a lista
+tem o **mesmo defeito** do sistema — **67 dos 81** contatos do PDF (83%) e
+**61 de 89** das fichas por terapeuta estão com 10 dígitos em vez de 11.
+No banco, 6 das 7 fichas idem. Cruzando os dois lados, **nenhuma** ficha do
+sistema encontra número completo na lista; onde o nome bate, os dois estão
+truncados — às vezes de forma diferente (Helena: `3188418250` no banco,
+`3198418250` no PDF; Liderjane em três versões, com DDD 31 e 37).
+**Como fica:** não houve importação. As telas passaram a **marcar em vermelho**
+quem tem 10 dígitos, com a contagem no topo do bloco, e quem conhece a
+paciente corrige.
+**O que NÃO fazer:** deduzir o dígito que falta e gravar. Dá para inferir que
+é o 9, mas a posição varia e o resultado é o telefone de alguém — aviso de
+consulta de terapia para número errado expõe dado sensível de saúde, o mesmo
+motivo da decisão de 02/09/2026 logo abaixo.
+**Fixo tem 10 dígitos e é legítimo:** o aviso só aparece quando o primeiro
+dígito depois do DDD é 6, 7, 8 ou 9 — faixa que não pode ser fixo. Não trocar
+essa regra por "todo mundo com 10 dígitos", senão a tela passa a acusar
+telefone certo.
+
+### 03/09/2026 — A diretoria também corrige contato de paciente
+**Motivo:** a correção de nome e WhatsApp existia desde 29/08/2026, mas só na
+tela da profissional. A diretoria não tinha por onde fazer, então toda
+correção virava pedido manual para a Iara. As funções do banco já aceitavam
+`p_modo = 'coordenacao'` desde 29/08 — faltava só a tela.
+**Como fica:** `/saude/controle/` tem o bloco "Contatos das pacientes", com
+todas as fichas e o mesmo botão Corrigir da profissional. Cada profissional
+continua vendo só quem ela atendeu.
+**Junto disso:** fichas gravadas como `+55 31 8841-8250` eram contadas com 12
+dígitos e apareciam sem formatação na tela. `soDigitosBr()` tira o código do
+país — mas só quando sobra um telefone válido, para não mutilar o DDD 55, que
+é o Rio Grande do Sul.
+**Pendente:** `painel/contatos-pacientes-2026-09-03.sql` ainda **não foi
+aplicado**. Ele faz a diretoria enxergar ficha **sem consulta marcada** — hoje
+invisível, e é justamente onde o WhatsApp errado se esconde, porque a mensagem
+nunca chegou. A tela funciona com ou sem ele (testado nos dois casos).
+
 ### 02/09/2026 — O e-mail da PACIENTE é discreto; o da profissional não
 **Motivo:** ao marcar consulta sai aviso por e-mail para as duas. A CRMAP
 atende mulheres em acompanhamento psicológico — **dado sensível de saúde**
