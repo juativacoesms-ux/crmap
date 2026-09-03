@@ -87,11 +87,24 @@ function fmtData(iso) { if (!iso) return '—'; const [y, m, d] = iso.split('-')
 function fmtHora(t) { return String(t || '').slice(0, 5); }
 function fmtMoeda(v) { return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
 
+/* Boa parte das fichas antigas foi gravada como "+55 31 8841-8250". O 55 da
+   frente é código do PAÍS, não DDD: contado junto, o número parecia ter 12
+   dígitos e não era reconhecido nem para formatar nem para conferir.
+
+   Só tiramos o 55 quando sobra um telefone de verdade (10 ou 11 dígitos).
+   Assim um número do DDD 55, que é o Rio Grande do Sul, não é mutilado —
+   "5531234567" continua inteiro. */
+function soDigitosBr(t) {
+  const n = String(t || '').replace(/\D/g, '');
+  if (n.length >= 12 && n.startsWith('55')) return n.slice(2);
+  return n;
+}
+
 /* O banco guarda o telefone como um monte de números colados
    ("31988887777"). Na tela isso é difícil de conferir de bater o olho, e
    conferir o WhatsApp é justamente o que evita ficha duplicada. */
 function fmtTelefone(t) {
-  const n = String(t || '').replace(/\D/g, '');
+  const n = soDigitosBr(t);
   if (n.length === 11) return `(${n.slice(0, 2)}) ${n.slice(2, 7)}-${n.slice(7)}`;
   if (n.length === 10) return `(${n.slice(0, 2)}) ${n.slice(2, 6)}-${n.slice(6)}`;
   return t || '—';
@@ -471,6 +484,26 @@ function restaurarSessao() {
 // gratuitas recomeça do zero.
 let pacientesCarregadas = [];
 
+/* Celular no Brasil tem 11 dígitos: DDD + 9 + oito números. Quando um contato
+   chega com 10, quase sempre foi o 9 que se perdeu na cópia — e um WhatsApp
+   sem o 9 simplesmente não existe: a mensagem da consulta nunca chega, ou
+   pior, chega em outra pessoa.
+
+   O que NÃO se pode fazer é adivinhar o dígito que falta e gravar sozinho.
+   Aqui é terapia: mandar aviso de consulta para o número errado expõe dado
+   de saúde de alguém. Então o sistema aponta e quem conhece a paciente
+   confirma.
+
+   Telefone fixo também tem 10 dígitos e é legítimo. A diferença está no
+   primeiro dígito depois do DDD: fixo começa com 2, 3, 4 ou 5; celular
+   começa com 9 (antigos, com 8, 7 e 6). Só avisamos quando os 10 dígitos
+   NÃO podem ser um fixo. */
+function telefoneIncompleto(t) {
+  const n = soDigitosBr(t);
+  if (n.length !== 10) return false;
+  return /^[6-9]/.test(n.slice(2));
+}
+
 async function carregarPacientes() {
   const alvo = document.getElementById('listaPacientes');
   if (!alvo) return;
@@ -488,15 +521,45 @@ async function carregarPacientes() {
       alvo.textContent = 'Nenhuma paciente ainda. A ficha nasce quando você marca a primeira consulta.';
       return;
     }
+
+    // A coluna de quem atende só faz sentido para a diretoria, que vê todas as
+    // fichas. Ela vem da versão nova da função do banco; se o banco ainda
+    // estiver na versão antiga o campo não existe, e a coluna some sozinha em
+    // vez de virar uma fila de "undefined".
+    const temProf = isCoord() && pacientesCarregadas.some(p => p.profissionais);
+
+    // Contar antes de desenhar: o aviso no topo é o que faz alguém agir.
+    // Sem ele o problema fica diluído no meio da tabela e ninguém corrige.
+    const aConferir = pacientesCarregadas.filter(p => telefoneIncompleto(p.telefone));
+    const resumo = document.getElementById('resumoPacientes');
+    if (resumo) {
+      resumo.innerHTML = aConferir.length
+        ? `<strong>${pacientesCarregadas.length}</strong> ${pacientesCarregadas.length === 1 ? 'ficha' : 'fichas'}` +
+          ` · <span style="color:#b3261e"><strong>${aConferir.length}</strong> com WhatsApp` +
+          ` ${aConferir.length === 1 ? 'incompleto' : 'incompletos'}</span>`
+        : `<strong>${pacientesCarregadas.length}</strong> ${pacientesCarregadas.length === 1 ? 'ficha' : 'fichas'} · todos os WhatsApp completos`;
+    }
+
     alvo.innerHTML =
-      '<table><thead><tr><th>Nome</th><th>WhatsApp</th><th>Consultas</th><th>Última</th><th></th></tr></thead><tbody>' +
-      pacientesCarregadas.map(p => `<tr>
+      '<table><thead><tr><th>Nome</th><th>WhatsApp</th>' +
+      (temProf ? '<th>Atendida por</th>' : '') +
+      '<th>Consultas</th><th>Última</th><th></th></tr></thead><tbody>' +
+      pacientesCarregadas.map(p => {
+        const falta = telefoneIncompleto(p.telefone);
+        const semTel = !String(p.telefone || '').trim();
+        const whats = semTel
+          ? '<span style="color:#b3261e">falta</span>'
+          : esc(fmtTelefone(p.telefone)) +
+            (falta ? '<br><span style="color:#b3261e;font-size:.78rem">só 10 dígitos — confira o 9</span>' : '');
+        return `<tr>
         <td data-rotulo="Nome">${esc(p.nome)}</td>
-        <td data-rotulo="WhatsApp">${esc(fmtTelefone(p.telefone))}</td>
+        <td data-rotulo="WhatsApp">${whats}</td>
+        ${temProf ? `<td data-rotulo="Atendida por">${esc(p.profissionais) || '—'}</td>` : ''}
         <td data-rotulo="Consultas">${Number(p.consultas)}</td>
         <td data-rotulo="Última">${p.ultima_consulta ? dataBr(p.ultima_consulta) : '—'}</td>
         <td class="acoes"><button class="btn btn-sm btn-outline" onclick="abrirPaciente(${Number(p.id)})">Corrigir</button></td>
-      </tr>`).join('') + '</tbody></table>';
+      </tr>`;
+      }).join('') + '</tbody></table>';
   } catch (e) {
     alvo.textContent = 'Não consegui falar com o sistema. Tente de novo.';
   }
@@ -514,7 +577,17 @@ function abrirPaciente(id) {
   document.getElementById('pacId').value = p.id;
   document.getElementById('pacNome').value = p.nome || '';
   document.getElementById('pacTelefone').value = p.telefone || '';
-  document.getElementById('avisoPaciente').textContent = '';
+  const aviso = document.getElementById('avisoPaciente');
+  // Quem abre a ficha já chega sabendo o que há de errado com ela. O aviso
+  // diz o que falta, mas não sugere um número: o dígito certo é o que a
+  // paciente usa no WhatsApp, e só quem fala com ela sabe qual é.
+  if (telefoneIncompleto(p.telefone)) {
+    aviso.style.color = '#b3261e';
+    aviso.textContent = 'Este WhatsApp tem 10 dígitos e um celular tem 11. '
+      + 'Confirme o número com a paciente antes de salvar — não complete pelo palpite.';
+  } else {
+    aviso.textContent = '';
+  }
   document.getElementById('modalPaciente').classList.add('show');
 }
 

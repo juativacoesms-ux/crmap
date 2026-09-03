@@ -170,7 +170,40 @@
     <div id="resumoProfissionais" class="hint" style="margin-bottom:.75rem"></div>
     <div id="listaProfissionais" class="hint">Carregando…</div>
   </div>
+
+  <div class="card admin" style="margin-top:1rem">
+    <h3>Contatos das pacientes</h3>
+    <p class="hint" style="margin-top:0">
+      Todas as fichas, de todas as profissionais. Corrija aqui quando o
+      WhatsApp estiver errado ou incompleto —
+      <strong>é por esse número que o sistema reconhece a paciente</strong> e
+      conta as sessões gratuitas. Um dígito trocado abre uma ficha nova e a
+      contagem recomeça do zero.
+    </p>
+    <p class="hint">
+      Antes de mudar o contato de alguém, confirme o número com a paciente ou
+      com quem a atende. Aviso de consulta enviado para o número errado
+      expõe o atendimento dela a um estranho.
+    </p>
+    <div id="resumoPacientes" class="hint" style="margin-bottom:.75rem"></div>
+    <div id="listaPacientes" class="hint">Carregando…</div>
+  </div>
 </main>
+
+<div class="modal" id="modalPaciente">
+  <div class="modal-box">
+    <h3 style="color:var(--primary);margin-top:0">Corrigir dados da paciente</h3>
+    <input type="hidden" id="pacId">
+    <label class="hint" for="pacNome">Nome da paciente</label>
+    <input id="pacNome" type="text">
+    <label class="hint" for="pacTelefone">WhatsApp (com DDD)</label>
+    <input id="pacTelefone" type="tel" placeholder="31 99999-9999">
+    <p class="hint">Corrigir o WhatsApp mantém o histórico e a contagem das sessões.</p>
+    <div id="avisoPaciente" class="hint" style="margin-top:.5rem"></div>
+    <button class="btn" style="width:100%;margin-top:.75rem" id="btnSalvarPaciente" onclick="salvarPaciente()">Salvar</button>
+    <button class="btn btn-outline" style="width:100%;margin-top:.5rem" onclick="document.getElementById('modalPaciente').classList.remove('show')">Cancelar</button>
+  </div>
+</div>
 
 <div class="modal" id="modalProf">
   <div class="modal-box">
@@ -218,7 +251,7 @@
   </div>
 </div>
 
-<script src="../saude-common.js?v=2026-09-02c"></script>
+<script src="../saude-common.js?v=2026-09-03a"></script>
 <script>
 window.SAUDE_PAGE = 'controle';
 state.modo = 'coordenacao';
