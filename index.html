@@ -676,12 +676,29 @@
     color: #1b7340;
     opacity: 0.75;
   }
+  .top-support-banner .apoio-logos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem 2.5rem;
+  }
   .top-support-banner .apoio-logo {
     max-height: 100px;
     width: auto;
     border-radius: 8px;
     mix-blend-mode: multiply;
     box-shadow: 0 2px 12px rgba(15, 48, 29, 0.06);
+  }
+  /* Logo em PNG de fundo transparente: a sombra e os cantos arredondados
+     desenhariam um retangulo em volta do desenho, por isso saem aqui. */
+  .top-support-banner .apoio-logo.is-transparente {
+    box-shadow: none;
+    border-radius: 0;
+  }
+  @media (max-width: 560px) {
+    .top-support-banner .apoio-logo { max-height: 68px; }
+    .top-support-banner .apoio-logos { gap: 1.1rem 1.5rem; }
   }
 
   footer.footer-site {
@@ -790,7 +807,10 @@
 <div class="top-support-banner">
   <div class="container">
     <span class="apoio-label">Apoio Oficial</span>
-    <img class="apoio-logo" src="images/logo_secretaria_cultura.jpg" alt="Apoio Oficial - Secretaria Municipal de Cultura, Esporte e Turismo">
+    <div class="apoio-logos">
+      <img class="apoio-logo" src="images/logo_secretaria_cultura.jpg" alt="Apoio Oficial - Secretaria Municipal de Cultura, Esporte e Turismo">
+      <img class="apoio-logo is-transparente" src="images/logo_radio_exclusiva_fm.png" alt="Apoio - Rádio Exclusiva FM 97,9">
+    </div>
   </div>
 </div>
 
