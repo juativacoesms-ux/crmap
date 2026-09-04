@@ -159,6 +159,8 @@ function iniciarAppUI() {
     carregarAgenda();
     carregarPacientes();
   }
+  // O campo que cria a ficha da paciente também recebe máscara e trava.
+  ligarCampoCelular('telefonePaciente', null);
 }
 
 async function carregarProfissionaisSelects() {
@@ -294,6 +296,17 @@ async function carregarAgenda() {
 
 async function agendarConsulta(e) {
   e.preventDefault();
+
+  // A ficha da paciente NASCE aqui, com o telefone digitado neste campo. Sem
+  // esta trava, o mesmo defeito volta pela porta da frente a cada consulta
+  // nova — e é o telefone que liga a pessoa ao histórico dela.
+  const erroTel = erroCelular(document.getElementById('telefonePaciente').value);
+  if (erroTel) {
+    alert('WhatsApp da paciente: ' + erroTel);
+    document.getElementById('telefonePaciente').focus();
+    return;
+  }
+
   const profId = isCoord() ? Number(document.getElementById('profissionalId').value) : state.profissionalId;
   loader(true);
   try {
@@ -504,6 +517,82 @@ function telefoneIncompleto(t) {
   return /^[6-9]/.test(n.slice(2));
 }
 
+/* Os DDDs que existem de verdade no Brasil. Sem esta lista, "(30) 99999-9999"
+   passaria: tem 11 dígitos e começa com 9, mas o DDD 30 não existe e a
+   mensagem não chega em ninguém. */
+const DDDS_VALIDOS = new Set([
+  11, 12, 13, 14, 15, 16, 17, 18, 19,             // SP
+  21, 22, 24, 27, 28,                             // RJ e ES
+  31, 32, 33, 34, 35, 37, 38,                     // MG
+  41, 42, 43, 44, 45, 46, 47, 48, 49,             // PR e SC
+  51, 53, 54, 55,                                 // RS
+  61, 62, 63, 64, 65, 66, 67, 68, 69,             // Centro-Oeste e Norte
+  71, 73, 74, 75, 77, 79,                         // BA e SE
+  81, 82, 83, 84, 85, 86, 87, 88, 89,             // Nordeste
+  91, 92, 93, 94, 95, 96, 97, 98, 99              // Norte e MA
+]);
+
+/* A trava do campo. Um WhatsApp de paciente TEM que ter 11 dígitos: DDD + 9 +
+   oito números. Foi a falta disso que deixou 6 das 7 fichas com número curto,
+   sem ninguém perceber por meses.
+
+   Devolve mensagem de erro (o que está faltando, em português) ou null quando
+   está tudo certo. Cada recusa diz o motivo — "número inválido" faria a pessoa
+   tentar de novo às cegas. */
+function erroCelular(t) {
+  const n = soDigitosBr(t);
+  if (!n)              return 'Digite o WhatsApp com DDD.';
+  if (n.length < 11) {
+    const f = 11 - n.length;
+    return `${f === 1 ? 'Falta 1 número' : `Faltam ${f} números`}. Um celular tem 11 com o DDD — ex: (31) 98888-7777.`;
+  }
+  if (n.length > 11) {
+    const s = n.length - 11;
+    return `${s === 1 ? 'Sobra 1 número' : `Sobram ${s} números`}. Um celular tem 11 com o DDD.`;
+  }
+  if (!DDDS_VALIDOS.has(Number(n.slice(0, 2))))
+                       return `O DDD ${n.slice(0, 2)} não existe. Confira os dois primeiros números.`;
+  if (n[2] !== '9')    return 'Depois do DDD, todo celular começa com 9. Confira o número.';
+  /* Aqui parou de propósito. A tentação seguinte é exigir que o dígito depois
+     do 9 seja de 6 a 9 — a faixa dos celulares antigos. Testado contra os
+     cadastros reais: barraria a Joaci, profissional ATIVA, cujo número é
+     (11) 94039-8890. Ela deixaria de conseguir entrar no sistema.
+     Regra que recusa gente de verdade é pior do que regra que deixa passar um
+     número esquisito. */
+  return null;
+}
+
+/* Vai formatando (31) 98888-7777 enquanto a pessoa digita, e não deixa passar
+   do 11º dígito. Escrever certo é mais fácil do que corrigir depois. */
+function mascaraCelular(el) {
+  const n = el.value.replace(/\D/g, '').slice(0, 11);
+  el.value = n.length <= 2  ? n
+           : n.length <= 7  ? `(${n.slice(0, 2)}) ${n.slice(2)}`
+                            : `(${n.slice(0, 2)}) ${n.slice(2, 7)}-${n.slice(7)}`;
+}
+
+/* Liga a máscara e o aviso ao vivo num campo de telefone. O aviso aparece
+   quando a pessoa SAI do campo, não a cada tecla — reclamar de "faltam 10
+   números" no primeiro dígito só atrapalha quem está digitando. */
+function ligarCampoCelular(idCampo, idAviso) {
+  const el = document.getElementById(idCampo);
+  if (!el || el.dataset.celularLigado) return;
+  el.dataset.celularLigado = '1';
+  el.setAttribute('inputmode', 'numeric');
+  el.setAttribute('maxlength', '15');
+  el.setAttribute('placeholder', '(31) 98888-7777');
+  const aviso = idAviso ? document.getElementById(idAviso) : null;
+  el.addEventListener('input', () => {
+    mascaraCelular(el);
+    if (aviso && aviso.dataset.erroCelular) { aviso.textContent = ''; delete aviso.dataset.erroCelular; }
+  });
+  el.addEventListener('blur', () => {
+    if (!aviso || !el.value.trim()) return;
+    const erro = erroCelular(el.value);
+    if (erro) { aviso.style.color = '#b3261e'; aviso.textContent = erro; aviso.dataset.erroCelular = '1'; }
+  });
+}
+
 async function carregarPacientes() {
   const alvo = document.getElementById('listaPacientes');
   if (!alvo) return;
@@ -528,16 +617,42 @@ async function carregarPacientes() {
     // vez de virar uma fila de "undefined".
     const temProf = isCoord() && pacientesCarregadas.some(p => p.profissionais);
 
+    // Quem está sem número vai para o TOPO. É a ficha que precisa de alguém —
+    // deixada no meio da lista, em ordem de nome, ela não seria vista.
+    const semNumero = p => !String(p.telefone || '').trim();
+    pacientesCarregadas.sort((a, b) => (semNumero(b) ? 1 : 0) - (semNumero(a) ? 1 : 0));
+
     // Contar antes de desenhar: o aviso no topo é o que faz alguém agir.
     // Sem ele o problema fica diluído no meio da tabela e ninguém corrige.
     const aConferir = pacientesCarregadas.filter(p => telefoneIncompleto(p.telefone));
+    const semTel = pacientesCarregadas.filter(semNumero);
     const resumo = document.getElementById('resumoPacientes');
     if (resumo) {
-      resumo.innerHTML = aConferir.length
-        ? `<strong>${pacientesCarregadas.length}</strong> ${pacientesCarregadas.length === 1 ? 'ficha' : 'fichas'}` +
-          ` · <span style="color:#b3261e"><strong>${aConferir.length}</strong> com WhatsApp` +
-          ` ${aConferir.length === 1 ? 'incompleto' : 'incompletos'}</span>`
-        : `<strong>${pacientesCarregadas.length}</strong> ${pacientesCarregadas.length === 1 ? 'ficha' : 'fichas'} · todos os WhatsApp completos`;
+      const total = pacientesCarregadas.length;
+      const partes = [`<strong>${total}</strong> ${total === 1 ? 'ficha' : 'fichas'}`];
+      if (semTel.length) partes.push(
+        `<span style="color:#b3261e"><strong>${semTel.length}</strong> esperando o número</span>`);
+      if (aConferir.length) partes.push(
+        `<span style="color:#b3261e"><strong>${aConferir.length}</strong> com WhatsApp ` +
+        `${aConferir.length === 1 ? 'incompleto' : 'incompletos'}</span>`);
+      if (!semTel.length && !aConferir.length) partes.push('todos os WhatsApp completos');
+      resumo.innerHTML = partes.join(' · ');
+    }
+
+    // Faixa de chamada: aparece só quando há ficha sem número, e diz o que
+    // fazer, não o que aconteceu.
+    const faixa = document.getElementById('avisoPacientesSemNumero');
+    if (faixa) {
+      faixa.style.display = semTel.length ? 'block' : 'none';
+      if (semTel.length) {
+        faixa.innerHTML =
+          `<strong>Atualize o número de telefone</strong> de ` +
+          `${semTel.length === 1 ? '<strong>1 paciente</strong>' : `<strong>${semTel.length} pacientes</strong>`}: ` +
+          semTel.map(p => esc(p.nome)).join(', ') + '. ' +
+          `O número que estava guardado não conferia, então foi retirado para não ` +
+          `mandar mensagem para a pessoa errada. Toque em <strong>Corrigir</strong> ` +
+          `e digite o WhatsApp com 11 números.`;
+      }
     }
 
     alvo.innerHTML =
@@ -546,18 +661,18 @@ async function carregarPacientes() {
       '<th>Consultas</th><th>Última</th><th></th></tr></thead><tbody>' +
       pacientesCarregadas.map(p => {
         const falta = telefoneIncompleto(p.telefone);
-        const semTel = !String(p.telefone || '').trim();
-        const whats = semTel
-          ? '<span style="color:#b3261e">falta</span>'
+        const vazio = semNumero(p);
+        const whats = vazio
+          ? '<strong style="color:#b3261e">Atualize o número de telefone</strong>'
           : esc(fmtTelefone(p.telefone)) +
             (falta ? '<br><span style="color:#b3261e;font-size:.78rem">só 10 dígitos — confira o 9</span>' : '');
-        return `<tr>
+        return `<tr${vazio ? ' style="background:#fdecea"' : ''}>
         <td data-rotulo="Nome">${esc(p.nome)}</td>
         <td data-rotulo="WhatsApp">${whats}</td>
         ${temProf ? `<td data-rotulo="Atendida por">${esc(p.profissionais) || '—'}</td>` : ''}
         <td data-rotulo="Consultas">${Number(p.consultas)}</td>
         <td data-rotulo="Última">${p.ultima_consulta ? dataBr(p.ultima_consulta) : '—'}</td>
-        <td class="acoes"><button class="btn btn-sm btn-outline" onclick="abrirPaciente(${Number(p.id)})">Corrigir</button></td>
+        <td class="acoes"><button class="btn btn-sm${vazio ? '' : ' btn-outline'}" onclick="abrirPaciente(${Number(p.id)})">${vazio ? 'Pôr o número' : 'Corrigir'}</button></td>
       </tr>`;
       }).join('') + '</tbody></table>';
   } catch (e) {
@@ -581,13 +696,17 @@ function abrirPaciente(id) {
   // Quem abre a ficha já chega sabendo o que há de errado com ela. O aviso
   // diz o que falta, mas não sugere um número: o dígito certo é o que a
   // paciente usa no WhatsApp, e só quem fala com ela sabe qual é.
-  if (telefoneIncompleto(p.telefone)) {
-    aviso.style.color = '#b3261e';
+  aviso.style.color = '#b3261e';
+  if (!String(p.telefone || '').trim()) {
+    aviso.textContent = 'Esta ficha está sem WhatsApp. O número que estava aqui '
+      + 'não conferia e foi retirado. Pergunte à paciente e digite os 11 números.';
+  } else if (telefoneIncompleto(p.telefone)) {
     aviso.textContent = 'Este WhatsApp tem 10 dígitos e um celular tem 11. '
       + 'Confirme o número com a paciente antes de salvar — não complete pelo palpite.';
   } else {
     aviso.textContent = '';
   }
+  ligarCampoCelular('pacTelefone', 'avisoPaciente');
   document.getElementById('modalPaciente').classList.add('show');
 }
 
@@ -597,6 +716,15 @@ async function salvarPaciente() {
   aviso.style.color = '#b3261e';
   aviso.textContent = '';
   if (botao.disabled) return;
+
+  // A trava fica ANTES de falar com o banco. Número curto foi exatamente o que
+  // encheu as fichas de contato que não chega em ninguém — aqui ele não passa.
+  const erro = erroCelular(document.getElementById('pacTelefone').value);
+  if (erro) { aviso.textContent = erro; document.getElementById('pacTelefone').focus(); return; }
+  if (!document.getElementById('pacNome').value.trim()) {
+    aviso.textContent = 'O nome não pode ficar vazio.'; return;
+  }
+
   const original = botao.textContent;
   botao.disabled = true;
   botao.textContent = 'Salvando…';
