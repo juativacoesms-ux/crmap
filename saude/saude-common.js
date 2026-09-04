@@ -645,12 +645,15 @@ async function carregarPacientes() {
     if (faixa) {
       faixa.style.display = semTel.length ? 'block' : 'none';
       if (semTel.length) {
+        // Sem <strong> no meio da frase: no celular ele quebrava a linha antes
+        // dos dois-pontos e a lista de nomes começava com ": " sozinho.
         faixa.innerHTML =
-          `<strong>Atualize o número de telefone</strong> de ` +
-          `${semTel.length === 1 ? '<strong>1 paciente</strong>' : `<strong>${semTel.length} pacientes</strong>`}: ` +
+          `<strong>Atualize o número de telefone</strong><br>` +
+          `${semTel.length === 1 ? 'Está faltando o WhatsApp de 1 paciente'
+                                 : `Está faltando o WhatsApp de ${semTel.length} pacientes`}: ` +
           semTel.map(p => esc(p.nome)).join(', ') + '. ' +
           `O número que estava guardado não conferia, então foi retirado para não ` +
-          `mandar mensagem para a pessoa errada. Toque em <strong>Corrigir</strong> ` +
+          `mandar mensagem para a pessoa errada. Toque em “Pôr o número” ` +
           `e digite o WhatsApp com 11 números.`;
       }
     }
