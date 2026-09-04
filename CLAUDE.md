@@ -84,6 +84,35 @@ problema que motivou este arquivo.
 
 ## Decisões tomadas (não desfazer sem ler o motivo)
 
+### 03/09/2026 — Contato que não confere fica VAZIO, e o campo exige 11 dígitos
+**Motivo:** decisão da Iara depois de ver a medição — *"deixe em branco os
+errados e emita um alerta de: atualize o número de telefone... não permita
+erros, delimite os campos forçando os 11 dígitos"*. Número errado é pior do
+que número ausente: o ausente pede providência, o errado manda aviso de
+consulta de terapia para um estranho.
+**A prova que decidiu o que dava para salvar:** para cada ficha, existe **um
+único** celular válido de 11 dígitos que, perdendo um algarismo, produz o que
+estava guardado? Só em **2 de 6**. Quando os 8 dígitos começam com 8, o 9 só
+cabe na frente — determinado. Quando começam com 9, há **67 a 73** respostas
+possíveis. Corrigidas: Helena `(31) 98841-8250` e Vânia `(31) 98313-6303`.
+As outras 4 ficaram vazias, com o número antigo guardado em `observacoes`.
+**Como fica:** `telefone` e `telefone_norm` aceitam NULL; a ficha vazia vai
+para o topo da lista, em vermelho, com "Atualize o número de telefone"; o
+campo tem máscara, para no 11º dígito e recusa salvar dizendo o que falta.
+`_celular_valido()` repete a regra dentro do banco, em
+`corrigir_paciente_saude` e `criar_consulta_saude_v2`.
+**Duas coisas que NÃO se deve apertar sem medir de novo:**
+1. A regra parou em "começa com 9". Exigir que o dígito seguinte seja de 6 a 9
+   **barraria a Joaci**, profissional ATIVA de número `(11) 94039-8890`, que
+   deixaria de conseguir entrar. Foi testado contra os cadastros reais.
+2. `_normalizar_telefone` **não** foi endurecida: ela também serve ao login
+   das profissionais. A exigência dos 11 dígitos entrou só onde a paciente é
+   gravada.
+**Risco aceito:** ficha sem telefone não é achada por `buscarPaciente()`. Se
+alguém agendar antes de corrigir, nasce ficha nova e a contagem das 8 sessões
+recomeça. Por isso o aviso manda corrigir primeiro, e o número antigo ficou em
+`observacoes` para permitir juntar se acontecer.
+
 ### 03/09/2026 — O sistema APONTA o telefone incompleto, nunca completa sozinho
 **Motivo:** a Iara mandou atualizar os contatos das pacientes com a lista que
 ela montou (`~/Downloads/contatos crmap0309`). Medido antes de mexer: a lista
